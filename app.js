@@ -8,46 +8,8 @@
     var crypto = require('crypto');
     var moment = require('moment');
     var favicon = require('serve-favicon');
-
-    var passwords = {
-        'admin@gmail.com': 'e9Yx9JihUi6gXfI5/gzGNHsEtE+LiTNIM+oD/1dUlMbU727uGiJbCsWgtdSp6Q3FNkdrn94AZ3UgqTU6XsxLtA==',
-        'coach@gmail.com': 'e9Yx9JihUi6gXfI5/gzGNHsEtE+LiTNIM+oD/1dUlMbU727uGiJbCsWgtdSp6Q3FNkdrn94AZ3UgqTU6XsxLtA==',
-        'client@gmail.com': 'e9Yx9JihUi6gXfI5/gzGNHsEtE+LiTNIM+oD/1dUlMbU727uGiJbCsWgtdSp6Q3FNkdrn94AZ3UgqTU6XsxLtA=='
-    };
-
-    var users =  {
-        'admin@gmail.com': {
-            userName: 'admin',
-            roles: ['admin', 'coach', 'client']
-        },
-
-        'coach@gmail.com': {
-            userName: 'coach',
-            roles: ['coach', 'client']
-        },
-
-        'client@gmail.com': {
-            userName: 'client',
-            roles: ['client']
-        }
-    };
-
-    var clientNames = [
-        'Sterling Archer',
-        'Lana Kane',
-        'Malory Archer',
-        'Cyril Figgis',
-        'Cheryl Tunt',
-        'Pamela Poovey',
-        'Ray Gillette',
-        'Algernop Krieger',
-        'Woodhouse',
-        'Ron Cadillac',
-        'Katya Kazanova',
-        'Burt Reynolds'
-    ];
-
-
+    var jsonFile = require('jsonfile');
+    var util = require('util');
 
     app.use(bodyParser.urlencoded({ extended: true }));
     app.use(bodyParser.json());
@@ -58,14 +20,36 @@
 
     var router = express.Router();
 
+    var users = jsonFile.readFileSync(__dirname + '/data/users.json').users;
+    var hashes = jsonFile.readFileSync(__dirname + '/data/hashes.json').hashes;
+
     router.use(function(req, res, next) {
 
         console.log(req.method + ' ' + req.originalUrl);
         authenticate(req);
-        console.log(req.authenticated ? ('Authenticated as ' + req.authenticatedAs) : ('Not authenticated'));
+        console.log(req.authenticated ? ('Authenticated as ' + req.authenticatedAs.userName) : ('Not authenticated'));
 
         next();
     });
+
+    function findUser(userName, checkEmail) {
+        for (var index = 0; index < users.length; index++) {
+            var current = users[index];
+            if (current.userName === userName || (checkEmail && current.email === userName)) {
+                return current;
+            }
+        }
+    }
+
+    function checkHash(user, hash) {
+        for (var index = 0; user && index < hashes.length; index++){
+            var current = hashes[index];
+            if (current.userName === user.userName && current.hash === hash) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     function authenticate(req) {
 
@@ -78,15 +62,20 @@
             var base64 = authorizationHeader.replace('Basic ', '');
             base64 = new Buffer(base64, 'base64');
             var userNameAndPassword = base64.toString('utf8');
+            console.log(userNameAndPassword);
             userNameAndPassword = userNameAndPassword.split(':');
             var userName = userNameAndPassword[0];
             var password = userNameAndPassword[1];
             var sha512 = crypto.createHash('sha512');
             sha512.update(password, 'utf8');
             var hash = sha512.digest(password);
-            if (passwords[userName] == hash.toString('base64')) {
+            var hashBase64 = hash.toString('base64');
+
+            var user = findUser(userName, true);
+
+            if (checkHash(user, hashBase64)) {
                 req.authenticated = true;
-                req.authenticatedAs = userName;
+                req.authenticatedAs = user;
             }
 
         } catch (error) {
@@ -103,11 +92,7 @@
 
             if (req.authenticated) {
 
-                result.userInfo = {
-                    userName : users[req.authenticatedAs].userName,
-                    roles : users[req.authenticatedAs].roles
-                };
-
+                result.userInfo = req.authenticatedAs;
             } else {
                 result.error = {
                     message : "Hibás felhasználónév vagy jelszó"
@@ -177,20 +162,9 @@
 
             };
 
-            if (req.authenticatedAs == 'client@gmail.com') {
-                schedule.rows[2].classes[4].signedUp = true;
-                schedule.rows[3].classes[1].signedUp = true;
-                schedule.rows[3].classes[3].signedUp = true;
-                schedule.rows[4].classes[1].signedUp = true;
-                schedule.rows[4].classes[3].signedUp = true;
-            }
+            if (req.authenticated && req.authenticatedAs.roles.indexOf('coach') > -1) {
 
-            if (req.authenticated && users[req.authenticatedAs].roles.indexOf('coach') > -1) {
-                schedule.rows.forEach(function(row){
-                    row.classes.forEach(function(cell) {
-                        cell.participants = clientNames.slice(0, cell.current);
-                    });
-                });
+
             }
 
             res.json(schedule);
@@ -209,7 +183,7 @@
         });
 
     router.get('/', function(req, res) {
-        res.json({ message: 'Canned GymAssistant REST API' });
+        res.json({ message: 'GymAssistant REST API' });
     });
 
     app.use('/api', router);

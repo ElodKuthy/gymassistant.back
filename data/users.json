@@ -1,0 +1,69 @@
+{
+ "users": [
+  {
+   "email": "admin@gmail.com",
+   "userName": "admin",
+   "roles": ["client", "coach", "admin"]
+  },
+  {
+   "email": "sterling.archer@hotmail.com",
+   "userName": "Sterling Archer",
+   "roles": ["client"]
+  },
+  {
+   "email": "lana.kane@hotmail.com",
+   "userName": "Lana Kane",
+   "roles": ["client"]
+  },
+  {
+   "email": "malory.archer@hotmail.com",
+   "userName": "Malory Archer",
+   "roles": ["client"]
+  },
+  {
+   "email": "cyril.figgis@hotmail.com",
+   "userName": "Cyril Figgis",
+   "roles": ["client"]
+  },
+  {
+   "email": "cheryl.tunt@hotmail.com",
+   "userName": "Cheryl Tunt",
+   "roles": ["client"]
+  },
+  {
+   "email": "pamela.poovey@hotmail.com",
+   "userName": "Pamela Poovey",
+   "roles": ["client"]
+  },
+  {
+   "email": "ray.gillette@hotmail.com",
+   "userName": "Ray Gillette",
+   "roles": ["client"]
+  },
+  {
+   "email": "algernop.krieger@hotmail.com",
+   "userName": "Algernop Krieger",
+   "roles": ["client"]
+  },
+  {
+   "email": "woodhouse@hotmail.com",
+   "userName": "Woodhouse",
+   "roles": ["client"]
+  },
+  {
+   "email": "ron.cadillac@hotmail.com",
+   "userName": "Ron Cadillac",
+   "roles": ["client"]
+  },
+  {
+   "email": "katya.kazanova@hotmail.com",
+   "userName": "Katya Kazanova",
+   "roles": ["client"]
+  },
+  {
+   "email": "burt.reynolds@hotmail.com",
+   "userName": "Burt Reynolds",
+   "roles": ["client"]
+  }
+ ]
+}
