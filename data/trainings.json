@@ -1,0 +1,245 @@
+{
+  "trainings" : [
+    {
+      "id": 1,
+      "name": "Dinamikus Jóga",
+      "coach": "Krisztina",
+      "dates": [
+        { "day": 1, "hour": 7 },
+        { "day": 4, "hour": 7 }
+      ],
+      "max": 10,
+      "attendees": [
+        "Lana Kane",
+        "Malory Archer",
+        "Cheryl Tunt",
+        "Pamela Poovey",
+        "Katya Kazanova"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Bajnokok Reggelije",
+      "coach": "Dávid",
+      "dates": [
+        { "day": 2, "hour": 7 },
+        { "day": 3, "hour": 7 },
+        { "day": 5, "hour": 7 }
+      ],
+      "max": 12,
+      "attendees": [
+        "Cyril Figgis",
+        "Pamela Poovey",
+        "Ray Gillette",
+        "Woodhouse"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Haladó Kettlebell",
+      "coach": "Arnold",
+      "dates": [
+        { "day": 1, "hour": 17 },
+        { "day": 3, "hour": 17 }
+      ],
+      "max": 12,
+      "attendees": [
+        "Woodhouse",
+        "Ron Cadillac",
+        "Cyril Figgis",
+        "Burt Reynolds",
+        "Pamela Poovey",
+        "Ray Gillette"       
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Haladó Kettlebell",
+      "coach": "Albert",
+      "dates": [
+        { "day": 2, "hour": 17 },
+        { "day": 4, "hour": 17 }
+      ],
+      "max": 12,
+      "attendees": [
+        "Sterling Archer",
+        "Lana Kane",
+        "Malory Archer",
+        "Cyril Figgis",
+        "Cheryl Tunt",
+        "Pamela Poovey"        
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Kezdő Kettlebell",
+      "coach": "Arnold",
+      "dates": [
+        { "day": 1, "hour": 18 },
+        { "day": 3, "hour": 18 }
+      ],
+      "max": 12,
+      "attendees": [
+        "Woodhouse",
+        "Cyril Figgis",
+        "Pamela Poovey",
+        "Ray Gillette"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Haladó Kettlebell",
+      "coach": "Albert",
+      "dates": [
+        { "day": 2, "hour": 18 },
+        { "day": 4, "hour": 18 }
+      ],
+      "max": 12,
+      "attendees": [
+        "Sterling Archer",
+        "Lana Kane",
+        "Malory Archer",
+        "Cyril Figgis",
+        "Cheryl Tunt",
+        "Pamela Poovey"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Clubbell",
+      "coach": "Albert",
+      "dates": [
+        { "day": 5, "hour": 18 }
+      ],
+      "max": 12,
+      "attendees": [
+        "Sterling Archer",
+        "Lana Kane",
+        "Cyril Figgis",
+        "Algernop Krieger"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Primal Move",
+      "coach": "Albert",
+      "dates": [
+        { "day": 2, "hour": 19 },
+        { "day": 4, "hour": 19 }
+      ],
+      "max": 12,
+      "attendees": [
+        "Sterling Archer",
+        "Lana Kane",
+        "Cyril Figgis",
+        "Algernop Krieger"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "Haladó Kettlebell",
+      "coach": "Albert",
+      "dates": [
+        { "day": 2, "hour": 20 },
+        { "day": 4, "hour": 20 }
+      ],
+      "max": 12,
+      "attendees": [
+        "Sterling Archer",
+        "Lana Kane",
+        "Malory Archer",
+        "Cyril Figgis",
+        "Cheryl Tunt",
+        "Pamela Poovey",
+        "Ray Gillette",
+        "Algernop Krieger",
+        "Woodhouse",
+        "Ron Cadillac",
+        "Katya Kazanova",
+        "Burt Reynolds"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "OldSchool Training",
+      "coach": "Zsolt",
+      "dates": [
+        { "day": 1, "hour": 19 },
+        { "day": 3, "hour": 19 }
+      ],
+      "max": 12,
+      "attendees": [
+        "Malory Archer",
+        "Cyril Figgis",
+        "Ray Gillette",
+        "Algernop Krieger"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "OldSchool Training",
+      "coach": "Zsolt",
+      "dates": [
+        { "day": 1, "hour": 20 },
+        { "day": 3, "hour": 20 }
+      ],
+      "max": 12,
+      "attendees": [
+        "Malory Archer",
+        "Cyril Figgis",
+        "Woodhouse",
+        "Ron Cadillac",
+        "Katya Kazanova",
+        "Burt Reynolds"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "Bajnokok Vacsorája",
+      "coach": "Dávid",
+      "dates": [
+        { "day": 5, "hour": 19 }
+      ],
+      "max": 12,
+      "attendees": [
+        "Lana Kane",
+        "Malory Archer",
+        "Cyril Figgis",
+        "Cheryl Tunt",
+        "Pamela Poovey",
+        "Ray Gillette"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "Bajnokok Vacsorája",
+      "coach": "Dávid",
+      "dates": [
+        { "day": 5, "hour": 20 }
+      ],
+      "max": 12,
+      "attendees": [
+        "Algernop Krieger",
+        "Woodhouse",
+        "Ron Cadillac",
+        "Katya Kazanova",
+        "Burt Reynolds"
+      ]
+    },
+    {
+      "id": 13,
+      "name": "Kettlebell Tesztüzem",
+      "coach": "Arnold",
+      "dates": [
+        { "day": 6, "hour": 10 }
+      ],
+      "max": 12,
+      "attendees": [
+        "Algernop Krieger",
+        "Woodhouse",
+        "Ron Cadillac",
+        "Burt Reynolds"
+      ]
+    }
+  ]
+}

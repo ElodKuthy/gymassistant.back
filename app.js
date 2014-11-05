@@ -22,6 +22,7 @@
 
     var users = jsonFile.readFileSync(__dirname + '/data/users.json').users;
     var hashes = jsonFile.readFileSync(__dirname + '/data/hashes.json').hashes;
+    var trainings = jsonFile.readFileSync(__dirname + '/data/trainings.json').trainings;
 
     router.use(function(req, res, next) {
 
@@ -31,6 +32,8 @@
 
         next();
     });
+
+    var isCoach = false;
 
     function findUser(userName, checkEmail) {
         for (var index = 0; index < users.length; index++) {
@@ -55,6 +58,7 @@
 
         req.authenticated = false;
         req.authenticatedAs = null;
+        isCoach = false;
         var authorizationHeader = req.headers['authorization'];
 
         try {
@@ -76,6 +80,7 @@
             if (checkHash(user, hashBase64)) {
                 req.authenticated = true;
                 req.authenticatedAs = user;
+                isCoach = (user.roles.indexOf("coach") > -1);
             }
 
         } catch (error) {
@@ -102,72 +107,75 @@
             res.json(result);
         });
 
+    function fetchSchedule(firstDate, lastDate) {
+
+        var result = {};
+
+        result.dates = {
+            "begin": firstDate,
+            "end": lastDate
+        };
+
+        result.schedule = [];
+
+        trainings.forEach(function (training){
+
+            training.dates.forEach(function (offset){
+
+                for (var date = firstDate.clone().day(offset.day).hour(offset.hour);
+                     date.isBefore(lastDate);
+                     date.add({weeks: 1})) {
+
+                    var instance = {
+                        name: training.name,
+                        coach: training.coach,
+                        current: training.attendees.length,
+                        max: training.max,
+                        date: date.clone()
+                    };
+
+                    if (isCoach) {
+                        instance.attendess = training.attendees;
+                    }
+
+                    var indexToInsert = 0;
+
+                    while (result.schedule.length > indexToInsert
+                            && moment(result.schedule[indexToInsert].date).isBefore(instance.date))
+                        indexToInsert++;
+
+                    result.schedule.splice(indexToInsert, 0, instance);
+                }
+            });
+        });
+
+        return result;
+    }
+
+    function thisWeek() {
+        var result = [];
+
+        result.push(moment().startOf('week').add({ days: 1 }));
+        result.push(moment().startOf('week').add({ days: 6 }));
+
+        return result;
+    }
+
     router.route('/schedule')
 
         .get(function(req, res) {
 
-            var schedule = {
-                "dates": {
-                    "begin": moment().day() == 0 ? moment().day(1) : moment().day(1 - moment().day()),
-                    "end": moment().day() == 0 ? moment().day(6) : moment().day(6 - moment().day())
-                },
-                "rows" : [
-                    { "time" : "7:00",
-                        "classes" : [
-                            { "name": "Dinamikus Jóga", "trainer": "Krisztina", "max": 12, "current": 6 },
-                            { "name": "Bajnokok Reggelije", "trainer": "Dávid", "max": 12, "current": 10 },
-                            { "name": "Bajnokok Reggelije", "trainer": "Dávid", "max": 12, "current": 9 },
-                            { "name": "Dinamikus Jóga", "trainer": "Krisztina", "max": 12, "current": 8 },
-                            { "name": "Bajnokok Reggelije", "trainer": "Dávid", "max": 12, "current": 5 },
-                            { "name": "Kettlebell+", "trainer": "Arnold", "max": 12, "current": 4 }
-                        ]},
-                    {
-                        "time" : "17:00",
-                        "classes" : [
-                            { "name": "Haladó Kettlebell", "trainer": "Arnold", "max": 12, "current": 9 },
-                            { "name": "Haladó Kettlebell", "trainer": "Albert", "max": 12, "current": 11 },
-                            { "name": "Haladó Kettlebell", "trainer": "Arnold", "max": 12, "current": 12 },
-                            { "name": "Haladó Kettlebell", "trainer": "Albert", "max": 12, "current": 11 },
-                            { },
-                            { }
-                        ]},
-                    { "time" : "18:00",
-                        "classes" : [
-                            { "name": "Kezdő Kettlebell", "trainer": "Arnold", "max": 12, "current": 9 },
-                            { "name": "Haladó Kettlebell", "trainer": "Albert", "max": 12, "current": 11 },
-                            { "name": "kezdő Kettlebell", "trainer": "Arnold", "max": 12, "current": 12 },
-                            { "name": "Haladó Kettlebell", "trainer": "Albert", "max": 12, "current": 11 },
-                            { "name": "Clubbell", "trainer": "Albert", "max": 8, "current": 4},
-                            { }
-                        ]},
-                    { "time" : "19:00",
-                        "classes" : [
-                            { "name": "OldSchool Training", "trainer": "Zsolt", "max": 12, "current": 6 },
-                            { "name": "Primal Move", "trainer": "Albert", "max": 8, "current": 4 },
-                            { "name": "OldSchool Training", "trainer": "Zsolt", "max": 12, "current": 8 },
-                            { "name": "Primal Move", "trainer": "Albert", "max": 8, "current": 4 },
-                            { "name": "Bajnokok Vacsorája", "trainer": "David", "max": 12, "current": 8 },
-                            { }
-                        ]},
-                    { "time" : "20:00",
-                        "classes" : [
-                            { "name": "OldSchool Training", "trainer": "Zsolt", "max": 12, "current": 7 },
-                            { "name": "Haladó Kettlebell", "trainer": "Albert", "max": 12, "current": 11 },
-                            { "name": "OldSchool Training", "trainer": "Zsolt", "max": 12, "current": 7 },
-                            { "name": "Haladó Kettlebell", "trainer": "Albert", "max": 12, "current": 12 },
-                            { "name": "Bajnokok Vacsorája", "trainer": "David", "max": 12, "current": 7 },
-                            { }
-                        ]}
-                ]
+            res.json(fetchSchedule.apply(this, thisWeek()));
+        });
 
-            };
+    router.route('/schedule/:firstDate/:lastDate')
 
-            if (req.authenticated && req.authenticatedAs.roles.indexOf('coach') > -1) {
+        .get(function(req, res) {
 
+            var firstDate = moment(req.param('firstDate'));
+            var lastDate = moment(req.param('lastDate'));
 
-            }
-
-            res.json(schedule);
+            res.json(fetchSchedule(firstDate, lastDate));
         });
 
     router.route('/credits')
