@@ -168,6 +168,17 @@
             res.json(fetchSchedule.apply(this, thisWeek()));
         });
 
+    router.route('/schedule/:day')
+
+        .get(function(req, res) {
+
+            var firstDate = moment(req.param('day'));
+            var lastDate = firstDate.clone().add({days: 1});
+
+            res.json(fetchSchedule(firstDate, lastDate));
+        });
+
+
     router.route('/schedule/:firstDate/:lastDate')
 
         .get(function(req, res) {
