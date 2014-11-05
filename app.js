@@ -12,6 +12,7 @@
     var util = require("util");
     var uuid = require("node-uuid");
     var fs = require("fs");
+    var validator = require('validator');
 
     app.use(bodyParser.urlencoded({ extended: true }));
     app.use(bodyParser.json());
@@ -235,7 +236,8 @@
 
         .post(function(req, res) {
 
-            checkAuthentication(req, res, "coach");
+            if (checkAuthentication(req, res, "coach"))
+                return;
 
             updateSchedule(req.body.schedule);
 
@@ -274,13 +276,15 @@
 
         .get(function(req, res) {
 
-            checkAuthentication(req, res);
+            if (checkAuthentication(req, res))
+                return;
 
             var id = req.param("id");
             var index = findInstance(id);
 
             if (!index) {
                 res.send("Invalid training session id");
+                return;
             }
 
             var user = req.authenticatedAs;
@@ -289,18 +293,22 @@
 
             if (moment(instance.date).isBefore(now)) {
                 res.send("Training session is in the past");
+                return;
             }
 
             if (instance.current === instance.max) {
                 res.send("Training session is full");
+                return;
             }
 
             if (instance.attendees.indexOf(user.userName) > -1) {
                 res.send("Already signed up");
+                return;
             }
 
             if (user.credits < 1) {
                 res.send("No free credit");
+                return;
             }
 
             instance.attendees.push(user.userName);
@@ -316,13 +324,15 @@
 
         .get(function(req, res) {
 
-            checkAuthentication(req, res);
+            if (checkAuthentication(req, res))
+                return;
 
             var id = req.param("id");
             var index = findInstance(id);
 
             if (!index) {
                 res.send("Invalid training session id");
+                return;
             }
 
             var user = req.authenticatedAs;
@@ -332,16 +342,19 @@
 
             if (moment(instance.date).isBefore(now)) {
                 res.send("Training session is in the past");
+                return;
             }
 
             if (moment(instance.date).isBefore(latestLeaveTime)) {
                 res.send("To close to the actual date to leave");
+                return;
             }
 
             var userIndex = instance.attendees.indexOf(user.userName);
 
             if (userIndex === -1) {
                 res.send("User hasn't signed up for that session");
+                return;
             }
 
             instance.attendees.splice(userIndex, 1);
@@ -357,18 +370,56 @@
         if (!req.authenticated || (role && req.authenticatedAs.roles.indexOf() > -1)) {
             res.send("Unauthorized");
         }
+
+        return true;
     }
 
     router.route("/credits")
 
         .get(function(req, res) {
 
-            checkAuthentication(req, res);
+            if (!checkAuthentication(req, res))
+                return;
 
             var data = {};
             data.credits = req.authenticatedAs.credits;
 
             res.json(data);
+        });
+
+    router.route("/credits/add/:credits/:userName")
+
+        .get(function(req, res) {
+
+            if (checkAuthentication(req, res, "coach"))
+                return;
+
+            var creditsToAdd = NaN;
+
+            if (validator.isInt(req.param("credits"))) {
+                creditsToAdd = parseInt(req.param("credits"));
+            }
+
+            if (isNaN(creditsToAdd) || creditsToAdd < 1) {
+                res.send("Credits to add should be a positive integer");
+                return;
+            }
+
+            var userName = req.param("userName");
+
+            var user = findUser(userName);
+
+            if(!user) {
+                res.send("Invalid user name");
+                return;
+            }
+
+            user.credits += creditsToAdd;
+
+            saveUsers();
+
+            res.send("Credits added successfully");
+
         });
 
     router.get("/", function(req, res) {
