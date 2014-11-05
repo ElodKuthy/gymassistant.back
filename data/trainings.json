@@ -1,7 +1,7 @@
 {
   "trainings" : [
     {
-      "id": 1,
+      "id": "72a834c6-abed-4951-a353-383fdd51be3b",
       "name": "Dinamikus Jóga",
       "coach": "Krisztina",
       "dates": [
@@ -18,7 +18,7 @@
       ]
     },
     {
-      "id": 2,
+      "id": "b45969b4-5ee8-41ce-9e78-59f08933c256",
       "name": "Bajnokok Reggelije",
       "coach": "Dávid",
       "dates": [
@@ -35,7 +35,7 @@
       ]
     },
     {
-      "id": 3,
+      "id": "9693d0d3-dd4a-4114-b985-ecf9c4bfa897",
       "name": "Haladó Kettlebell",
       "coach": "Arnold",
       "dates": [
@@ -53,7 +53,7 @@
       ]
     },
     {
-      "id": 4,
+      "id": "4dc562e9-1fe7-4e9c-bcb5-e2bf805328b5",
       "name": "Haladó Kettlebell",
       "coach": "Albert",
       "dates": [
@@ -71,7 +71,7 @@
       ]
     },
     {
-      "id": 5,
+      "id": "04d49a09-98f4-4493-ba1b-e0fe5431e317",
       "name": "Kezdő Kettlebell",
       "coach": "Arnold",
       "dates": [
@@ -87,7 +87,7 @@
       ]
     },
     {
-      "id": 6,
+      "id": "0516d08f-5661-43ed-80a7-e4994c0a3318",
       "name": "Haladó Kettlebell",
       "coach": "Albert",
       "dates": [
@@ -105,7 +105,7 @@
       ]
     },
     {
-      "id": 6,
+      "id": "4346059b-c78c-49a4-a4d2-3fd8c5b574a4",
       "name": "Clubbell",
       "coach": "Albert",
       "dates": [
@@ -120,7 +120,7 @@
       ]
     },
     {
-      "id": 7,
+      "id": "4c3a2495-5715-4565-bd4e-0741f0c6d46b",
       "name": "Primal Move",
       "coach": "Albert",
       "dates": [
@@ -136,7 +136,7 @@
       ]
     },
     {
-      "id": 8,
+      "id": "2c349081-e8de-4750-a8bc-85a6f0280547",
       "name": "Haladó Kettlebell",
       "coach": "Albert",
       "dates": [
@@ -160,7 +160,7 @@
       ]
     },
     {
-      "id": 9,
+      "id": "c65b9a9b-3d6c-4faa-bce7-88c681b5d2e6",
       "name": "OldSchool Training",
       "coach": "Zsolt",
       "dates": [
@@ -176,7 +176,7 @@
       ]
     },
     {
-      "id": 10,
+      "id": "975a304d-3773-4c03-a7f4-6275fd1ef65a",
       "name": "OldSchool Training",
       "coach": "Zsolt",
       "dates": [
@@ -194,7 +194,7 @@
       ]
     },
     {
-      "id": 11,
+      "id": "c3e93bcc-0fc4-4ab3-82fa-44ea255d49a0",
       "name": "Bajnokok Vacsorája",
       "coach": "Dávid",
       "dates": [
@@ -211,7 +211,7 @@
       ]
     },
     {
-      "id": 12,
+      "id": "56bc016b-e832-45ee-b65f-58c45f9e75f7",
       "name": "Bajnokok Vacsorája",
       "coach": "Dávid",
       "dates": [
@@ -227,7 +227,7 @@
       ]
     },
     {
-      "id": 13,
+      "id": "a92a2b00-7b76-4715-85a0-01db1ae84b73",
       "name": "Kettlebell Tesztüzem",
       "coach": "Arnold",
       "dates": [
