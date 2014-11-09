@@ -240,6 +240,14 @@
         "Ron Cadillac",
         "Burt Reynolds"
       ]
+    },
+    {
+      "id": "7f54912d-0ae0-4887-9691-19b4eb3b2a11",
+      "name": "Placeholder",
+      "dates": [
+        { "day": 5, "hour": 17 }
+      ],
+      "attendees": []
     }
   ]
 }

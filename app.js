@@ -30,7 +30,7 @@
 
     router.use(function(req, res, next) {
 
-        console.log(req.method + " " + req.originalUrl);
+        console.log(moment().format() + " " + req.method + " " + req.originalUrl);
         authenticate(req);
         console.log(req.authenticated ? ("Authenticated as " + req.authenticatedAs.userName) : ("Not authenticated"));
 
@@ -111,12 +111,24 @@
             res.json(result);
         });
 
-    function generateSchedule() {
+    router.route("/generate/:year")
+
+        .get(function(req, res) {
+
+            if (!checkAuthentication(req, res, "admin"))
+                return;
+
+            generateSchedule(req.param("year"));
+
+            res.send("OK");
+        });
+
+    function generateSchedule(year) {
 
         var result = {};
 
-        var firstDate = moment().startOf("year");
-        var lastDate = moment().endOf("year").add({years: 1});
+        var firstDate = moment({ year: year }).startOf("year");
+        var lastDate = moment({ year: year }).endOf("year");
 
         result.schedule = [];
 
@@ -136,7 +148,7 @@
                         current: training.attendees.length,
                         max: training.max,
                         date: date.clone(),
-                        attendess: training.attendees
+                        attendees: training.attendees
                     };
 
                     var indexToInsert = 0;
@@ -155,9 +167,16 @@
         return result;
     }
 
-    function fetchSchedule(startDate, endDate) {
+    function fetchSchedule(startDate, endDate, userName) {
 
-        var result = [];
+        var result = {};
+
+        result.dates = {
+            begin: startDate,
+            end: endDate
+        };
+
+        result.schedule = [];
 
         var index = 0;
         while (moment(schedule[index].date).isBefore(startDate) && index < schedule.length) {
@@ -174,10 +193,11 @@
                 current: current.attendees.length,
                 max: current.max,
                 date: current.date,
-                attendees: isCoach ? current.attendees : undefined
+                attendees: isCoach ? current.attendees : undefined,
+                signedUp: (current.attendees.indexOf(userName) > -1)
             };
 
-            result.push(instance);
+            result.schedule.push(instance);
         }
 
         return result;
@@ -187,7 +207,7 @@
         var result = [];
 
         result.push(moment().startOf("week").add({ days: 1 }));
-        result.push(moment().startOf("week").add({ days: 6 }));
+        result.push(moment().startOf("week").add({ days: 7 }));
 
         return result;
     }
@@ -229,7 +249,8 @@
         .get(function(req, res) {
 
             var result = {};
-            result.schedule = fetchSchedule.apply(this, thisWeek());
+            var dates = thisWeek();
+            result = fetchSchedule(dates[0], dates[1], req.authenticatedAs ? req.authenticatedAs.userName : null);
 
             res.json(result);
         })
@@ -253,7 +274,7 @@
             var firstDate = moment(req.param("day"));
             var lastDate = firstDate.clone().add({days: 1});
 
-            result.schedule = fetchSchedule(firstDate, lastDate);
+            result = fetchSchedule(firstDate, lastDate, req.authenticatedAs ? req.authenticatedAs.userName : null);
 
             res.json(result);
         });
@@ -267,7 +288,7 @@
             var firstDate = moment(req.param("firstDate"));
             var lastDate = moment(req.param("lastDate"));
 
-            result.schedule = fetchSchedule(firstDate, lastDate);
+            result = fetchSchedule(firstDate, lastDate, req.authenticatedAs ? req.authenticatedAs.userName : null);
 
             res.json(result);
         });
@@ -276,14 +297,14 @@
 
         .get(function(req, res) {
 
-            if (checkAuthentication(req, res))
+            if (!checkAuthentication(req, res))
                 return;
 
             var id = req.param("id");
             var index = findInstance(id);
 
             if (!index) {
-                res.send("Invalid training session id");
+                res.send({error: "Invalid training session id"});
                 return;
             }
 
@@ -292,22 +313,22 @@
             var now = moment();
 
             if (moment(instance.date).isBefore(now)) {
-                res.send("Training session is in the past");
+                res.send({error: "Training session is in the past"});
                 return;
             }
 
             if (instance.current === instance.max) {
-                res.send("Training session is full");
+                res.send({error: "Training session is full"});
                 return;
             }
 
             if (instance.attendees.indexOf(user.userName) > -1) {
-                res.send("Already signed up");
+                res.send({error: "Already signed up"});
                 return;
             }
 
             if (user.credits < 1) {
-                res.send("No free credit");
+                res.send({error: "No free credit"});
                 return;
             }
 
@@ -324,14 +345,14 @@
 
         .get(function(req, res) {
 
-            if (checkAuthentication(req, res))
+            if (!checkAuthentication(req, res))
                 return;
 
             var id = req.param("id");
             var index = findInstance(id);
 
             if (!index) {
-                res.send("Invalid training session id");
+                res.send({ error: "Invalid training session id"});
                 return;
             }
 
@@ -341,19 +362,19 @@
             var latestLeaveTime = moment().add({days: 1});
 
             if (moment(instance.date).isBefore(now)) {
-                res.send("Training session is in the past");
+                res.send({ error: "Training session is in the past"});
                 return;
             }
 
             if (moment(instance.date).isBefore(latestLeaveTime)) {
-                res.send("To close to the actual date to leave");
+                res.send({ error: "To close to the actual date to leave"});
                 return;
             }
 
             var userIndex = instance.attendees.indexOf(user.userName);
 
             if (userIndex === -1) {
-                res.send("User hasn't signed up for that session");
+                res.send({ error: "User hasn't signed up for that session"});
                 return;
             }
 
@@ -368,7 +389,7 @@
     function checkAuthentication(req, res, role) {
 
         if (!req.authenticated || (role && req.authenticatedAs.roles.indexOf() > -1)) {
-            res.send("Unauthorized");
+            res.send({ error: "Unauthorized"});
         }
 
         return true;
@@ -401,7 +422,7 @@
             }
 
             if (isNaN(creditsToAdd) || creditsToAdd < 1) {
-                res.send("Credits to add should be a positive integer");
+                res.send({ error: "Credits to add should be a positive integer"});
                 return;
             }
 
@@ -410,7 +431,7 @@
             var user = findUser(userName);
 
             if(!user) {
-                res.send("Invalid user name");
+                res.send({ error: "Invalid user name"});
                 return;
             }
 

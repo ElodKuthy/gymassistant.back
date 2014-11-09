@@ -22,5 +22,8 @@
   },
   "devDependencies": {
     "nodemon": "^1.2.1"
+  },
+  "scripts": {
+    "start": "node ./node_modules/nodemon/bin/nodemon.js app.js"
   }
 }
