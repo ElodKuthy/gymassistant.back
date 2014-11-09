@@ -18905,7 +18905,7 @@
       "parent": "72a834c6-abed-4951-a353-383fdd51be3b",
       "name": "Dinamikus Jóga",
       "coach": "Krisztina",
-      "current": 6,
+      "current": 5,
       "max": 10,
       "date": "2014-11-10T06:00:00.000Z",
       "attendees": [
@@ -18913,8 +18913,7 @@
         "Malory Archer",
         "Cheryl Tunt",
         "Pamela Poovey",
-        "Katya Kazanova",
-        "admin"
+        "Katya Kazanova"
       ]
     },
     {

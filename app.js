@@ -214,12 +214,24 @@
 
     function updateSchedule(updated) {
 
-        var updatedInstance = JSON.parse(updated);
-
-        var index = findInstance(updatedInstance.id);
+        var index = findInstance(updated.id);
 
         if (index) {
-            schedule[index] = updatedInstance;
+
+            var old =  schedule[index]; 
+            updated.attendees ? updated.attendees.slice(0) : schedule[index].attendees;
+
+            schedule[index] = {
+                id: updated.id ? updated.id : old.id,
+                parent: updated.parent ? updated.parent : old.parent,
+                name: updated.name ? updated.name : old.name,
+                coach: updated.coach ? updated.coach : old.coach,
+                current: updated.current ? updated.current : old.current,
+                max: updated.max ? updated.max : old.max,
+                date: updated.date ? updated.date : old.date,
+                attendees: updated.attendees ? updated.attendees : old.attendees
+            }
+            
             saveSchedule();
         }
     }
@@ -257,8 +269,10 @@
 
         .post(function(req, res) {
 
-            if (checkAuthentication(req, res, "coach"))
+            if (!checkAuthentication(req, res, "coach"))
                 return;
+
+            console.log(req.body.schedule);
 
             updateSchedule(req.body.schedule);
 
@@ -266,15 +280,37 @@
 
         });
 
-    router.route("/schedule/:day")
+    router.route("/schedule/:id")
 
         .get(function(req, res) {
 
-            var result = {};
-            var firstDate = moment(req.param("day"));
-            var lastDate = firstDate.clone().add({days: 1});
+            if (!checkAuthentication(req, res, "coach"))
+                return;
 
-            result = fetchSchedule(firstDate, lastDate, req.authenticatedAs ? req.authenticatedAs.userName : null);
+            var result = {};
+            var id = req.param("id");
+
+            var index = findInstance(id);
+
+            if (!index) {
+                res.send({ error: "Id is not valid" });
+                return;
+            }
+
+            var current = schedule[index];
+
+            var instance = {
+                id: current.id,
+                parent: current.parent,
+                name: current.name,
+                coach: current.coach,
+                current: current.attendees.length,
+                max: current.max,
+                date: current.date,
+                attendees: current.attendees
+            };
+
+            result.instance = instance;
 
             res.json(result);
         });
@@ -442,6 +478,20 @@
             res.send("Credits added successfully");
 
         });
+
+    router.route("/users")
+        
+        .get(function (req, res) {
+
+            if (!checkAuthentication(req, res, "coach"))
+                return;
+
+            var result = {};
+            result.users = users;
+
+            res.json(result);
+        });
+
 
     router.get("/", function(req, res) {
         res.json({ message: "GymAssistant REST API" });
