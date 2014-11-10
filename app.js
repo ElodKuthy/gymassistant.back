@@ -58,6 +58,17 @@
         return false;
     }
 
+    function setHash(user, hash) {
+        for (var index = 0; user && index < hashes.length; index++){
+            var current = hashes[index];
+            if (current.userName === user.userName) {
+                current.hash = hash;
+                return true;
+            }
+        }
+        return false;
+    }
+
     function authenticate(req) {
 
         req.authenticated = false;
@@ -148,7 +159,8 @@
                         current: training.attendees.length,
                         max: training.max,
                         date: date.clone(),
-                        attendees: training.attendees
+                        attendees: training.attendees.slice(),
+                        participants: date.isBefore(moment(), "day") ?  training.attendees.slice() : []
                     };
 
                     var indexToInsert = 0;
@@ -167,7 +179,7 @@
         return result;
     }
 
-    function fetchSchedule(startDate, endDate, userName) {
+    function fetchSchedule(startDate, endDate, user) {
 
         var result = {};
 
@@ -183,7 +195,9 @@
             index++;
         }
 
-        for (var current = schedule[index];moment(current.date).isBefore(endDate) && index < schedule.length; current = schedule[++index]) {
+        for (var current = schedule[index];
+             moment(current.date).isBefore(endDate) && index < schedule.length;
+             current = schedule[++index]) {
 
             var instance = {
                 id: current.id,
@@ -194,7 +208,8 @@
                 max: current.max,
                 date: current.date,
                 attendees: isCoach ? current.attendees : undefined,
-                signedUp: (current.attendees.indexOf(userName) > -1)
+                participants: isCoach ? current.participants : undefined,
+                signedUp: user ? (current.attendees.indexOf(user.userName) > -1) : false
             };
 
             result.schedule.push(instance);
@@ -212,30 +227,6 @@
         return result;
     }
 
-    function updateSchedule(updated) {
-
-        var index = findInstance(updated.id);
-
-        if (index) {
-
-            var old =  schedule[index]; 
-            updated.attendees ? updated.attendees.slice(0) : schedule[index].attendees;
-
-            schedule[index] = {
-                id: updated.id ? updated.id : old.id,
-                parent: updated.parent ? updated.parent : old.parent,
-                name: updated.name ? updated.name : old.name,
-                coach: updated.coach ? updated.coach : old.coach,
-                current: updated.current ? updated.current : old.current,
-                max: updated.max ? updated.max : old.max,
-                date: updated.date ? updated.date : old.date,
-                attendees: updated.attendees ? updated.attendees : old.attendees
-            }
-            
-            saveSchedule();
-        }
-    }
-
     function saveSchedule() {
         var data = {};
         data.schedule = schedule;
@@ -246,6 +237,12 @@
         var data = {};
         data.users = users;
         jsonFile.writeFileSync(__dirname + "/data/users.json", data);
+    }
+
+    function saveHashes() {
+        var data = {};
+        data.hashes = hashes;
+        jsonFile.writeFileSync(__dirname + "/data/hashes.json", data);
     }
 
     function findInstance(id) {
@@ -260,24 +257,10 @@
 
         .get(function(req, res) {
 
-            var result = {};
             var dates = thisWeek();
-            result = fetchSchedule(dates[0], dates[1], req.authenticatedAs ? req.authenticatedAs.userName : null);
+            var result = fetchSchedule(dates[0], dates[1], req.authenticatedAs);
 
             res.json(result);
-        })
-
-        .post(function(req, res) {
-
-            if (!checkAuthentication(req, res, "coach"))
-                return;
-
-            console.log(req.body.schedule);
-
-            updateSchedule(req.body.schedule);
-
-            res.json({message: "Schedule updated"});
-
         });
 
     router.route("/schedule/:id")
@@ -299,7 +282,7 @@
 
             var current = schedule[index];
 
-            var instance = {
+            result.instance = {
                 id: current.id,
                 parent: current.parent,
                 name: current.name,
@@ -307,10 +290,9 @@
                 current: current.attendees.length,
                 max: current.max,
                 date: current.date,
-                attendees: current.attendees
+                attendees: current.attendees,
+                participants: current.participants
             };
-
-            result.instance = instance;
 
             res.json(result);
         });
@@ -320,16 +302,55 @@
 
         .get(function(req, res) {
 
-            var result = {};
             var firstDate = moment(req.param("firstDate"));
             var lastDate = moment(req.param("lastDate"));
 
-            result = fetchSchedule(firstDate, lastDate, req.authenticatedAs ? req.authenticatedAs.userName : null);
+            var result = fetchSchedule(firstDate, lastDate, req.authenticatedAs);
 
             res.json(result);
         });
 
-    router.route("/join/:id")
+    function addToTrainingSession(id, userName, tolerance) {
+
+        var index = findInstance(id);
+
+        if (!index) {
+            return { error: "Invalid training session id" };
+        }
+
+        var instance = schedule[index];
+
+        if (moment().isAfter(instance.date, tolerance)) {
+            return { error: "Training session is in the past" };
+        }
+
+        if (instance.current === instance.max) {
+            return { error: "Training session is full" };
+        }
+
+        var user = findUser(userName);
+
+        if (!user) {
+            return { error: "Invalid user name" };
+        }
+
+        if (instance.attendees.indexOf(userName) > -1) {
+            return { error: "Already signed up" };
+        }
+
+        if (user.credits < 1) {
+            return { error: "No free credit" };
+        }
+
+        instance.attendees.push(user.userName);
+        instance.current++;
+        user.credits--;
+        saveSchedule();
+        saveUsers();
+        return "Successfully joined to training session";
+    }
+
+    router.route("/join/session/:id")
 
         .get(function(req, res) {
 
@@ -337,47 +358,67 @@
                 return;
 
             var id = req.param("id");
-            var index = findInstance(id);
 
-            if (!index) {
-                res.send({error: "Invalid training session id"});
-                return;
-            }
-
-            var user = req.authenticatedAs;
-            var instance = schedule[index];
-            var now = moment();
-
-            if (moment(instance.date).isBefore(now)) {
-                res.send({error: "Training session is in the past"});
-                return;
-            }
-
-            if (instance.current === instance.max) {
-                res.send({error: "Training session is full"});
-                return;
-            }
-
-            if (instance.attendees.indexOf(user.userName) > -1) {
-                res.send({error: "Already signed up"});
-                return;
-            }
-
-            if (user.credits < 1) {
-                res.send({error: "No free credit"});
-                return;
-            }
-
-            instance.attendees.push(user.userName);
-            instance.current++;
-            user.credits--;
-            saveSchedule();
-            saveUsers();
-            res.send("Successfully joined to training session");
+            res.send(addToTrainingSession(id, req.authenticatedAs.userName));
 
         });
 
-    router.route("/leave/:id")
+    router.route("/add/user/:userName/session/:id")
+
+        .get(function(req, res) {
+
+            if (!checkAuthentication(req, res, "coach"))
+                return;
+
+            var id = req.param("id");
+            var userName = req.param("userName");
+
+            res.send(addToTrainingSession(id, userName, "day"));
+
+        });
+
+    function removeFromTrainingSession(id, userName, daysBeforeCanLeave, tolerance) {
+
+        var index = findInstance(id);
+
+        if (!index) {
+            return { error: "Invalid training session id" };
+        }
+
+        var instance = schedule[index];
+
+        if (moment().isAfter(instance.date, tolerance)) {
+            return { error: "Training session is in the past"};
+        }
+
+        var latestLeaveTime = moment().add({days: daysBeforeCanLeave});
+
+        if (latestLeaveTime.isAfter(instance.date, tolerance)) {
+            return { error: "To close to the actual date to leave"};
+        }
+
+        var user = findUser(userName);
+
+        if (!user) {
+            return { error: "Invalid user name" };
+        }
+
+        var userIndex = instance.attendees.indexOf(userName);
+
+        if (userIndex === -1) {
+            return { error: "User hasn't signed up for that session"};
+        }
+
+        instance.attendees.splice(userIndex, 1);
+        instance.current--;
+        user.credits++;
+        saveSchedule();
+        saveUsers();
+
+        return "Successfully left the training session";
+    }
+
+    router.route("/leave/session/:id")
 
         .get(function(req, res) {
 
@@ -385,46 +426,26 @@
                 return;
 
             var id = req.param("id");
-            var index = findInstance(id);
 
-            if (!index) {
-                res.send({ error: "Invalid training session id"});
+            res.send(removeFromTrainingSession(id, req.authenticatedAs.userName, 1));
+        });
+
+    router.route("/remove/user/:userName/session/:id")
+
+        .get(function(req, res) {
+
+            if (!checkAuthentication(req, res, "coach"))
                 return;
-            }
 
-            var user = req.authenticatedAs;
-            var instance = schedule[index];
-            var now = moment();
-            var latestLeaveTime = moment().add({days: 1});
+            var id = req.param("id");
+            var userName = req.param("userName");
 
-            if (moment(instance.date).isBefore(now)) {
-                res.send({ error: "Training session is in the past"});
-                return;
-            }
-
-            if (moment(instance.date).isBefore(latestLeaveTime)) {
-                res.send({ error: "To close to the actual date to leave"});
-                return;
-            }
-
-            var userIndex = instance.attendees.indexOf(user.userName);
-
-            if (userIndex === -1) {
-                res.send({ error: "User hasn't signed up for that session"});
-                return;
-            }
-
-            instance.attendees.splice(userIndex, 1);
-            instance.current--;
-            user.credits++;
-            saveSchedule();
-            saveUsers();
-            res.send("Successfully left the training session");
+            res.send(removeFromTrainingSession(id, userName, 0, "day"));
         });
 
     function checkAuthentication(req, res, role) {
 
-        if (!req.authenticated || (role && req.authenticatedAs.roles.indexOf() > -1)) {
+        if (!req.authenticated || (role && req.authenticatedAs.roles.indexOf(role) === -1)) {
             res.send({ error: "Unauthorized"});
         }
 
@@ -444,7 +465,7 @@
             res.json(data);
         });
 
-    router.route("/credits/add/:credits/:userName")
+    router.route("/credits/add/:credits/user/:userName")
 
         .get(function(req, res) {
 
@@ -490,6 +511,34 @@
             result.users = users;
 
             res.json(result);
+        });
+
+
+    router.route("/password")
+
+        .post(function (req, res) {
+
+            if(!checkAuthentication(req, res))
+                return;
+
+            var password = req.body.password;
+
+            console.log(req.authenticatedAs.userName);
+            console.log(password);
+
+            var sha512 = crypto.createHash("sha512");
+            sha512.update(password, "utf8");
+            var hash = sha512.digest(password);
+            var hashBase64 = hash.toString("base64");
+            console.log(hashBase64);
+
+
+            if (setHash(req.authenticatedAs, hashBase64)) {
+                saveHashes();
+                res.send("A jelszó sikeresen meg lett változtatva");
+            } else {
+                res.send({error: "Nem sikerült megváltoztatni a jelszót"})
+            }
         });
 
 
