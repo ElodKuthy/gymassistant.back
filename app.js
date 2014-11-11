@@ -30,7 +30,7 @@
 
     router.use(function(req, res, next) {
 
-        console.log(moment().format() + " " + req.method + " " + req.originalUrl);
+        console.log(moment().format() + ": " + req.method + " " +  req.connection.remoteAddress + " " + req.originalUrl);
         authenticate(req);
         console.log(req.authenticated ? ("Authenticated as " + req.authenticatedAs.userName) : ("Not authenticated"));
 
