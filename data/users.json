@@ -1,14 +1,57 @@
 {
   "users": [
     {
-      "email": "admin@gmail.com",
+      "email": "admin@testkulturamuhely.hu",
       "userName": "admin",
       "roles": [
         "client",
         "coach",
         "admin"
       ],
-      "credits": 24
+      "credits": 0
+    },
+    {
+      "email": "albert@testkulturamuhely.hu",
+      "userName": "Albert",
+      "roles": [
+        "client",
+        "coach"
+      ],
+      "credits": 0
+    },
+    {
+      "email": "arnold@testkulturamuhely.hu",
+      "userName": "Arnold",
+      "roles": [
+        "client",
+        "coach"
+      ],
+      "credits": 0
+    },
+    {
+      "email": "krisztina@testkulturamuhely.hu",
+      "userName": "Krisztina",
+      "roles": [
+        "client",
+        "coach"
+      ],
+      "credits": 0
+    },    {
+      "email": "david@testkulturamuhely.hu",
+      "userName": "Dávid",
+      "roles": [
+        "client",
+        "coach"
+      ],
+      "credits": 0
+    },    {
+      "email": "zsolt@testkulturamuhely.hu",
+      "userName": "Zsolt",
+      "roles": [
+        "client",
+        "coach"
+      ],
+      "credits": 0
     },
     {
       "email": "sterling.archer@hotmail.com",
