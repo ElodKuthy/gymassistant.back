@@ -112,11 +112,10 @@
 
             if (req.authenticated) {
 
+                result.result = "OK";
                 result.userInfo = req.authenticatedAs;
             } else {
-                result.error = {
-                    message : "Hibás felhasználónév vagy jelszó"
-                };
+                result.error = "Hibás felhasználónév vagy jelszó";
             }
 
             res.json(result);
@@ -131,7 +130,7 @@
 
             generateSchedule(req.param("year"));
 
-            res.send("OK");
+            res.send({ result: "OK" });
         });
 
     function generateSchedule(year) {
@@ -260,6 +259,27 @@
             var dates = thisWeek();
             var result = fetchSchedule(dates[0], dates[1], req.authenticatedAs);
 
+            result.result = "OK";
+            res.json(result);
+        });
+
+    function thisDay() {
+        var result = [];
+
+        result.push(moment().startOf("day"));
+        result.push(moment().startOf("day").add({ days: 1 }));
+
+        return result;
+    }
+
+    router.route("/schedule/today")
+
+        .get(function(req, res) {
+
+            var dates = thisDay();
+            var result = fetchSchedule(dates[0], dates[1], req.authenticatedAs);
+
+            result.result = "OK";
             res.json(result);
         });
 
@@ -276,7 +296,7 @@
             var index = findInstance(id);
 
             if (!index) {
-                res.send({ error: "Id is not valid" });
+                res.send({ error: "Hibás edzés azonosító" });
                 return;
             }
 
@@ -294,6 +314,7 @@
                 participants: current.participants
             };
 
+            result.result = "OK";
             res.json(result);
         });
 
@@ -307,6 +328,7 @@
 
             var result = fetchSchedule(firstDate, lastDate, req.authenticatedAs);
 
+            result.result = "OK";
             res.json(result);
         });
 
@@ -315,31 +337,31 @@
         var index = findInstance(id);
 
         if (!index) {
-            return { error: "Invalid training session id" };
+            return { error: "Hibás edzés azonosító" };
         }
 
         var instance = schedule[index];
 
         if (moment().isAfter(instance.date, tolerance)) {
-            return { error: "Training session is in the past" };
+            return { error: "Ez az óra már véget ért" };
         }
 
         if (instance.current === instance.max) {
-            return { error: "Training session is full" };
+            return { error: "Ez az edzés már megtelt" };
         }
 
         var user = findUser(userName);
 
         if (!user) {
-            return { error: "Invalid user name" };
+            return { error: "Nincs ilyen nevű felhasználó" };
         }
 
         if (instance.attendees.indexOf(userName) > -1) {
-            return { error: "Already signed up" };
+            return { error: "A felhasználó már feliratkozott" };
         }
 
         if (user.credits < 1) {
-            return { error: "No free credit" };
+            return { error: "A felhasználónak nincs több szabad kreditje" };
         }
 
         instance.attendees.push(user.userName);
@@ -347,7 +369,7 @@
         user.credits--;
         saveSchedule();
         saveUsers();
-        return "Successfully joined to training session";
+        return { result : "A felhasználó sikerersen feliratkozott az órára" };
     }
 
     router.route("/join/session/:id")
@@ -377,36 +399,133 @@
 
         });
 
-    function removeFromTrainingSession(id, userName, daysBeforeCanLeave, tolerance) {
+    function checkInUser(id, userName, tolarence) {
 
         var index = findInstance(id);
 
         if (!index) {
-            return { error: "Invalid training session id" };
+            return { error: "Hibás edzés azonosító" };
         }
 
         var instance = schedule[index];
 
-        if (moment().isAfter(instance.date, tolerance)) {
-            return { error: "Training session is in the past"};
-        }
-
-        var latestLeaveTime = moment().add({days: daysBeforeCanLeave});
-
-        if (latestLeaveTime.isAfter(instance.date, tolerance)) {
-            return { error: "To close to the actual date to leave"};
+        if (moment().isAfter(instance.date, tolarence ? tolarence : "hour")) {
+            return { error: "Ez az óra már véget ért" };
         }
 
         var user = findUser(userName);
 
         if (!user) {
-            return { error: "Invalid user name" };
+            return { error: "Nincs ilyen nevű felhasználó" };
+        }
+
+        if (instance.attendees.indexOf(userName) === -1) {
+            return { error: "A felhasználó nem iratkozott fel erre az órára" };
+        }
+
+        if (instance.participants.indexOf(userName) > -1) {
+            return { error: "A felhasználó már bejelentkezett erre az órára" };
+        }
+
+        instance.participants.push(userName);
+        saveSchedule();
+        return { result: "A felhasználó sikeresen bejelenkezett az órára" };
+    }
+
+
+    router.route("/check/in/user/:userName/session/:id")
+
+        .get(function(req, res) {
+
+            if (!checkAuthentication(req, res, "coach"))
+                return;
+
+            var id = req.param("id");
+            var userName = req.param("userName");
+
+            res.send(checkInUser(id, userName, "day"));
+
+        });
+
+    function undoCheckInUser(id, userName, tolarence) {
+
+        var index = findInstance(id);
+
+        if (!index) {
+            return { error: "Nincs ilyen edzés azonosító" };
+        }
+
+        var instance = schedule[index];
+
+        if (moment().isAfter(instance.date, tolarence ? tolarence : "hour")) {
+            return { error: "Ez az óra már véget ért" };
+        }
+
+        var user = findUser(userName);
+
+        if (!user) {
+            return { error: "Nincs ilyen nevű felhasználó" };
+        }
+
+        if (instance.attendees.indexOf(userName) === -1) {
+            return { error: "A felhasználó nem iratkozott fel erre az órára" };
+        }
+
+        var participantIndex = instance.participants.indexOf(userName);
+
+        if (participantIndex === -1) {
+            return { error: "A felhasználó nem jelentkezett be erre az órára" };
+        }
+
+        instance.participants.splice(participantIndex, 1);
+        saveSchedule();
+        return { result: "A felhasználó bejelenkezése sikeresen visszavonva" };
+    }
+
+    router.route("/undo/check/in/user/:userName/session/:id")
+
+        .get(function(req, res) {
+
+            if (!checkAuthentication(req, res, "coach"))
+                return;
+
+            var id = req.param("id");
+            var userName = req.param("userName");
+
+            res.send(undoCheckInUser(id, userName, "day"));
+
+        });
+
+    function removeFromTrainingSession(id, userName, daysBeforeCanLeave, tolerance) {
+
+        var index = findInstance(id);
+
+        if (!index) {
+            return { error: "Nincs ilyen edzés azonosító" };
+        }
+
+        var instance = schedule[index];
+
+        if (moment().isAfter(instance.date, tolerance)) {
+            return { error: "Ez az óra már véget ért"};
+        }
+
+        var latestLeaveTime = moment().add({days: daysBeforeCanLeave});
+
+        if (latestLeaveTime.isAfter(instance.date, tolerance)) {
+            return { error: "Erről az óráról már túl késő leiratkozni"};
+        }
+
+        var user = findUser(userName);
+
+        if (!user) {
+            return { error: "Nincs ilyen nevű felhasználó" };
         }
 
         var userIndex = instance.attendees.indexOf(userName);
 
         if (userIndex === -1) {
-            return { error: "User hasn't signed up for that session"};
+            return { error: "A felhasználó nem iratkozott fel erre az órára"};
         }
 
         instance.attendees.splice(userIndex, 1);
@@ -415,7 +534,7 @@
         saveSchedule();
         saveUsers();
 
-        return "Successfully left the training session";
+        return { message: "A felhasználó sikeresen lemondta az órát" };
     }
 
     router.route("/leave/session/:id")
@@ -445,8 +564,14 @@
 
     function checkAuthentication(req, res, role) {
 
-        if (!req.authenticated || (role && req.authenticatedAs.roles.indexOf(role) === -1)) {
-            res.send({ error: "Unauthorized"});
+        if (!req.authenticated) {
+            res.send({ error: "Hibás felhasználónév vagy jelszó"});
+            return false;
+        }
+
+        if (role && req.authenticatedAs.roles.indexOf(role) === -1) {
+            res.send({ error: "Ehhez a művelethez nincs jogosultsága"});
+            return false;
         }
 
         return true;
@@ -479,7 +604,7 @@
             }
 
             if (isNaN(creditsToAdd) || creditsToAdd < 1) {
-                res.send({ error: "Credits to add should be a positive integer"});
+                res.send({ error: "A kreditekhez csak pozitív egész szám adható"});
                 return;
             }
 
@@ -488,7 +613,7 @@
             var user = findUser(userName);
 
             if(!user) {
-                res.send({ error: "Invalid user name"});
+                res.send({ error: "Nincs ilyen nevű felhasználó"});
                 return;
             }
 
@@ -496,7 +621,7 @@
 
             saveUsers();
 
-            res.send("Credits added successfully");
+            res.send({ message: "Kreditek sikeresen hozáadva" });
 
         });
 
