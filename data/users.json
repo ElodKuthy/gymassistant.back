@@ -36,7 +36,8 @@
         "coach"
       ],
       "credits": 0
-    },    {
+    },
+    {
       "email": "david@testkulturamuhely.hu",
       "userName": "Dávid",
       "roles": [
@@ -44,7 +45,8 @@
         "coach"
       ],
       "credits": 0
-    },    {
+    },
+    {
       "email": "zsolt@testkulturamuhely.hu",
       "userName": "Zsolt",
       "roles": [

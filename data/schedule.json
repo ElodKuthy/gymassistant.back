@@ -27460,6 +27460,9 @@
         "Woodhouse"
       ],
       "participants": [
+        "Cyril Figgis",
+        "Pamela Poovey",
+        "Ray Gillette",
         "Woodhouse"
       ]
     },
@@ -27629,7 +27632,7 @@
       "parent": "72a834c6-abed-4951-a353-383fdd51be3b",
       "name": "Dinamikus Jóga",
       "coach": "Krisztina",
-      "current": 5,
+      "current": 6,
       "max": 10,
       "date": "2014-11-13T06:00:00.000Z",
       "attendees": [
@@ -27637,7 +27640,8 @@
         "Malory Archer",
         "Cheryl Tunt",
         "Pamela Poovey",
-        "Katya Kazanova"
+        "Katya Kazanova",
+        "Sterling Archer"
       ],
       "participants": []
     },
@@ -27646,11 +27650,10 @@
       "parent": "4dc562e9-1fe7-4e9c-bcb5-e2bf805328b5",
       "name": "Haladó Kettlebell",
       "coach": "Albert",
-      "current": 6,
+      "current": 5,
       "max": 12,
       "date": "2014-11-13T16:00:00.000Z",
       "attendees": [
-        "Sterling Archer",
         "Lana Kane",
         "Malory Archer",
         "Cyril Figgis",
