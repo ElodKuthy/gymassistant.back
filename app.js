@@ -30,8 +30,8 @@
     var schedule = jsonFile.readFileSync(__dirname + "/data/schedule.json").schedule;
 
     var options = {
-        key: fs.readFileSync(__dirname + "/ssl/localhost.key.pem"),
-        cert: fs.readFileSync(__dirname + "/ssl/localhost.cert.pem"),
+        key: fs.readFileSync(__dirname + "/ssl/key.pem"),
+        cert: fs.readFileSync(__dirname + "/ssl/cert.pem"),
     };
 
     router.use(function(req, res, next) {
