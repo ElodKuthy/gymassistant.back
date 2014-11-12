@@ -12,7 +12,8 @@
     var util = require("util");
     var uuid = require("node-uuid");
     var fs = require("fs");
-    var validator = require('validator');
+    var validator = require("validator");
+    var https = require("https");
 
     app.use(bodyParser.urlencoded({ extended: true }));
     app.use(bodyParser.json());
@@ -28,7 +29,15 @@
     var trainings = jsonFile.readFileSync(__dirname + "/data/trainings.json").trainings;
     var schedule = jsonFile.readFileSync(__dirname + "/data/schedule.json").schedule;
 
+    var options = {
+        key: fs.readFileSync(__dirname + "/ssl/localhost.key.pem"),
+        cert: fs.readFileSync(__dirname + "/ssl/localhost.cert.pem"),
+    };
+
     router.use(function(req, res, next) {
+
+        res.header("Access-Control-Allow-Origin", "*");
+        res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
 
         console.log(moment().format() + ": " + req.method + " " +  req.connection.remoteAddress + " " + req.originalUrl);
         authenticate(req);
@@ -259,7 +268,6 @@
             var dates = thisWeek();
             var result = fetchSchedule(dates[0], dates[1], req.authenticatedAs);
 
-            result.result = "OK";
             res.json(result);
         });
 
@@ -673,7 +681,8 @@
 
     app.use("/api", router);
 
-    app.listen(port);
-    console.log("Server running at port " + port);
+    https.createServer(options, app).listen(port, function(){
+        console.log("Express server listening on port " + port);
+    });
 
 })();
