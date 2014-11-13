@@ -720,7 +720,7 @@
         });
 
 
-    router.route("/password")
+    router.route("/change/password")
 
         .post(function (req, res) {
 
