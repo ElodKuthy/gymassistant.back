@@ -369,13 +369,19 @@
             return { error: "A felhasználó már feliratkozott" };
         }
 
-        if (user.credits < 1) {
+        if (user.roles.indexOf("coach") > -1) {
+            if (user.userName === instance.coach) {
+                return { error: "Saját órára nem lehet feliratkozni"};
+            }
+        } else if (user.credits.free < 1) {
             return { error: "A felhasználónak nincs több szabad kreditje" };
         }
 
         instance.attendees.push(user.userName);
         instance.current++;
-        user.credits--;
+        if (user.roles.indexOf("coach") === -1) {
+            user.credits.free--;
+        }
         saveSchedule();
         saveUsers();
         return { result : "A felhasználó sikerersen feliratkozott az órára" };
@@ -539,7 +545,9 @@
 
         instance.attendees.splice(userIndex, 1);
         instance.current--;
-        user.credits++;
+        if (user.roles.indexOf("coach") === -1) {
+            user.credits.free ++;
+        }
         saveSchedule();
         saveUsers();
 
