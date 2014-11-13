@@ -8,7 +8,7 @@
         "coach",
         "admin"
       ],
-      "credits": 0
+      "credits": {}
     },
     {
       "email": "albert@testkulturamuhely.hu",
@@ -17,7 +17,7 @@
         "client",
         "coach"
       ],
-      "credits": 0
+      "credits": {}
     },
     {
       "email": "arnold@testkulturamuhely.hu",
@@ -26,7 +26,7 @@
         "client",
         "coach"
       ],
-      "credits": 0
+      "credits": {}
     },
     {
       "email": "krisztina@testkulturamuhely.hu",
@@ -35,7 +35,7 @@
         "client",
         "coach"
       ],
-      "credits": 0
+      "credits": {}
     },
     {
       "email": "david@testkulturamuhely.hu",
@@ -44,7 +44,7 @@
         "client",
         "coach"
       ],
-      "credits": 0
+      "credits": {}
     },
     {
       "email": "zsolt@testkulturamuhely.hu",
@@ -53,7 +53,7 @@
         "client",
         "coach"
       ],
-      "credits": 0
+      "credits": {}
     },
     {
       "email": "sterling.archer@hotmail.com",
@@ -61,7 +61,11 @@
       "roles": [
         "client"
       ],
-      "credits": 12
+      "credits": {
+        "free": 12,
+        "coach": "Albert",
+        "expiry": "2014-12-31T23:00:00.000Z"
+      }
     },
     {
       "email": "lana.kane@hotmail.com",
@@ -69,7 +73,11 @@
       "roles": [
         "client"
       ],
-      "credits": 12
+      "credits": {
+        "free": 12,
+        "coach": "Albert",
+        "expiry": "2014-12-31T23:00:00.000Z"
+      }
     },
     {
       "email": "malory.archer@hotmail.com",
@@ -77,7 +85,11 @@
       "roles": [
         "client"
       ],
-      "credits": 12
+      "credits": {
+        "free": 12,
+        "coach": "Dávid",
+        "expiry": "2014-12-31T23:00:00.000Z"
+      }
     },
     {
       "email": "cyril.figgis@hotmail.com",
@@ -85,7 +97,11 @@
       "roles": [
         "client"
       ],
-      "credits": 12
+      "credits": {
+        "free": 12,
+        "coach": "Krisztina",
+        "expiry": "2014-12-31T23:00:00.000Z"
+      }
     },
     {
       "email": "cheryl.tunt@hotmail.com",
@@ -93,7 +109,11 @@
       "roles": [
         "client"
       ],
-      "credits": 12
+      "credits": {
+        "free": 12,
+        "coach": "Krisztina",
+        "expiry": "2014-12-31T23:00:00.000Z"
+      }
     },
     {
       "email": "pamela.poovey@hotmail.com",
@@ -101,7 +121,11 @@
       "roles": [
         "client"
       ],
-      "credits": 12
+      "credits": {
+        "free": 12,
+        "coach": "Dávid",
+        "expiry": "2014-12-31T23:00:00.000Z"
+      }
     },
     {
       "email": "ray.gillette@hotmail.com",
@@ -109,7 +133,11 @@
       "roles": [
         "client"
       ],
-      "credits": 12
+      "credits": {
+        "free": 12,
+        "coach": "Albert",
+        "expiry": "2014-12-31T23:00:00.000Z"
+      }
     },
     {
       "email": "algernop.krieger@hotmail.com",
@@ -117,7 +145,11 @@
       "roles": [
         "client"
       ],
-      "credits": 12
+      "credits": {
+        "free": 12,
+        "coach": "Albert",
+        "expiry": "2014-12-31T23:00:00.000Z"
+      }
     },
     {
       "email": "woodhouse@hotmail.com",
@@ -125,7 +157,11 @@
       "roles": [
         "client"
       ],
-      "credits": 10
+      "credits": {
+        "free": 12,
+        "coach": "Arnold",
+        "expiry": "2014-12-31T23:00:00.000Z"
+      }
     },
     {
       "email": "ron.cadillac@hotmail.com",
@@ -133,7 +169,11 @@
       "roles": [
         "client"
       ],
-      "credits": 12
+      "credits": {
+        "free": 12,
+        "coach": "Zsolt",
+        "expiry": "2014-12-31T23:00:00.000Z"
+      }
     },
     {
       "email": "katya.kazanova@hotmail.com",
@@ -141,7 +181,11 @@
       "roles": [
         "client"
       ],
-      "credits": 12
+      "credits": {
+        "free": 12,
+        "coach": "Arnold",
+        "expiry": "2014-12-31T23:00:00.000Z"
+      }
     },
     {
       "email": "burt.reynolds@hotmail.com",
@@ -149,7 +193,11 @@
       "roles": [
         "client"
       ],
-      "credits": 12
+      "credits": {
+        "free": 12,
+        "coach": "Zsolt",
+        "expiry": "2014-12-31T23:00:00.000Z"
+      }
     }
   ]
 }

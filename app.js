@@ -277,6 +277,7 @@
         result.push(moment().startOf("day"));
         result.push(moment().startOf("day").add({ days: 1 }));
 
+        result.result = "OK";
         return result;
     }
 
@@ -585,7 +586,7 @@
         return true;
     }
 
-    router.route("/credits")
+    router.route("/my/credits")
 
         .get(function(req, res) {
 
@@ -598,39 +599,103 @@
             res.json(data);
         });
 
-    router.route("/credits/add/:credits/user/:userName")
+    router.route("/credits/of/user/:userName")
 
         .get(function(req, res) {
 
-            if (checkAuthentication(req, res, "coach"))
+            if (!checkAuthentication(req, res, "coach"))
                 return;
 
-            var creditsToAdd = NaN;
-
-            if (validator.isInt(req.param("credits"))) {
-                creditsToAdd = parseInt(req.param("credits"));
-            }
-
-            if (isNaN(creditsToAdd) || creditsToAdd < 1) {
-                res.send({ error: "A kreditekhez csak pozitív egész szám adható"});
-                return;
-            }
+            var data = {};
 
             var userName = req.param("userName");
 
             var user = findUser(userName);
 
-            if(!user) {
-                res.send({ error: "Nincs ilyen nevű felhasználó"});
+            if (!user) {
+                res.send({ error: "Nincs ilyen nevű felhasználó" });
                 return;
             }
 
-            user.credits += creditsToAdd;
+            data.credits = user.credits;
+
+            res.json(data);
+        });
+
+    function addCredits(credits, userName, coach, expiry) {
+
+            var creditsToAdd = NaN;
+
+            if (validator.isInt(credits)) {
+                creditsToAdd = parseInt(credits);
+            }
+
+            if (isNaN(creditsToAdd) || creditsToAdd < 1) {
+                return { error: "A kreditekhez csak pozitív egész szám adható"};
+            }
+
+            var user = findUser(userName);
+
+            if(!user) {
+                return { error: "Nincs ilyen nevű felhasználó"};
+            }
+
+            if(user.roles.indexOf("coach") > -1) {
+                return { error: "Edzőhöz nem adható kredit"};
+            }
+
+            user.credits.free += creditsToAdd;
+            user.credits.coach = coach;
+            user.credits.expiry = moment().startOf("day").add(expiry);
 
             saveUsers();
 
-            res.send({ message: "Kreditek sikeresen hozáadva" });
+            return { credits: user.credits, message: "Kreditek sikeresen hozáadva" };
+    }    
 
+    router.route("/credits/add/:credits/for/today/for/user/:userName")
+
+        .get(function(req, res) {
+
+            if (!checkAuthentication(req, res, "coach"))
+                return;
+
+            var credits = req.param("credits");
+            var userName = req.param("userName");
+            var coach = req.authenticatedAs.userName;
+            var expiry = { day: 1 };
+
+            res.send(addCredits(credits, userName, coach, expiry));
+        });
+
+    router.route("/credits/add/:credits/for/month/for/user/:userName")
+
+        .get(function(req, res) {
+
+            if (!checkAuthentication(req, res, "coach"))
+                return;
+
+            var credits = req.param("credits");
+            var userName = req.param("userName");
+            var coach = req.authenticatedAs.userName;
+            var expiry = { month: 1 };
+
+            res.send(addCredits(credits, userName, coach, expiry));
+        });
+
+    router.route("/credits/add/:credits/for/three/months/for/user/:userName")
+
+        .get(function(req, res) {
+
+            if (!checkAuthentication(req, res, "coach"))
+                return;
+
+            var credits = req.param("credits");
+            var userName = req.param("userName");
+            var coach = req.authenticatedAs.userName;
+            var expiry = { month: 3 };
+
+            res.send(addCredits(credits, userName, coach, expiry));
         });
 
     router.route("/users")
