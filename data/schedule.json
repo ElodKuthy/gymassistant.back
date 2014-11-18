@@ -27762,14 +27762,15 @@
       "parent": "4346059b-c78c-49a4-a4d2-3fd8c5b574a4",
       "name": "Clubbell",
       "coach": "Albert",
-      "current": 4,
+      "current": 5,
       "max": 12,
       "date": "2014-11-14T17:00:00.000Z",
       "attendees": [
         "Sterling Archer",
         "Lana Kane",
         "Cyril Figgis",
-        "Algernop Krieger"
+        "Algernop Krieger",
+        "Woodhouse"
       ],
       "participants": []
     },
@@ -28026,12 +28027,12 @@
       "max": 12,
       "date": "2014-11-19T16:00:00.000Z",
       "attendees": [
-        "Woodhouse",
         "Ron Cadillac",
         "Cyril Figgis",
         "Burt Reynolds",
         "Pamela Poovey",
-        "Ray Gillette"
+        "Ray Gillette",
+        "Woodhouse"
       ],
       "participants": []
     },
@@ -28090,7 +28091,7 @@
       "parent": "72a834c6-abed-4951-a353-383fdd51be3b",
       "name": "Dinamikus Jóga",
       "coach": "Krisztina",
-      "current": 5,
+      "current": 6,
       "max": 10,
       "date": "2014-11-20T06:00:00.000Z",
       "attendees": [
@@ -28098,7 +28099,8 @@
         "Malory Archer",
         "Cheryl Tunt",
         "Pamela Poovey",
-        "Katya Kazanova"
+        "Katya Kazanova",
+        "Woodhouse"
       ],
       "participants": []
     },
@@ -28107,7 +28109,7 @@
       "parent": "4dc562e9-1fe7-4e9c-bcb5-e2bf805328b5",
       "name": "Haladó Kettlebell",
       "coach": "Albert",
-      "current": 6,
+      "current": 7,
       "max": 12,
       "date": "2014-11-20T16:00:00.000Z",
       "attendees": [
@@ -28116,7 +28118,8 @@
         "Malory Archer",
         "Cyril Figgis",
         "Cheryl Tunt",
-        "Pamela Poovey"
+        "Pamela Poovey",
+        "Woodhouse"
       ],
       "participants": []
     },

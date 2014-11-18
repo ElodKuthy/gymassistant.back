@@ -2,9 +2,11 @@
 
 (function () {
 
-    var express = require("express");
-    var app = express();
-    var bodyParser = require("body-parser");
+    var express = require('express');
+    var router = express.Router();
+
+    exports.router = router;
+
     var crypto = require("crypto");
     var moment = require("moment");
     var favicon = require("serve-favicon");
@@ -15,24 +17,10 @@
     var validator = require("validator");
     var https = require("https");
 
-    app.use(bodyParser.urlencoded({ extended: true }));
-    app.use(bodyParser.json());
-
-    app.use(favicon(__dirname + "/public/favicon.ico"));
-
-    var port = process.env.PORT || 9000;
-
-    var router = express.Router();
-
-    var users = jsonFile.readFileSync(__dirname + "/data/users.json").users;
-    var hashes = jsonFile.readFileSync(__dirname + "/data/hashes.json").hashes;
-    var trainings = jsonFile.readFileSync(__dirname + "/data/trainings.json").trainings;
-    var schedule = jsonFile.readFileSync(__dirname + "/data/schedule.json").schedule;
-
-    var options = {
-        key: fs.readFileSync(__dirname + "/ssl/key.pem"),
-        cert: fs.readFileSync(__dirname + "/ssl/cert.pem"),
-    };
+    var users = jsonFile.readFileSync("data/users.json").users;
+    var hashes = jsonFile.readFileSync("data/hashes.json").hashes;
+    var trainings = jsonFile.readFileSync("data/trainings.json").trainings;
+    var schedule = jsonFile.readFileSync("data/schedule.json").schedule;
 
     router.use(function(req, res, next) {
 
@@ -750,12 +738,6 @@
 
     router.get("/", function(req, res) {
         res.json({ message: "GymAssistant REST API" });
-    });
-
-    app.use("/api", router);
-
-    https.createServer(options, app).listen(port, function(){
-        console.log("Express server listening on port " + port);
     });
 
 })();
