@@ -12,6 +12,7 @@ gulp.task("deploy", function () {
         "api/*",
         "data/*",
         "public/*",
+        "routes/*",
         "ssl/*"
     ], { "base" : "." })
         .pipe(gulp.dest("../gymassistant"));
