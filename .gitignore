@@ -1,3 +1,4 @@
+*.sublime-*
 logs/*
 !.gitkeep
 node_modules/
