@@ -1,6 +1,7 @@
-"use strict";
 
 (function () {
+
+    "use strict";
 
     var express = require('express');
     var router = express.Router();
@@ -17,10 +18,10 @@
     var validator = require("validator");
     var https = require("https");
 
-    var users = jsonFile.readFileSync("data/users.json").users;
-    var hashes = jsonFile.readFileSync("data/hashes.json").hashes;
-    var trainings = jsonFile.readFileSync("data/trainings.json").trainings;
-    var schedule = jsonFile.readFileSync("data/schedule.json").schedule;
+    var users = jsonFile.readFileSync(__dirname + "/data/users.json").users;
+    var hashes = jsonFile.readFileSync(__dirname + "/data/hashes.json").hashes;
+    var trainings = jsonFile.readFileSync(__dirname + "/data/trainings.json").trainings;
+    var schedule = jsonFile.readFileSync(__dirname + "/data/schedule.json").schedule;
 
     router.use(function(req, res, next) {
 
@@ -71,7 +72,7 @@
         req.authenticated = false;
         req.authenticatedAs = null;
         isCoach = false;
-        var authorizationHeader = req.headers["authorization"];
+        var authorizationHeader = req.headers.authorization;
 
         try {
 
@@ -161,8 +162,8 @@
 
                     var indexToInsert = 0;
 
-                    while (result.schedule.length > indexToInsert
-                            && moment(result.schedule[indexToInsert].date).isBefore(instance.date))
+                    while (result.schedule.length > indexToInsert &&
+                        moment(result.schedule[indexToInsert].date).isBefore(instance.date))
                         indexToInsert++;
 
                     result.schedule.splice(indexToInsert, 0, instance);
@@ -647,7 +648,7 @@
             saveUsers();
 
             return { credits: user.credits, message: "Kreditek sikeresen hozáadva" };
-    }    
+    }
 
     router.route("/credits/add/:credits/for/today/for/user/:userName")
 
@@ -695,7 +696,7 @@
         });
 
     router.route("/users")
-        
+
         .get(function (req, res) {
 
             if (!checkAuthentication(req, res, "coach"))
@@ -731,7 +732,7 @@
                 saveHashes();
                 res.send("A jelszó sikeresen meg lett változtatva");
             } else {
-                res.send({error: "Nem sikerült megváltoztatni a jelszót"})
+                res.send({error: "Nem sikerült megváltoztatni a jelszót"});
             }
         });
 

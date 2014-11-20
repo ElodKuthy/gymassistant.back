@@ -9,8 +9,7 @@ gulp.task("deploy", function () {
     return gulp.src([
         "package.json",
         "server.js",
-        "api/*",
-        "data/*",
+        "api/**/*",
         "public/*",
         "routes/*",
         "ssl/*"
