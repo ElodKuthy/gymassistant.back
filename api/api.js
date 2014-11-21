@@ -119,6 +119,27 @@
             res.json(result);
         });
 
+    router.route("/user")
+
+        .get(function(req, res) {
+
+            var result = {};
+
+            if (req.authenticated) {
+                result.result = "OK";
+                result.userInfo = req.authenticatedAs;
+            } else {
+                if (req.headers.authorization) {
+                    result.error = "Hibás felhasználónév vagy jelszó";
+                } else {
+                    result.error = "Nincs bejelentkezve";
+                }
+            }
+
+            res.json(result);
+
+    });
+
     router.route("/generate/:year")
 
         .get(function(req, res) {
