@@ -9,10 +9,14 @@
     var roles = require("./../dal/roles.js");
 
     function User(user) {
-      this.userName = user.userName;
-      this.email = user.email;
-      this.roles = user.roles.slice();
-      this.credits = user.credits;
+        this.userName = user.userName;
+        this.email = user.email;
+        this.roles = user.roles.slice();
+        this.credits = user.credits ? {
+            free: user.credits.free,
+            coach: user.credits.coach,
+            expiry: user.credits.expiry
+        } : undefined;
     }
 
     User.prototype.isCoach = function () {
