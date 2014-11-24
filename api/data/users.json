@@ -1,8 +1,8 @@
 {
   "users": [
     {
-      "email": "admin@testkulturamuhely.hu",
       "userName": "admin",
+      "email": "admin@testkulturamuhely.hu",
       "roles": [
         "client",
         "coach",
@@ -11,8 +11,8 @@
       "credits": {}
     },
     {
-      "email": "albert@testkulturamuhely.hu",
       "userName": "Albert",
+      "email": "albert@testkulturamuhely.hu",
       "roles": [
         "client",
         "coach"
@@ -20,8 +20,8 @@
       "credits": {}
     },
     {
-      "email": "arnold@testkulturamuhely.hu",
       "userName": "Arnold",
+      "email": "arnold@testkulturamuhely.hu",
       "roles": [
         "client",
         "coach"
@@ -29,8 +29,8 @@
       "credits": {}
     },
     {
-      "email": "krisztina@testkulturamuhely.hu",
       "userName": "Krisztina",
+      "email": "krisztina@testkulturamuhely.hu",
       "roles": [
         "client",
         "coach"
@@ -38,8 +38,8 @@
       "credits": {}
     },
     {
-      "email": "david@testkulturamuhely.hu",
       "userName": "Dávid",
+      "email": "david@testkulturamuhely.hu",
       "roles": [
         "client",
         "coach"
@@ -47,8 +47,8 @@
       "credits": {}
     },
     {
-      "email": "zsolt@testkulturamuhely.hu",
       "userName": "Zsolt",
+      "email": "zsolt@testkulturamuhely.hu",
       "roles": [
         "client",
         "coach"
@@ -56,8 +56,8 @@
       "credits": {}
     },
     {
-      "email": "sterling.archer@hotmail.com",
       "userName": "Sterling Archer",
+      "email": "sterling.archer@hotmail.com",
       "roles": [
         "client"
       ],
@@ -68,8 +68,8 @@
       }
     },
     {
-      "email": "lana.kane@hotmail.com",
       "userName": "Lana Kane",
+      "email": "lana.kane@hotmail.com",
       "roles": [
         "client"
       ],
@@ -80,8 +80,8 @@
       }
     },
     {
-      "email": "malory.archer@hotmail.com",
       "userName": "Malory Archer",
+      "email": "malory.archer@hotmail.com",
       "roles": [
         "client"
       ],
@@ -92,8 +92,8 @@
       }
     },
     {
-      "email": "cyril.figgis@hotmail.com",
       "userName": "Cyril Figgis",
+      "email": "cyril.figgis@hotmail.com",
       "roles": [
         "client"
       ],
@@ -104,8 +104,8 @@
       }
     },
     {
-      "email": "cheryl.tunt@hotmail.com",
       "userName": "Cheryl Tunt",
+      "email": "cheryl.tunt@hotmail.com",
       "roles": [
         "client"
       ],
@@ -116,8 +116,8 @@
       }
     },
     {
-      "email": "pamela.poovey@hotmail.com",
       "userName": "Pamela Poovey",
+      "email": "pamela.poovey@hotmail.com",
       "roles": [
         "client"
       ],
@@ -128,8 +128,8 @@
       }
     },
     {
-      "email": "ray.gillette@hotmail.com",
       "userName": "Ray Gillette",
+      "email": "ray.gillette@hotmail.com",
       "roles": [
         "client"
       ],
@@ -140,8 +140,8 @@
       }
     },
     {
-      "email": "algernop.krieger@hotmail.com",
       "userName": "Algernop Krieger",
+      "email": "algernop.krieger@hotmail.com",
       "roles": [
         "client"
       ],
@@ -152,8 +152,8 @@
       }
     },
     {
-      "email": "woodhouse@hotmail.com",
       "userName": "Woodhouse",
+      "email": "woodhouse@hotmail.com",
       "roles": [
         "client"
       ],
@@ -164,8 +164,8 @@
       }
     },
     {
-      "email": "ron.cadillac@hotmail.com",
       "userName": "Ron Cadillac",
+      "email": "ron.cadillac@hotmail.com",
       "roles": [
         "client"
       ],
@@ -176,8 +176,8 @@
       }
     },
     {
-      "email": "katya.kazanova@hotmail.com",
       "userName": "Katya Kazanova",
+      "email": "katya.kazanova@hotmail.com",
       "roles": [
         "client"
       ],
@@ -188,8 +188,8 @@
       }
     },
     {
-      "email": "burt.reynolds@hotmail.com",
       "userName": "Burt Reynolds",
+      "email": "burt.reynolds@hotmail.com",
       "roles": [
         "client"
       ],
