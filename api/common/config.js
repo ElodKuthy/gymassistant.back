@@ -5,7 +5,8 @@
 
     var config = jfs.readFileSync(__dirname + "./../../config.json");
 
-    exports.log = config.log;
-
+    module.exports = {
+        log: config.log,
+        db: config.db
+    };
 })();
-

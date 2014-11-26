@@ -1,30 +1,55 @@
 (function () {
-    "use strict";
+    'use strict';
     /*jshint expr: true*/
 
-    var should = require("should");
-    var proxyquire = require("proxyquire");
-    var a = require("a");
+    describe('Configuration', function () {
 
+        var should = require('should');
+        var config = require('./config.js');
 
-    describe("Config", function () {
-
-        var expected = { log: {} };
-
-        var mockFileRead = a.mock();
-        mockFileRead.expect(__dirname + "./../../config.json").return(expected);
-
-        var config = proxyquire("./config", { "jsonfile": { readFileSync : mockFileRead } });
-
-        it("should read the config file", function () {
-            mockFileRead.verify().should.be.ok;
+        it('should be defined', function() {
+            config.should.be.ok;
         });
 
-        describe("Log", function() {
+        describe('Log section', function() {
 
-            it("should return the config log", function () {
-                var log = config.log;
-                log.should.be.equal(expected.log);
+            var log = config.log;
+
+            it('should be defined', function() {
+                log.should.be.ok;
+            });
+
+            it('should include console setting', function () {
+                log.console.should.be.ok;
+            });
+
+            it('should include logFile setting', function () {
+                log.logFile.should.be.ok;
+            });
+
+            it('should include exceptions setting', function () {
+                log.exceptions.should.be.ok;
+            });
+
+            it('should include level setting', function () {
+                log.level.should.be.ok;
+            });
+        });
+
+        describe('DB section', function() {
+
+            var db = config.db;
+
+            it('should be defined', function() {
+                db.should.be.ok;
+            });
+
+            it('should include server setting', function () {
+                db.server.should.be.ok;
+            });
+
+            it('should include name setting', function () {
+                db.name.should.be.ok;
             });
         });
     });
