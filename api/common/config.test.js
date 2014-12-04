@@ -5,7 +5,8 @@
     describe('Configuration', function () {
 
         var should = require('should');
-        var config = require('./config.js');
+        var container = require('../container.js');
+        var config = container.get('config');
 
         it('should be defined', function() {
             config.should.be.ok;

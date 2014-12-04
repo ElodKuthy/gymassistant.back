@@ -1,12 +1,15 @@
 (function () {
-    "use strict";
+    'use strict';
 
-    var jfs = require("jsonfile");
+    module.exports = Config;
 
-    var config = jfs.readFileSync(__dirname + "./../../config.json");
+    Config.$inject = ['plugins'];
+    function Config(plugins) {
+        var self = this;
+        var config = plugins.jsonfile.readFileSync(__dirname + './../../config.json');
 
-    module.exports = {
-        log: config.log,
-        db: config.db
-    };
+        self.log = config.log;
+        self.db = config.db;
+    }
+
 })();
