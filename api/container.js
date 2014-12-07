@@ -15,6 +15,7 @@
     container.register('plugins', require('./common/plugins.js'), 'singleton');
 
     /* data access layer */
+    container.register('series', require('./dal/series.js'));
     container.register('trainings', require('./dal/trainings.js'));
     container.register('users', require('./dal/users.js'));
 

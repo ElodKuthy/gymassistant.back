@@ -37,7 +37,7 @@
                     var password = userNameAndPassword[1];
                     var hashBase64 = self.createHash(password);
 
-                    self.findByName(userName)
+                    users.byNameFull(userName)
                         .then(function (results) {
                             var result = results[0];
                             if (result.hash === hashBase64) {
@@ -127,7 +127,7 @@
                     if (results.length === 0) {
                         deferred.reject(errors.unknownUserName());
                     } else {
-                        deferred.resolve(results);
+                        deferred.resolve(results[0]);
                     }
                 }, function (error) {
                     deferred.reject(error);

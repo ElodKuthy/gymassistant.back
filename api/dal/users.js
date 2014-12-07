@@ -9,6 +9,10 @@
         var q = plugins.q;
         var request = coachUtils.request;
 
+        self.byNameFull = function (name) {
+            return request('GET', '_design/users/_view/byNameFull' + coachUtils.addKey(name));
+        };
+
         self.byName = function (name) {
             return request('GET', '_design/users/_view/byName' + coachUtils.addKey(name));
         };

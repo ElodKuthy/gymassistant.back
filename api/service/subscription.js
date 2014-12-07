@@ -107,8 +107,7 @@
             }
 
             identity.findByName(userName)
-                .then(function (results) {
-                    var user = results[0];
+                .then(function (user) {
 
                     var newCredit = {
                         id: uuid.v4(),

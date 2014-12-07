@@ -107,7 +107,7 @@
 
             q.all([identity.findByName(userName), schedule.findByIdFull(id)])
                 .then(function (results) {
-                    var user = results[0][0];
+                    var user = results[0];
                     var training = results[1];
 
                     var error = validateTraining(training, user, 'add', coach);
@@ -251,7 +251,7 @@
 
             q.all([identity.findByName(userName, true), schedule.findByIdFull(id)])
                 .then(function (results) {
-                    var user = results[0][0];
+                    var user = results[0];
                     var training = results[1];
 
                     var error = validateTraining(training, user, 'remove', coach);
@@ -280,7 +280,7 @@
 
             q.all([identity.findByName(userName, true), schedule.findByIdFull(id)])
                 .then(function (results) {
-                    var user = results[0][0];
+                    var user = results[0];
                     var training = results[1];
 
                     var error = validateTraining(training, user, 'check in', coach);
@@ -310,7 +310,7 @@
 
             q.all([identity.findByName(userName, true), schedule.findByIdFull(id)])
                 .then(function (results) {
-                    var user = results[0][0];
+                    var user = results[0];
                     var training = results[1];
 
                     var error = validateTraining(training, user, 'undo check in', coach);

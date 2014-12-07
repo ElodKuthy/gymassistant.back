@@ -15,6 +15,9 @@
 
     router.use(function(req, res, next) {
 
+        res.header("Access-Control-Allow-Origin", "*");
+        res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+
         var identity = container.get('identity');
 
         log.info(req.method + ' ' + req.originalUrl + ' from: ' + req.connection.remoteAddress);
@@ -327,7 +330,7 @@
         });
 
 
-    /*router.route('/all/users')
+    router.route('/all/users')
 
         .get(function (req, res) {
 
@@ -347,9 +350,29 @@
                         res.json(error);
                     });
             }
-        });*/
+        });
 
+    router.route('/user/:name')
 
+        .get(function (req, res) {
+
+            var identity = container.get('identity');
+
+            var error = identity.checkCoach(req.user);
+
+            if (error) {
+                res.json(error);
+            } else {
+                var name = req.param('name');
+
+                identity.findByName(name)
+                    .then(function(result) {
+                        res.json(result);
+                    }, function(error) {
+                        res.json(error);
+                    });
+            }
+        });
 
     router.route('/add/new/user/with/name/:name/and/email/:email')
 
@@ -396,6 +419,29 @@
             }
         });
 
+    router.route('/my/training/series')
+
+        .get(function(req, res) {
+
+            log.debug('my/training/series');
+
+            var identity = container.get('identity');
+
+            var error = identity.checkCoach(req.user);
+
+            if (error) {
+                res.json(error);
+            } else {
+                var series = container.get('series');
+
+                series.byCoach(req.user.name)
+                    .then(function(result) {
+                        res.json(result);
+                    }, function(error) {
+                        res.json(error);
+                    });
+            }
+        });
 
     router.get('/', function(req, res) {
         res.json({ message: 'GymAssistant REST API' });

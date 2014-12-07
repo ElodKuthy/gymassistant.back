@@ -36,7 +36,6 @@
                 url: url + '/' + (request ? request : ''),
                 body: (body ? JSON.stringify(body) : '')
             }, function(error, response, body) {
-                log.debug('error: ' + error);
                 if (error) {
                     log.error(error);
                     deferred.reject(error);
