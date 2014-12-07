@@ -1,0 +1,12 @@
+{
+  "log": {
+    "console": "true",
+    "logFile": "server.log",
+    "exceptions": "exceptions.log",
+    "level": "debug"
+  },
+  "db": {
+    "server": "http://127.0.0.1:5984/",
+    "name": "gym"
+  }
+}

@@ -1,765 +1,478 @@
 
 (function () {
 
-    "use strict";
+    'use strict';
 
     var express = require('express');
     var router = express.Router();
 
     exports.router = router;
 
-    var crypto = require("crypto");
-    var moment = require("moment");
-    var favicon = require("serve-favicon");
-    var jsonFile = require("jsonfile");
-    var util = require("util");
-    var uuid = require("node-uuid");
-    var fs = require("fs");
-    var validator = require("validator");
-    var https = require("https");
+    var container = require('./container.js');
 
-    var users = jsonFile.readFileSync(__dirname + "/data/users.json").users;
-    var hashes = jsonFile.readFileSync(__dirname + "/data/hashes.json").hashes;
-    var trainings = jsonFile.readFileSync(__dirname + "/data/trainings.json").trainings;
-    var schedule = jsonFile.readFileSync(__dirname + "/data/schedule.json").schedule;
+    var log = container.get('log');
+    var errors = container.get('errors');
 
     router.use(function(req, res, next) {
 
         res.header("Access-Control-Allow-Origin", "*");
         res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
 
-        console.log(moment().format() + ": " + req.method + " " +  req.connection.remoteAddress + " " + req.originalUrl);
-        authenticate(req);
-        console.log(req.authenticated ? ("Authenticated as " + req.authenticatedAs.userName) : ("Not authenticated"));
+        var identity = container.get('identity');
 
-        next();
-    });
-
-    var isCoach = false;
-
-    function findUser(userName, checkEmail) {
-        for (var index = 0; index < users.length; index++) {
-            var current = users[index];
-            if (current.userName === userName || (checkEmail && current.email === userName)) {
-                return current;
-            }
-        }
-    }
-
-    function checkHash(user, hash) {
-        for (var index = 0; user && index < hashes.length; index++){
-            var current = hashes[index];
-            if (current.userName === user.userName && current.hash === hash) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    function setHash(user, hash) {
-        for (var index = 0; user && index < hashes.length; index++){
-            var current = hashes[index];
-            if (current.userName === user.userName) {
-                current.hash = hash;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    function authenticate(req) {
-
-        req.authenticated = false;
-        req.authenticatedAs = null;
-        isCoach = false;
-        var authorizationHeader = req.headers.authorization;
-
-        try {
-
-            var base64 = authorizationHeader.replace("Basic ", "");
-            base64 = new Buffer(base64, "base64");
-            var userNameAndPassword = base64.toString("utf8");
-            console.log(userNameAndPassword);
-            userNameAndPassword = userNameAndPassword.split(":");
-            var userName = userNameAndPassword[0];
-            var password = userNameAndPassword[1];
-            var sha512 = crypto.createHash("sha512");
-            sha512.update(password, "utf8");
-            var hash = sha512.digest(password);
-            var hashBase64 = hash.toString("base64");
-
-            var user = findUser(userName, true);
-
-            if (checkHash(user, hashBase64)) {
-                req.authenticated = true;
-                req.authenticatedAs = user;
-                isCoach = (user.roles.indexOf("coach") > -1);
-            }
-
-        } catch (error) {
-            req.authenticated = false;
-            req.authenticatedAs = null;
-        }
-    }
-
-    router.route("/login")
-
-        .get(function(req, res) {
-
-            var result = {};
-
-            if (req.authenticated) {
-
-                result.result = "OK";
-                result.userInfo = req.authenticatedAs;
-            } else {
-                result.error = "Hibás felhasználónév vagy jelszó";
-            }
-
-            res.json(result);
-        });
-
-    router.route("/user")
-
-        .get(function(req, res) {
-
-            var result = {};
-
-            if (req.authenticated) {
-                result.result = "OK";
-                result.userInfo = req.authenticatedAs;
-            } else {
-                if (req.headers.authorization) {
-                    result.error = "Hibás felhasználónév vagy jelszó";
-                } else {
-                    result.error = "Nincs bejelentkezve";
-                }
-            }
-
-            res.json(result);
-
-    });
-
-    router.route("/generate/:year")
-
-        .get(function(req, res) {
-
-            if (!checkAuthentication(req, res, "admin"))
-                return;
-
-            generateSchedule(req.param("year"));
-
-            res.send({ result: "OK" });
-        });
-
-    function generateSchedule(year) {
-
-        var result = {};
-
-        var firstDate = moment({ year: year }).startOf("year");
-        var lastDate = moment({ year: year }).endOf("year");
-
-        result.schedule = [];
-
-        trainings.forEach(function (training){
-
-            training.dates.forEach(function (offset){
-
-                for (var date = firstDate.clone().day(offset.day).hour(offset.hour);
-                     date.isBefore(lastDate);
-                     date.add({weeks: 1})) {
-
-                    var instance = {
-                        id: uuid.v4(),
-                        parent: training.id,
-                        name: training.name,
-                        coach: training.coach,
-                        current: training.attendees.length,
-                        max: training.max,
-                        date: date.clone(),
-                        attendees: training.attendees.slice(),
-                        participants: date.isBefore(moment(), "day") ?  training.attendees.slice() : []
-                    };
-
-                    var indexToInsert = 0;
-
-                    while (result.schedule.length > indexToInsert &&
-                        moment(result.schedule[indexToInsert].date).isBefore(instance.date))
-                        indexToInsert++;
-
-                    result.schedule.splice(indexToInsert, 0, instance);
-                }
+        log.info(req.method + ' ' + req.originalUrl + ' from: ' + req.connection.remoteAddress);
+        identity.authenticate(req.headers.authorization)
+            .then(function (result) {
+                req.user = result;
+                next();
+            }, function (error) {
+                log.error(error);
+                next();
             });
-        });
 
-        jsonFile.writeFileSync(__dirname + "/data/schedule.json", result);
+    });
 
-        return result;
-    }
+    router.route('/login')
 
-    function fetchSchedule(startDate, endDate, user) {
+        .get(function(req, res) {
 
-        var result = {};
-
-        result.dates = {
-            begin: startDate,
-            end: endDate
-        };
-
-        result.schedule = [];
-
-        var index = 0;
-        while (moment(schedule[index].date).isBefore(startDate) && index < schedule.length) {
-            index++;
-        }
-
-        for (var current = schedule[index];
-             moment(current.date).isBefore(endDate) && index < schedule.length;
-             current = schedule[++index]) {
-
-            var instance = {
-                id: current.id,
-                parent: current.parent,
-                name: current.name,
-                coach: current.coach,
-                current: current.attendees.length,
-                max: current.max,
-                date: current.date,
-                attendees: isCoach ? current.attendees : undefined,
-                participants: isCoach ? current.participants : undefined,
-                signedUp: user ? (current.attendees.indexOf(user.userName) > -1) : false
-            };
-
-            result.schedule.push(instance);
-        }
-
-        return result;
-    }
-
-    function thisWeek() {
-        var result = [];
-
-        result.push(moment().startOf("week").add({ days: 1 }));
-        result.push(moment().startOf("week").add({ days: 7 }));
-
-        return result;
-    }
-
-    function saveSchedule() {
-        var data = {};
-        data.schedule = schedule;
-        jsonFile.writeFileSync(__dirname + "/data/schedule.json", data);
-    }
-
-    function saveUsers() {
-        var data = {};
-        data.users = users;
-        jsonFile.writeFileSync(__dirname + "/data/users.json", data);
-    }
-
-    function saveHashes() {
-        var data = {};
-        data.hashes = hashes;
-        jsonFile.writeFileSync(__dirname + "/data/hashes.json", data);
-    }
-
-    function findInstance(id) {
-        for (var index = 0; index < schedule.length; index++) {
-            if (schedule[index].id === id) {
-                return index;
+            if (req.user) {
+                res.json(req.user);
+            } else {
+                res.json(errors.invalidUserNameOrPassword());
             }
-        }
-    }
-
-    router.route("/schedule")
-
-        .get(function(req, res) {
-
-            var dates = thisWeek();
-            var result = fetchSchedule(dates[0], dates[1], req.authenticatedAs);
-
-            res.json(result);
         });
 
-    function thisDay() {
-        var result = [];
+    router.route('/schedule/this/week')
 
-        result.push(moment().startOf("day"));
-        result.push(moment().startOf("day").add({ days: 1 }));
-
-        result.result = "OK";
-        return result;
-    }
-
-    router.route("/schedule/today")
 
         .get(function(req, res) {
 
-            var dates = thisDay();
-            var result = fetchSchedule(dates[0], dates[1], req.authenticatedAs);
+            var schedule = container.get('schedule');
 
-            result.result = "OK";
-            res.json(result);
+            schedule.thisWeek(req.user)
+                .then(function (result) {
+                    res.json(result);
+                }, function (error) {
+                   res.json(errors.serverError());
+
+                });
         });
 
-    router.route("/schedule/:id")
+
+    router.route('/schedule/today')
 
         .get(function(req, res) {
 
-            if (!checkAuthentication(req, res, "coach"))
-                return;
+            var schedule = container.get('schedule');
 
-            var result = {};
-            var id = req.param("id");
+            schedule.today(req.user)
+                .then(function (result) {
+                    res.json(result);
+                }, function (error) {
+                   res.json(errors.serverError());
+                });
+        });
 
-            var index = findInstance(id);
+    router.route('/schedule/from/:firstDate/to/:lastDate')
 
-            if (!index) {
-                res.send({ error: "Hibás edzés azonosító" });
-                return;
+        .get(function(req, res) {
+
+            var schedule = container.get('schedule');
+            var firstDate = req.param('firstDate');
+            var lastDate = req.param('lastDate');
+
+            schedule.fetch(firstDate, lastDate, req.user)
+                .then(function (result) {
+                    res.json(result);
+                }, function (error) {
+                   res.json(errors.serverError());
+                });
+        });
+
+    router.route('/training/id/:id')
+
+        .get(function(req, res) {
+
+            var identity = container.get('identity');
+
+            var error = identity.checkCoach(req.user);
+
+            if (error) {
+                res.json(error);
+            } else {
+                var id = req.param('id');
+                var schedule = container.get('schedule');
+                schedule.findById(id, req.user)
+                    .then(function (result) {
+                        res.json(result);
+                    }, function (error) {
+                        res.json(error);
+                    });
             }
-
-            var current = schedule[index];
-
-            result.instance = {
-                id: current.id,
-                parent: current.parent,
-                name: current.name,
-                coach: current.coach,
-                current: current.attendees.length,
-                max: current.max,
-                date: current.date,
-                attendees: current.attendees,
-                participants: current.participants
-            };
-
-            result.result = "OK";
-            res.json(result);
         });
 
-
-    router.route("/schedule/:firstDate/:lastDate")
+    router.route('/join/training/id/:id')
 
         .get(function(req, res) {
 
-            var firstDate = moment(req.param("firstDate"));
-            var lastDate = moment(req.param("lastDate"));
+            var identity = container.get('identity');
 
-            var result = fetchSchedule(firstDate, lastDate, req.authenticatedAs);
+            var error = identity.checkLoggedIn(req.user);
 
-            result.result = "OK";
-            res.json(result);
-        });
+            if (error) {
+                res.json(error);
+            } else {
+                var attendees = container.get('attendees');
+                var id = req.param('id');
 
-    function addToTrainingSession(id, userName, tolerance) {
-
-        var index = findInstance(id);
-
-        if (!index) {
-            return { error: "Hibás edzés azonosító" };
-        }
-
-        var instance = schedule[index];
-
-        if (moment().isAfter(instance.date, tolerance)) {
-            return { error: "Ez az óra már véget ért" };
-        }
-
-        if (instance.current === instance.max) {
-            return { error: "Ez az edzés már megtelt" };
-        }
-
-        var user = findUser(userName);
-
-        if (!user) {
-            return { error: "Nincs ilyen nevű felhasználó" };
-        }
-
-        if (instance.attendees.indexOf(userName) > -1) {
-            return { error: "A felhasználó már feliratkozott" };
-        }
-
-        if (user.roles.indexOf("coach") > -1) {
-            if (user.userName === instance.coach) {
-                return { error: "Saját órára nem lehet feliratkozni"};
+                attendees.joinTraining(id, req.user)
+                    .then(function(result) {
+                        res.json(result);
+                    }, function(error) {
+                        res.json(error);
+                    });
             }
-        } else if (user.credits.free < 1) {
-            return { error: "A felhasználónak nincs több szabad kreditje" };
-        }
-
-        instance.attendees.push(user.userName);
-        instance.current++;
-        if (user.roles.indexOf("coach") === -1) {
-            user.credits.free--;
-        }
-        saveSchedule();
-        saveUsers();
-        return { result : "A felhasználó sikerersen feliratkozott az órára" };
-    }
-
-    router.route("/join/session/:id")
-
-        .get(function(req, res) {
-
-            if (!checkAuthentication(req, res))
-                return;
-
-            var id = req.param("id");
-
-            res.send(addToTrainingSession(id, req.authenticatedAs.userName));
-
         });
 
-    router.route("/add/user/:userName/session/:id")
+    router.route('/add/user/:userName/to/training/id/:id')
 
         .get(function(req, res) {
 
-            if (!checkAuthentication(req, res, "coach"))
-                return;
-
-            var id = req.param("id");
-            var userName = req.param("userName");
-
-            res.send(addToTrainingSession(id, userName, "day"));
-
-        });
-
-    function checkInUser(id, userName, tolarence) {
-
-        var index = findInstance(id);
-
-        if (!index) {
-            return { error: "Hibás edzés azonosító" };
-        }
-
-        var instance = schedule[index];
-
-        if (moment().isAfter(instance.date, tolarence ? tolarence : "hour")) {
-            return { error: "Ez az óra már véget ért" };
-        }
-
-        var user = findUser(userName);
-
-        if (!user) {
-            return { error: "Nincs ilyen nevű felhasználó" };
-        }
-
-        if (instance.attendees.indexOf(userName) === -1) {
-            return { error: "A felhasználó nem iratkozott fel erre az órára" };
-        }
-
-        if (instance.participants.indexOf(userName) > -1) {
-            return { error: "A felhasználó már bejelentkezett erre az órára" };
-        }
-
-        instance.participants.push(userName);
-        saveSchedule();
-        return { result: "A felhasználó sikeresen bejelenkezett az órára" };
-    }
-
-
-    router.route("/check/in/user/:userName/session/:id")
-
-        .get(function(req, res) {
-
-            if (!checkAuthentication(req, res, "coach"))
-                return;
-
-            var id = req.param("id");
-            var userName = req.param("userName");
-
-            res.send(checkInUser(id, userName, "day"));
-
-        });
-
-    function undoCheckInUser(id, userName, tolarence) {
-
-        var index = findInstance(id);
-
-        if (!index) {
-            return { error: "Nincs ilyen edzés azonosító" };
-        }
-
-        var instance = schedule[index];
-
-        if (moment().isAfter(instance.date, tolarence ? tolarence : "hour")) {
-            return { error: "Ez az óra már véget ért" };
-        }
-
-        var user = findUser(userName);
-
-        if (!user) {
-            return { error: "Nincs ilyen nevű felhasználó" };
-        }
-
-        if (instance.attendees.indexOf(userName) === -1) {
-            return { error: "A felhasználó nem iratkozott fel erre az órára" };
-        }
-
-        var participantIndex = instance.participants.indexOf(userName);
-
-        if (participantIndex === -1) {
-            return { error: "A felhasználó nem jelentkezett be erre az órára" };
-        }
-
-        instance.participants.splice(participantIndex, 1);
-        saveSchedule();
-        return { result: "A felhasználó bejelenkezése sikeresen visszavonva" };
-    }
-
-    router.route("/undo/check/in/user/:userName/session/:id")
-
-        .get(function(req, res) {
-
-            if (!checkAuthentication(req, res, "coach"))
-                return;
-
-            var id = req.param("id");
-            var userName = req.param("userName");
-
-            res.send(undoCheckInUser(id, userName, "day"));
-
-        });
-
-    function removeFromTrainingSession(id, userName, daysBeforeCanLeave, tolerance) {
-
-        var index = findInstance(id);
-
-        if (!index) {
-            return { error: "Nincs ilyen edzés azonosító" };
-        }
-
-        var instance = schedule[index];
-
-        if (moment().isAfter(instance.date, tolerance)) {
-            return { error: "Ez az óra már véget ért"};
-        }
-
-        var latestLeaveTime = moment().add({days: daysBeforeCanLeave});
-
-        if (latestLeaveTime.isAfter(instance.date, tolerance)) {
-            return { error: "Erről az óráról már túl késő leiratkozni"};
-        }
-
-        var user = findUser(userName);
-
-        if (!user) {
-            return { error: "Nincs ilyen nevű felhasználó" };
-        }
-
-        var userIndex = instance.attendees.indexOf(userName);
-
-        if (userIndex === -1) {
-            return { error: "A felhasználó nem iratkozott fel erre az órára"};
-        }
-
-        instance.attendees.splice(userIndex, 1);
-        instance.current--;
-        if (user.roles.indexOf("coach") === -1) {
-            user.credits.free ++;
-        }
-        saveSchedule();
-        saveUsers();
-
-        return { message: "A felhasználó sikeresen lemondta az órát" };
-    }
-
-    router.route("/leave/session/:id")
-
-        .get(function(req, res) {
-
-            if (!checkAuthentication(req, res))
-                return;
-
-            var id = req.param("id");
-
-            res.send(removeFromTrainingSession(id, req.authenticatedAs.userName, 1));
-        });
-
-    router.route("/remove/user/:userName/session/:id")
-
-        .get(function(req, res) {
-
-            if (!checkAuthentication(req, res, "coach"))
-                return;
-
-            var id = req.param("id");
-            var userName = req.param("userName");
-
-            res.send(removeFromTrainingSession(id, userName, 0, "day"));
-        });
-
-    function checkAuthentication(req, res, role) {
-
-        if (!req.authenticated) {
-            res.send({ error: "Hibás felhasználónév vagy jelszó"});
-            return false;
-        }
-
-        if (role && req.authenticatedAs.roles.indexOf(role) === -1) {
-            res.send({ error: "Ehhez a művelethez nincs jogosultsága"});
-            return false;
-        }
-
-        return true;
-    }
-
-    router.route("/my/credits")
-
-        .get(function(req, res) {
-
-            if (!checkAuthentication(req, res))
-                return;
-
-            var data = {};
-            data.credits = req.authenticatedAs.credits;
-
-            res.json(data);
-        });
-
-    router.route("/credits/of/user/:userName")
-
-        .get(function(req, res) {
-
-            if (!checkAuthentication(req, res, "coach"))
-                return;
-
-            var data = {};
-
-            var userName = req.param("userName");
-
-            var user = findUser(userName);
-
-            if (!user) {
-                res.send({ error: "Nincs ilyen nevű felhasználó" });
-                return;
+            var identity = container.get('identity');
+
+            var error = identity.checkCoach(req.user);
+
+            if (error) {
+                res.json(error);
+            } else {
+                var attendees = container.get('attendees');
+                var userName = req.param('userName');
+                var id = req.param('id');
+
+                attendees.addToTraining(id, userName, req.user)
+                    .then(function(result) {
+                        res.json(result);
+                    }, function(error) {
+                        res.json(error);
+                    });
             }
-
-            data.credits = user.credits;
-
-            res.json(data);
         });
 
-    function addCredits(credits, userName, coach, expiry) {
 
-            var creditsToAdd = NaN;
-
-            if (validator.isInt(credits)) {
-                creditsToAdd = parseInt(credits);
-            }
-
-            if (isNaN(creditsToAdd) || creditsToAdd < 1) {
-                return { error: "A kreditekhez csak pozitív egész szám adható"};
-            }
-
-            var user = findUser(userName);
-
-            if(!user) {
-                return { error: "Nincs ilyen nevű felhasználó"};
-            }
-
-            if(user.roles.indexOf("coach") > -1) {
-                return { error: "Edzőhöz nem adható kredit"};
-            }
-
-            user.credits.free += creditsToAdd;
-            user.credits.coach = coach;
-            user.credits.expiry = moment().startOf("day").add(expiry);
-
-            saveUsers();
-
-            return { credits: user.credits, message: "Kreditek sikeresen hozáadva" };
-    }
-
-    router.route("/credits/add/:credits/for/today/for/user/:userName")
+    router.route('/leave/training/id/:id')
 
         .get(function(req, res) {
 
-            if (!checkAuthentication(req, res, "coach"))
-                return;
+            var identity = container.get('identity');
 
-            var credits = req.param("credits");
-            var userName = req.param("userName");
-            var coach = req.authenticatedAs.userName;
-            var expiry = { day: 1 };
+            var error = identity.checkLoggedIn(req.user);
 
-            res.send(addCredits(credits, userName, coach, expiry));
+            if (error) {
+                res.json(error);
+            } else {
+                var attendees = container.get('attendees');
+                var id = req.param('id');
+
+                attendees.leaveTraining(id, req.user)
+                    .then(function(result) {
+                        res.json(result);
+                    }, function(error) {
+                        res.json(error);
+                    });
+            }
         });
 
-    router.route("/credits/add/:credits/for/month/for/user/:userName")
+    router.route('/remove/user/:userName/from/training/id/:id')
 
         .get(function(req, res) {
 
-            if (!checkAuthentication(req, res, "coach"))
-                return;
+            var identity = container.get('identity');
 
-            var credits = req.param("credits");
-            var userName = req.param("userName");
-            var coach = req.authenticatedAs.userName;
-            var expiry = { month: 1 };
+            var error = identity.checkCoach(req.user);
 
-            res.send(addCredits(credits, userName, coach, expiry));
+            if (error) {
+                res.json(error);
+            } else {
+                var attendees = container.get('attendees');
+                var userName = req.param('userName');
+                var id = req.param('id');
+
+                attendees.removeFromTraining(id, userName, req.user)
+                    .then(function(result) {
+                        res.json(result);
+                    }, function(error) {
+                        res.json(error);
+                    });
+            }
         });
 
-    router.route("/credits/add/:credits/for/three/months/for/user/:userName")
+    router.route('/check/in/user/:userName/to/training/id/:id')
 
         .get(function(req, res) {
 
-            if (!checkAuthentication(req, res, "coach"))
-                return;
+            var identity = container.get('identity');
 
-            var credits = req.param("credits");
-            var userName = req.param("userName");
-            var coach = req.authenticatedAs.userName;
-            var expiry = { month: 3 };
+            var error = identity.checkCoach(req.user);
 
-            res.send(addCredits(credits, userName, coach, expiry));
+            if (error) {
+                res.json(error);
+            } else {
+                var attendees = container.get('attendees');
+                var userName = req.param('userName');
+                var id = req.param('id');
+
+                attendees.checkIn(id, userName, req.user)
+                    .then(function(result) {
+                        res.json(result);
+                    }, function(error) {
+                        res.json(error);
+                    });
+            }
         });
 
-    router.route("/users")
+    router.route('/undo/check/in/user/:userName/for/training/id/:id')
+
+        .get(function(req, res) {
+
+            var identity = container.get('identity');
+
+            var error = identity.checkCoach(req.user);
+
+            if (error) {
+                res.json(error);
+            } else {
+                var attendees = container.get('attendees');
+                var userName = req.param('userName');
+                var id = req.param('id');
+
+                attendees.undoCheckIn(id, userName, req.user)
+                    .then(function(result) {
+                        res.json(result);
+                    }, function(error) {
+                        res.json(error);
+                    });
+            }
+        });
+
+    router.route('/my/credits')
+
+        .get(function(req, res) {
+
+            var identity = container.get('identity');
+
+            var error = identity.checkLoggedIn(req.user);
+
+            if (error) {
+                res.json(error);
+            } else {
+                var credits = container.get('credits');
+
+                credits.getUserCredits(req.user)
+                    .then(function(result) {
+                        res.json(result);
+                    }, function(error) {
+                        res.json(error);
+                    });
+            }
+        });
+
+    router.route('/credits/of/user/:userName')
+
+        .get(function(req, res) {
+
+            var identity = container.get('identity');
+
+            var error = identity.checkCoach(req.user);
+
+            if (error) {
+                res.json(error);
+            } else {
+                var credits = container.get('credits');
+                var userName = req.param('userName');
+
+                credits.getUserCreditsFromName(userName)
+                    .then(function(result) {
+                        res.json(result);
+                    }, function(error) {
+                        res.json(error);
+                    });
+            }
+        });
+
+    router.route('/add/subscription/with/:amount/credits/to/user/:userName/for/:period')
+
+        .get(function(req, res) {
+
+            var identity = container.get('identity');
+
+            var error = identity.checkCoach(req.user);
+
+            if (error) {
+                res.json(error);
+            } else {
+                var subscription = container.get('subscription');
+                var amount = req.param('amount');
+                var userName = req.param('userName');
+                var period = req.param('period');
+                var series = [];
+                if (req.query.series) {
+                    series = req.query.series.split(',');
+                }
+
+                subscription.add(amount, userName, period, series, req.user)
+                    .then(function(result) {
+                        res.json(result);
+                    }, function(error) {
+                        res.json(error);
+                    });
+            }
+        });
+
+    router.route('/add/subscription/with/:amountPerWeek/credits/per/week/to/user/:userName/till/date/:date')
+
+        .get(function(req, res) {
+
+            var identity = container.get('identity');
+
+            var error = identity.checkCoach(req.user);
+
+            if (error) {
+                res.json(error);
+            } else {
+                var subscription = container.get('subscription');
+                var amountPerWeek = req.param('amountPerWeek');
+                var userName = req.param('userName');
+                var date = req.param('date');
+                var series = [];
+                if (req.query.series) {
+                    series = req.query.series.split(',');
+                }
+
+                subscription.addTillDate(amountPerWeek, userName, date, series, req.user)
+                    .then(function(result) {
+                        res.json(result);
+                    }, function(error) {
+                        res.json(error);
+                    });
+            }
+        });
+
+    router.route('/all/users')
 
         .get(function (req, res) {
 
-            if (!checkAuthentication(req, res, "coach"))
-                return;
+            var identity = container.get('identity');
 
-            var result = {};
-            result.users = users;
+            var error = identity.checkCoach(req.user);
 
-            res.json(result);
-        });
-
-
-    router.route("/change/password")
-
-        .post(function (req, res) {
-
-            if(!checkAuthentication(req, res))
-                return;
-
-            var password = req.body.password;
-
-            console.log(req.authenticatedAs.userName);
-            console.log(password);
-
-            var sha512 = crypto.createHash("sha512");
-            sha512.update(password, "utf8");
-            var hash = sha512.digest(password);
-            var hashBase64 = hash.toString("base64");
-            console.log(hashBase64);
-
-
-            if (setHash(req.authenticatedAs, hashBase64)) {
-                saveHashes();
-                res.send("A jelszó sikeresen meg lett változtatva");
+            if (error) {
+                res.json(error);
             } else {
-                res.send({error: "Nem sikerült megváltoztatni a jelszót"});
+                var users = container.get('users');
+
+                users.byName()
+                    .then(function(result) {
+                        res.json(result);
+                    }, function(error) {
+                        res.json(error);
+                    });
             }
         });
 
+    router.route('/user/:name')
 
-    router.get("/", function(req, res) {
-        res.json({ message: "GymAssistant REST API" });
+        .get(function (req, res) {
+
+            var identity = container.get('identity');
+
+            var error = identity.checkCoach(req.user);
+
+            if (error) {
+                res.json(error);
+            } else {
+                var name = req.param('name');
+
+                identity.findByName(name)
+                    .then(function(result) {
+                        res.json(result);
+                    }, function(error) {
+                        res.json(error);
+                    });
+            }
+        });
+
+    router.route('/add/new/user/with/name/:name/and/email/:email')
+
+        .get(function(req, res) {
+
+            var identity = container.get('identity');
+
+            var error = identity.checkCoach(req.user);
+
+            if (error) {
+                res.json(error);
+            } else {
+                var name = req.param('name');
+                var email = req.param('email');
+
+                identity.addUser(name, email)
+                    .then(function(result) {
+                        res.json(result);
+                    }, function(error) {
+                        res.json(error);
+                    });
+            }
+        });
+
+    router.route('/change/password')
+
+        .post(function(req, res) {
+
+            var identity = container.get('identity');
+
+            var error = identity.checkLoggedIn(req.user);
+
+            if (error) {
+                res.json(error);
+            } else {
+                var password = req.body.password;
+
+                identity.changePassword(req.user, password)
+                    .then(function(result) {
+                        res.json(result);
+                    }, function(error) {
+                        res.json(error);
+                    });
+            }
+        });
+
+    router.route('/my/training/series')
+
+        .get(function(req, res) {
+
+            log.debug('my/training/series');
+
+            var identity = container.get('identity');
+
+            var error = identity.checkCoach(req.user);
+
+            if (error) {
+                res.json(error);
+            } else {
+                var series = container.get('series');
+
+                series.byCoach(req.user.name)
+                    .then(function(result) {
+                        res.json(result);
+                    }, function(error) {
+                        res.json(error);
+                    });
+            }
+        });
+
+    router.get('/', function(req, res) {
+        res.json({ message: 'GymAssistant REST API' });
     });
 
 })();
