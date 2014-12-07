@@ -43,7 +43,7 @@
             return deferred.promise;
         }
 
-        function addToSeries(amount, user, period, series, coach) {
+        function addToSeries(amount, user, offset, series, coach) {
             var deferred = q.defer();
 
             if (!series || !series.length || series.length === 0) {
@@ -54,7 +54,7 @@
             var promises = [];
 
             series.forEach(function (current) {
-                promises.push(trainings.bySeriesTillOffset(current, period.days()));
+                promises.push(trainings.bySeriesTillOffset(current, offset));
             });
 
             var trainingsToAdd = [];
@@ -100,7 +100,8 @@
                 return deferred.promise;
             }
 
-            if (!moment.unix(date).isValid() || !moment().isAfter(moment(date).unix())) {
+            var dateParsed = moment.unix(date);
+            if (!dateParsed.isValid() || moment().isAfter(dateParsed)) {
                 deferred.reject(errors.dateIsInPast());
                 return deferred.promise;
             }
@@ -110,7 +111,7 @@
                 .then(function (user) {
 
                     var now = moment();
-                    var expiry = moment(date).endOf('day');
+                    var expiry = moment(dateParsed).endOf('day');
                     var periodParsed = expiry.diff(now, 'week') + 1;
                     var allAmount = amountParsed * periodParsed;
 
@@ -126,7 +127,7 @@
                     users.addCredit(user._id, newCredit)
                         .then(function() {
 
-                            addToSeries(allAmount, user, periodParsed, series, coach)
+                            addToSeries(amountParsed, user, 7 * periodParsed, series, coach)
                                  .then(function (result) {
                                     deferred.resolve(result);
                                 }, function (error) {
@@ -181,7 +182,7 @@
                                         deferred.reject(error);
                                     });
                             } else {
-                                addToSeries(amountParsed, user, periodParsed, series, coach)
+                                addToSeries(amountParsed, user, periodParsed.day(), series, coach)
                                      .then(function (result) {
                                         deferred.resolve(result);
                                     }, function (error) {
