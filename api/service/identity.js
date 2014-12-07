@@ -30,7 +30,7 @@
                 try {
                     var base64 = authorizationHeader.replace('Basic ', '');
                     base64 = new Buffer(base64, 'base64');
-                    var userNameAndPassword = base64.toString('utf8');
+                    var userNameAndPassword = unescape(decodeURIComponent(base64.toString('utf8')));
                     log.debug(userNameAndPassword);
                     userNameAndPassword = userNameAndPassword.split(':');
                     var userName = userNameAndPassword[0];
