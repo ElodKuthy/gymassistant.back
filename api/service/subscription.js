@@ -90,6 +90,59 @@
             return deferred.promise;
         }
 
+        self.addTillDate = function(amountPerWeek, userName, date, series, coach) {
+            var deferred = q.defer();
+
+            var amountParsed = parseInt(amountPerWeek);
+
+            if (isNaN(amountParsed) || amountParsed < 1) {
+                deferred.reject(errors.onlyPositiveIntegers());
+                return deferred.promise;
+            }
+
+            if (!moment.unix(date).isValid() || !moment().isAfter(moment(date).unix())) {
+                deferred.reject(errors.dateIsInPast());
+                return deferred.promise;
+            }
+
+
+            identity.findByName(userName)
+                .then(function (user) {
+
+                    var now = moment();
+                    var expiry = moment(date).endOf('day');
+                    var periodParsed = expiry.diff(now, 'week') + 1;
+                    var allAmount = amountParsed * periodParsed;
+
+                    var newCredit = {
+                        id: uuid.v4(),
+                        date: now.unix(),
+                        expiry: expiry.unix(),
+                        coach: coach.name,
+                        amount: allAmount,
+                        free: allAmount
+                    };
+
+                    users.addCredit(user._id, newCredit)
+                        .then(function() {
+
+                            addToSeries(allAmount, user, periodParsed, series, coach)
+                                 .then(function (result) {
+                                    deferred.resolve(result);
+                                }, function (error) {
+                                    deferred.reject(error);
+                                });
+                        }, function (error) {
+                            deferred.reject(error);
+                        });
+
+                }, function (error) {
+                    deferred.reject(error);
+                });
+
+            return deferred.promise;
+        };
+
         self.add = function(amount, userName, period, series, coach) {
             var deferred = q.defer();
 

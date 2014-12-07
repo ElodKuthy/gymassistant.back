@@ -28,7 +28,8 @@
             userNameAlreadyExist: 'Már van ilyen nevű felhasználó',
             invalidPeriod: 'Ismeretlen periódus',
             notEnoughTrainingsForDailyTicket: 'Nincs ennyi napijeggyel elérhető óra ma',
-            invalidCreditId: 'Ismeretlen kredit azonosító'
+            invalidCreditId: 'Ismeretlen kredit azonosító',
+            dateIsInPast: 'Ez a dátum már elmúlt'
         };
 
         function Error(message) {
@@ -144,6 +145,11 @@
         self.invalidCreditId = function() {
             log.error(errorMessages.invalidCreditId);
             return new Error(errorMessages.invalidCreditId);
+        };
+
+        self.dateIsInPast = function() {
+            log.error(errorMessages.dateIsInPast);
+            return new Error(errorMessages.dateIsInPast);
         };
     }
 })();

@@ -299,7 +299,6 @@
             }
         });
 
-
     router.route('/add/subscription/with/:amount/credits/to/user/:userName/for/:period')
 
         .get(function(req, res) {
@@ -329,6 +328,34 @@
             }
         });
 
+    router.route('/add/subscription/with/:amountPerWeek/credits/per/week/to/user/:userName/till/date/:date')
+
+        .get(function(req, res) {
+
+            var identity = container.get('identity');
+
+            var error = identity.checkCoach(req.user);
+
+            if (error) {
+                res.json(error);
+            } else {
+                var subscription = container.get('subscription');
+                var amountPerWeek = req.param('amountPerWeek');
+                var userName = req.param('userName');
+                var date = req.param('date');
+                var series = [];
+                if (req.query.series) {
+                    series = req.query.series.split(',');
+                }
+
+                subscription.addTillDate(amountPerWeek, userName, date, series, req.user)
+                    .then(function(result) {
+                        res.json(result);
+                    }, function(error) {
+                        res.json(error);
+                    });
+            }
+        });
 
     router.route('/all/users')
 
