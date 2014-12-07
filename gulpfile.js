@@ -9,6 +9,7 @@ gulp.task("deploy", function () {
     return gulp.src([
         "package.json",
         "server.js",
+        "config.json",
         "api/**/*",
         "public/*",
         "routes/*",
@@ -17,4 +18,4 @@ gulp.task("deploy", function () {
         .pipe(gulp.dest("../gymassistant"));
 });
 
-gulp.task("default", ["nodemon"]);
+gulp.task("default", ["deploy"]);
