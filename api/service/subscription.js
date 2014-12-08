@@ -112,7 +112,7 @@
 
                     var now = moment();
                     var expiry = moment(dateParsed).endOf('day');
-                    var periodParsed = expiry.diff(now, 'week') + 1;
+                    var periodParsed = expiry.diff(now, 'days');
                     var allAmount = amountParsed * periodParsed;
 
                     var newCredit = {
@@ -127,7 +127,7 @@
                     users.addCredit(user._id, newCredit)
                         .then(function() {
 
-                            addToSeries(amountParsed, user, 7 * periodParsed, series, coach)
+                            addToSeries(amountParsed, user, periodParsed, series, coach)
                                  .then(function (result) {
                                     deferred.resolve(result);
                                 }, function (error) {
@@ -182,7 +182,7 @@
                                         deferred.reject(error);
                                     });
                             } else {
-                                addToSeries(amountParsed, user, periodParsed.day(), series, coach)
+                                addToSeries(amountParsed, user, periodParsed.days(), series, coach)
                                      .then(function (result) {
                                         deferred.resolve(result);
                                     }, function (error) {
