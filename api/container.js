@@ -6,7 +6,6 @@
 
     module.exports = container;
 
-
     /* common components */
     container.register('coachUtils', require('./common/coach_utils.js'));
     container.register('config', require('./common/config.js'), 'singleton');
