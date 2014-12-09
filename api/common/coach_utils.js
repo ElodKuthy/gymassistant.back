@@ -73,7 +73,7 @@
                     var bodyParsed = JSON.parse(body);
                     if (bodyParsed.error) {
                         log.error(bodyParsed);
-                        deferred.reject(bodyParsed);
+                        deferred.reject(new Error(body));
                     } else if (bodyParsed.rows){
                         var results = [];
                         bodyParsed.rows.forEach(function (row) {
