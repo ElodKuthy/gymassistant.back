@@ -42,7 +42,7 @@
                 }
 
                 function checkError(err) {
-                    if (currentTry <= 10 && err.reason.indexOf('Document update conflict') > -1) {
+                    if (currentTry <= 10 && err.message.indexOf('Document update conflict.') > -1) {
                         self.updateDoc(id, update, currentTry).then(success, error);
                     } else {
                         error(err);

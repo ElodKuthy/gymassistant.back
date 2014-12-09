@@ -260,7 +260,6 @@
 
                     function docUpdateSuccess(result) {
                         try {
-                            console.log(result);
                             expect(result).to.exist;
                             expect(result.ok).to.be.true;
                             expect(result.id).to.be.equal(testId);
