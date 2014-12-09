@@ -54,8 +54,6 @@
             self.getUserCredits(user).then(getUserCreditsSuccess, error);
 
             function getUserCreditsSuccess(credits) {
-                log.debug('credits length: ' + credits.length);
-                log.debug('credits: ' + credits);
                 var creditToBook;
                 if (credits) {
                     for (var index = 0; index < credits.length; index++) {

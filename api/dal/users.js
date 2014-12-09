@@ -71,43 +71,24 @@
             }
         }
 
-        self.decreaseFreeCredit = function(id, creditId, retries) {
-            var deferred = q.defer();
+        self.decreaseFreeCredit = function(id, creditId) {
 
-            var currentTry = isNaN(retries) ? 1 : retries + 1;
-            request('GET', id)
-                .then(function (result) {
-                    var credit = findCreditById(result.credits, creditId);
+            function update(user) {
+                var deferred = q.defer();
 
-                    log.debug('decreaseFreeCredit(id:' + id + ',creditId:' + creditId + ',currentTry:' + currentTry + ',credit:' + JSON.stringify(credit));
+                var credit = findCreditById(user.credits, creditId);
 
-                    if (!credit || credit.free <= 0) {
-                        deferred.reject(errors.noCredit());
-                        return;
-                    }
-
+                if (credit && credit.free > 0) {
                     credit.free--;
+                    deferred.resolve(user);
+                } else {
+                    deferred.reject(errors.noCredit());
+                }
 
-                    request('PUT', id, result)
-                        .then(function (result) {
-                            deferred.resolve(result);
-                        }, function (error) {
-                            if (currentTry <= 10 && error.reason.indexOf('Document update conflict') > -1) {
-                                self.decreaseFreeCredit(id, creditId, currentTry)
-                                    .then(function (result) {
-                                        deferred.resolve(result);
-                                    }, function (error) {
-                                        deferred.reject(error);
-                                    });
-                            } else {
-                                deferred.reject(error);
-                            }
-                        });
-            }, function (error) {
-                deferred.reject(error);
-            });
+                return deferred.promise;
+            }
 
-            return deferred.promise;
+            return coachUtils.updateDoc(id, update);
         };
 
         self.increaseFreeCredit = function(id, creditId, retries) {
@@ -129,7 +110,7 @@
                             deferred.resolve(result);
                         }, function (error) {
                             if (currentTry <= 10 && error.reason.indexOf('Document update conflict') > -1) {
-                                self.decreaseFreeCredit(id, creditId, currentTry)
+                                self.increaseFreeCredit(id, creditId, currentTry)
                                     .then(function (result) {
                                         deferred.resolve(result);
                                     }, function (error) {

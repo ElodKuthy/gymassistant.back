@@ -27,6 +27,36 @@
             return self.request('DELETE', '', '');
         };
 
+        self.updateDoc = function(id, update, retries) {
+            var deferred = q.defer();
+
+            var currentTry = isNaN(retries) ? 1 : retries + 1;
+            self.request('GET', id).then(update, error).then(put, error);
+
+            function put(result) {
+
+                self.request('PUT', id, result).then(success, checkError);
+
+                function success(result) {
+                    deferred.resolve(result);
+                }
+
+                function checkError(err) {
+                    if (currentTry <= 10 && err.reason.indexOf('Document update conflict') > -1) {
+                        self.updateDoc(id, update, currentTry).then(success, error);
+                    } else {
+                        error(err);
+                    }
+                }
+            }
+
+            function error(err) {
+                deferred.reject(err);
+            }
+
+            return deferred.promise;
+        };
+
         self.request = function(method, request, body) {
             var deferred = q.defer();
 
