@@ -62,7 +62,7 @@
         }
 
         self.thisWeek = function(user) {
-            var startDate = moment().startOf('isoWeek').add({ days: 1 }).format();
+            var startDate = moment().startOf('isoWeek').format();
             var endDate = moment().startOf('isoWeek').add({ days: 7 }).format();
 
             return self.fetch(startDate, endDate, user);

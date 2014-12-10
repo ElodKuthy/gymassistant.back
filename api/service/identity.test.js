@@ -83,7 +83,7 @@
 
                 identity.changeEmail(name, invalidEmail).then(emailChanged, expectedError);
 
-                function emailChanged(result) {
+                function emailChanged() {
                     error(new Error('That should not be happened'));
                 }
 
@@ -118,7 +118,7 @@
 
                 identity.changeEmail(name, email).then(emailChanged, expectedError);
 
-                function emailChanged(result) {
+                function emailChanged() {
                     error(new Error('That should not be happened'));
                 }
 
@@ -150,7 +150,7 @@
 
                 identity.changeEmail(name, email).then(emailChanged, expectedError);
 
-                function emailChanged(result) {
+                function emailChanged() {
                     error(new Error('That should not be happened'));
                 }
 
@@ -184,7 +184,7 @@
 
                 identity.changeEmail(name, email).then(emailChanged, expectedError);
 
-                function emailChanged(result) {
+                function emailChanged() {
                     error(new Error('That should not be happened'));
                 }
 

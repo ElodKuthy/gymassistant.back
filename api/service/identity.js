@@ -83,8 +83,8 @@
                 }
             }
 
-            function emailUpdated(result) {
-                deferred.resolve(result);
+            function emailUpdated() {
+                deferred.resolve('Az email címet sikeresen megváltoztattuk');
             }
 
             function error (err) {

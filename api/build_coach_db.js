@@ -16,8 +16,8 @@ function rebuild() {
 
     var deferred = q.defer();
 
-    var firstDate = moment({ year: 2014, month: 11 });
-    var lastDate = moment({ year: 2015, month: 1 }).endOf('month');
+    var firstDate = moment({ year: 2014, month: 11 }).startOf('month').subtract({ hours: 1 });
+    var lastDate = moment({ year: 2015, month: 1 }).endOf('month').subtract({ hours: 1 });
 
     coachUtils.deleteDb().then(build, build);
 

@@ -35,11 +35,11 @@
     router.route('/login')
 
         .get(function(req, res) {
-
+            var response = new Response(res);
             if (req.user) {
-                res.json(req.user);
+                response.success(req.user);
             } else {
-                res.json(errors.invalidUserNameOrPassword());
+                response.error(errors.invalidUserNameOrPassword());
             }
         });
 
@@ -47,115 +47,72 @@
 
 
         .get(function(req, res) {
-
+            var response = new Response(res);
             var schedule = container.get('schedule');
 
-            schedule.thisWeek(req.user)
-                .then(function (result) {
-                    res.json(result);
-                }, function (error) {
-                   res.json(errors.serverError());
-
-                });
+            schedule.thisWeek(req.user).then(response.success, response.error);
         });
 
 
     router.route('/schedule/today')
 
         .get(function(req, res) {
-
+            var response = new Response(res);
             var schedule = container.get('schedule');
 
-            schedule.today(req.user)
-                .then(function (result) {
-                    res.json(result);
-                }, function (error) {
-                   res.json(errors.serverError());
-                });
+            schedule.today(req.user).then(response.success, response.error);
         });
 
     router.route('/schedule/from/:firstDate/to/:lastDate')
 
         .get(function(req, res) {
-
+            var response = new Response(res);
             var schedule = container.get('schedule');
             var firstDate = req.param('firstDate');
             var lastDate = req.param('lastDate');
 
-            schedule.fetch(firstDate, lastDate, req.user)
-                .then(function (result) {
-                    res.json(result);
-                }, function (error) {
-                   res.json(errors.serverError());
-                });
+            schedule.fetch(firstDate, lastDate, req.user).then(response.success, response.error);
         });
 
     router.route('/training/id/:id')
 
         .get(function(req, res) {
-
+            var response = new Response(res);
             var identity = container.get('identity');
 
-            var error = identity.checkCoach(req.user);
-
-            if (error) {
-                res.json(error);
-            } else {
+            if (!response.error(identity.checkCoach(req.user))) {
                 var id = req.param('id');
                 var schedule = container.get('schedule');
-                schedule.findById(id, req.user)
-                    .then(function (result) {
-                        res.json(result);
-                    }, function (error) {
-                        res.json(error);
-                    });
+                schedule.findById(id, req.user).then(response.success, response.error);
             }
         });
 
     router.route('/join/training/id/:id')
 
         .get(function(req, res) {
-
+            var response = new Response(res);
             var identity = container.get('identity');
 
-            var error = identity.checkLoggedIn(req.user);
-
-            if (error) {
-                res.json(error);
-            } else {
+            if (!response.error(identity.checkLoggedIn(req.user))) {
                 var attendees = container.get('attendees');
                 var id = req.param('id');
 
-                attendees.joinTraining(id, req.user)
-                    .then(function(result) {
-                        res.json(result);
-                    }, function(error) {
-                        res.json(error);
-                    });
+                attendees.joinTraining(id, req.user).then(response.success, response.error);
             }
         });
 
     router.route('/add/user/:userName/to/training/id/:id')
 
         .get(function(req, res) {
-
+            var response = new Response(res);
             var identity = container.get('identity');
 
-            var error = identity.checkCoach(req.user);
-
-            if (error) {
-                res.json(error);
-            } else {
+            if (!response.error(identity.checkCoach(req.user))) {
                 var attendees = container.get('attendees');
                 var userName = req.param('userName');
                 var id = req.param('id');
 
-                attendees.addToTraining(id, userName, req.user)
-                    .then(function(result) {
-                        res.json(result);
-                    }, function(error) {
-                        res.json(error);
-                    });
+                attendees.addToTraining(id, userName, req.user).then(response.success, response.error);
             }
         });
 
@@ -163,154 +120,96 @@
     router.route('/leave/training/id/:id')
 
         .get(function(req, res) {
-
+            var response = new Response(res);
             var identity = container.get('identity');
 
-            var error = identity.checkLoggedIn(req.user);
-
-            if (error) {
-                res.json(error);
-            } else {
+            if (!response.error(identity.checkLoggedIn(req.user))) {
                 var attendees = container.get('attendees');
                 var id = req.param('id');
 
-                attendees.leaveTraining(id, req.user)
-                    .then(function(result) {
-                        res.json(result);
-                    }, function(error) {
-                        res.json(error);
-                    });
+                attendees.leaveTraining(id, req.user).then(response.success, response.error);
             }
         });
 
     router.route('/remove/user/:userName/from/training/id/:id')
 
         .get(function(req, res) {
-
+            var response = new Response(res);
             var identity = container.get('identity');
 
-            var error = identity.checkCoach(req.user);
-
-            if (error) {
-                res.json(error);
-            } else {
+            if (!response.error(identity.checkCoach(req.user))) {
                 var attendees = container.get('attendees');
                 var userName = req.param('userName');
                 var id = req.param('id');
 
-                attendees.removeFromTraining(id, userName, req.user)
-                    .then(function(result) {
-                        res.json(result);
-                    }, function(error) {
-                        res.json(error);
-                    });
+                attendees.removeFromTraining(id, userName, req.user).then(response.success, response.error);
             }
         });
 
     router.route('/check/in/user/:userName/to/training/id/:id')
 
         .get(function(req, res) {
-
+            var response = new Response(res);
             var identity = container.get('identity');
 
-            var error = identity.checkCoach(req.user);
-
-            if (error) {
-                res.json(error);
-            } else {
+            if (!response.error(identity.checkCoach(req.user))) {
                 var attendees = container.get('attendees');
                 var userName = req.param('userName');
                 var id = req.param('id');
 
-                attendees.checkIn(id, userName, req.user)
-                    .then(function(result) {
-                        res.json(result);
-                    }, function(error) {
-                        res.json(error);
-                    });
+                attendees.checkIn(id, userName, req.user).then(response.success, response.error);
             }
         });
 
     router.route('/undo/check/in/user/:userName/for/training/id/:id')
 
         .get(function(req, res) {
-
+            var response = new Response(res);
             var identity = container.get('identity');
 
-            var error = identity.checkCoach(req.user);
-
-            if (error) {
-                res.json(error);
-            } else {
+            if (!response.error(identity.checkCoach(req.user))) {
                 var attendees = container.get('attendees');
                 var userName = req.param('userName');
                 var id = req.param('id');
 
-                attendees.undoCheckIn(id, userName, req.user)
-                    .then(function(result) {
-                        res.json(result);
-                    }, function(error) {
-                        res.json(error);
-                    });
+                attendees.undoCheckIn(id, userName, req.user).then(response.success, response.error);
             }
         });
 
     router.route('/my/credits')
 
         .get(function(req, res) {
-
+            var response = new Response(res);
             var identity = container.get('identity');
 
-            var error = identity.checkLoggedIn(req.user);
-
-            if (error) {
-                res.json(error);
-            } else {
+            if (!response.error(identity.checkLoggedIn(req.user))) {
                 var credits = container.get('credits');
 
-                credits.getUserCredits(req.user)
-                    .then(function(result) {
-                        res.json(result);
-                    }, function(error) {
-                        res.json(error);
-                    });
+                credits.getUserCredits(req.user).then(response.success, response.error);
             }
         });
 
     router.route('/credits/of/user/:userName')
 
         .get(function(req, res) {
-
+            var response = new Response(res);
             var identity = container.get('identity');
 
-            var error = identity.checkCoach(req.user);
-
-            if (error) {
-                res.json(error);
-            } else {
+            if (!response.error(identity.checkCoach(req.user))) {
                 var credits = container.get('credits');
                 var userName = req.param('userName');
 
-                credits.getUserCreditsFromName(userName)
-                    .then(function(result) {
-                        res.json(result);
-                    }, function(error) {
-                        res.json(error);
-                    });
+                credits.getUserCreditsFromName(userName).then(response.success, response.error);
             }
         });
 
     router.route('/add/subscription/with/:amount/credits/to/user/:userName/for/:period')
 
         .get(function(req, res) {
-
+            var response = new Response(res);
             var identity = container.get('identity');
 
-            var error = identity.checkCoach(req.user);
-
-            if (error) {
-                res.json(error);
-            } else {
+            if (!response.error(identity.checkCoach(req.user))) {
                 var subscription = container.get('subscription');
                 var amount = req.param('amount');
                 var userName = req.param('userName');
@@ -320,26 +219,17 @@
                     series = req.query.series.split(',');
                 }
 
-                subscription.add(amount, userName, period, series, req.user)
-                    .then(function(result) {
-                        res.json(result);
-                    }, function(error) {
-                        res.json(error);
-                    });
+                subscription.add(amount, userName, period, series, req.user).then(response.success, response.error);
             }
         });
 
     router.route('/add/subscription/with/:amountPerWeek/credits/per/week/to/user/:userName/till/date/:date')
 
         .get(function(req, res) {
-
+            var response = new Response(res);
             var identity = container.get('identity');
 
-            var error = identity.checkCoach(req.user);
-
-            if (error) {
-                res.json(error);
-            } else {
+            if (!response.error(identity.checkCoach(req.user))) {
                 var subscription = container.get('subscription');
                 var amountPerWeek = req.param('amountPerWeek');
                 var userName = req.param('userName');
@@ -349,144 +239,104 @@
                     series = req.query.series.split(',');
                 }
 
-                subscription.addTillDate(amountPerWeek, userName, date, series, req.user)
-                    .then(function(result) {
-                        res.json(result);
-                    }, function(error) {
-                        res.json(error);
-                    });
+                subscription.addTillDate(amountPerWeek, userName, date, series, req.user).then(response.success, response.error);
             }
         });
 
     router.route('/all/users')
 
         .get(function (req, res) {
-
+            var response = new Response(res);
             var identity = container.get('identity');
 
-            var error = identity.checkCoach(req.user);
-
-            if (error) {
-                res.json(error);
-            } else {
+            if (!response.error(identity.checkCoach(req.user))) {
                 var users = container.get('users');
 
-                users.byName()
-                    .then(function(result) {
-                        res.json(result);
-                    }, function(error) {
-                        res.json(error);
-                    });
+                users.byName().then(response.success, response.error);
             }
         });
 
     router.route('/user/:name')
 
         .get(function (req, res) {
-
+            var response = new Response(res);
             var identity = container.get('identity');
 
-            var error = identity.checkCoach(req.user);
-
-            if (error) {
-                res.json(error);
-            } else {
+            if (!response.error(identity.checkCoach(req.user))) {
                 var name = req.param('name');
 
-                identity.findByName(name)
-                    .then(function(result) {
-                        res.json(result);
-                    }, function(error) {
-                        res.json(error);
-                    });
+                identity.findByName(name).then(response.success, response.error);
             }
         });
 
     router.route('/add/new/user/with/name/:name/and/email/:email')
 
         .get(function(req, res) {
-
+            var response = new Response(res);
             var identity = container.get('identity');
 
-            var error = identity.checkCoach(req.user);
-
-            if (error) {
-                res.json(error);
-            } else {
+            if (!response.error(identity.checkCoach(req.user))) {
                 var name = req.param('name');
                 var email = req.param('email');
 
-                identity.addUser(name, email)
-                    .then(function(result) {
-                        res.json(result);
-                    }, function(error) {
-                        res.json(error);
-                    });
+                identity.addUser(name, email).then(response.success, response.error);
             }
         });
 
     router.route('/change/password')
 
         .post(function(req, res) {
-
+            var response = new Response(res);
             var identity = container.get('identity');
 
-            var error = identity.checkLoggedIn(req.user);
-
-            if (error) {
-                res.json(error);
-            } else {
+            if (!response.error(identity.checkLoggedIn(req.user))) {
                 var password = req.body.password;
-
-                identity.changePassword(req.user, password)
-                    .then(function(result) {
-                        res.json(result);
-                    }, function(error) {
-                        res.json(error);
-                    });
+                identity.changePassword(req.user, password).then(response.success, response.error);
             }
         });
 
     router.route('/my/training/series')
 
         .get(function(req, res) {
-
+            var response = new Response(res);
             var identity = container.get('identity');
 
-            var error = identity.checkCoach(req.user);
-
-            if (error) {
-                res.json(error);
-            } else {
+            if (!response.error(identity.checkCoach(req.user))) {
                 var series = container.get('series');
-
-                series.byCoach(req.user.name)
-                    .then(function(result) {
-                        res.json(result);
-                    }, function(error) {
-                        res.json(error);
-                    });
+                series.byCoach(req.user.name).then(response.success, response.error);
             }
         });
 
     router.route('/change/email/of/user/:name/to/:email')
 
         .get(function(req, res) {
+            var response = new Response(res);
             var identity = container.get('identity');
 
-            var error = identity.checkCoach(req.user);
-
-            if (error) {
-                res.json(error);
-            } else {
+            if (!response.error(identity.checkCoach(req.user))) {
                 var name = req.param('name');
                 var email = req.param('email');
-                identity.changeEmail(name, email);
+                identity.changeEmail(name, email).then(response.success, response.error);
             }
         });
 
     router.get('/', function(req, res) {
         res.json({ message: 'GymAssistant REST API' });
     });
+
+    function Response (res) {
+        var self = this;
+
+        self.success = function (result) {
+            res.json(result);
+        };
+
+        self.error = function (err) {
+            if (err) {
+                res.send({ error : err.message });
+            }
+            return err;
+        };
+    }
 
 })();
