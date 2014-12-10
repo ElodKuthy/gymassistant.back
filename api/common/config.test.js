@@ -4,12 +4,12 @@
 
     describe('Configuration', function () {
 
-        var should = require('should');
+        var expect = require('chai').expect;
         var container = require('../container.js');
         var config = container.get('config');
 
         it('should be defined', function() {
-            config.should.be.ok;
+            expect(config).to.exist;
         });
 
         describe('Log section', function() {
@@ -17,23 +17,23 @@
             var log = config.log;
 
             it('should be defined', function() {
-                log.should.be.ok;
+                expect(log).to.exist;
             });
 
             it('should include console setting', function () {
-                log.console.should.be.ok;
+                expect(log).to.have.property('console');
             });
 
             it('should include logFile setting', function () {
-                log.logFile.should.be.ok;
+                expect(log).to.have.property('logFile');
             });
 
             it('should include exceptions setting', function () {
-                log.exceptions.should.be.ok;
+                expect(log).to.have.property('exceptions');
             });
 
             it('should include level setting', function () {
-                log.level.should.be.ok;
+                expect(log).to.have.property('level');
             });
         });
 
@@ -42,15 +42,15 @@
             var db = config.db;
 
             it('should be defined', function() {
-                db.should.be.ok;
+                expect(db).to.exist;
             });
 
             it('should include server setting', function () {
-                db.server.should.be.ok;
+                expect(db).to.have.property('server');
             });
 
             it('should include name setting', function () {
-                db.name.should.be.ok;
+                expect(db).to.have.property('name');
             });
         });
     });

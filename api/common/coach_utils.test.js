@@ -14,8 +14,9 @@
         var config = container.get('config');
 
         var logMock = {
-            debug: function () {},
-            error: function () {}
+            debug: function (message) { console.log('debug: ' + message); },
+            error: function (message) { console.log('error: ' + message); },
+            info: function (message) { console.log('info: ' + message); }
         };
 
         var configMock = {

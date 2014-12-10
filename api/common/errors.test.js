@@ -3,7 +3,6 @@
     /*jshint expr: true*/
 
     var should = require('should');
-    var proxyquire = require('proxyquire');
     var a = require('a');
 
     describe('Errors', function () {
