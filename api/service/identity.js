@@ -11,6 +11,7 @@
         var moment = plugins.moment;
         var uuid = plugins.uuid;
         var generatePassword = plugins.generatePassword;
+        var validator = plugins.validator;
 
         self.createHash = function (password) {
             var sha512 = crypto.createHash('sha512');
@@ -60,6 +61,34 @@
                     log.error(error.stack);
                     deferred.reject(errors.invalidUserNameOrPassword);
                 }
+            }
+
+            return deferred.promise;
+        };
+
+        self.changeEmail = function(name, email) {
+            var deferred = q.defer();
+
+            if (validator.isEmail(email)) {
+                self.findByName(name).then(userFound, error);
+            } else {
+                error(errors.invalidEmailFormat());
+            }
+
+            function userFound(user) {
+                try {
+                    users.updateEmail(user._id, email).then(emailUpdated, error);
+                } catch (err) {
+                    error(err);
+                }
+            }
+
+            function emailUpdated(result) {
+                deferred.resolve(result);
+            }
+
+            function error (err) {
+                deferred.reject(err);
             }
 
             return deferred.promise;
@@ -122,16 +151,23 @@
         self.findByName = function (name) {
             var deferred = q.defer();
 
-            users.byName(name)
-                .then(function (results) {
+            users.byName(name).then(byName, error);
+
+            function byName(results) {
+                try {
                     if (results.length === 0) {
                         deferred.reject(errors.unknownUserName());
                     } else {
                         deferred.resolve(results[0]);
                     }
-                }, function (error) {
-                    deferred.reject(error);
-                });
+                } catch (err) {
+                    error(err);
+                }
+            }
+
+            function error(err) {
+                deferred.reject(err);
+            }
 
             return deferred.promise;
         };

@@ -16,6 +16,7 @@
         self.moment = require('moment');
         self.crypto = require('crypto');
         self.generatePassword = require('password-generator');
+        self.validator = require('validator');
     }
 
 })();

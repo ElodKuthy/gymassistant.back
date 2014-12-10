@@ -29,13 +29,9 @@
             invalidPeriod: 'Ismeretlen periódus',
             notEnoughTrainingsForDailyTicket: 'Nincs ennyi napijeggyel elérhető óra ma',
             invalidCreditId: 'Ismeretlen kredit azonosító',
-            dateIsInPast: 'Ez a dátum már elmúlt'
+            dateIsInPast: 'Ez a dátum már elmúlt',
+            invalidEmailFormat: 'Érvénytelen email cím formátum'
         };
-
-        function Error(message) {
-            this.error = {};
-            this.error.message = message;
-        }
 
         self.serverError = function () {
             log.error(errorMessages.serverError);
@@ -150,6 +146,11 @@
         self.dateIsInPast = function() {
             log.error(errorMessages.dateIsInPast);
             return new Error(errorMessages.dateIsInPast);
+        };
+
+        self.invalidEmailFormat = function() {
+            log.error(errorMessages.invalidEmailFormat);
+            return new Error(errorMessages.invalidEmailFormat);
         };
     }
 })();

@@ -451,8 +451,6 @@
 
         .get(function(req, res) {
 
-            log.debug('my/training/series');
-
             var identity = container.get('identity');
 
             var error = identity.checkCoach(req.user);
@@ -468,6 +466,22 @@
                     }, function(error) {
                         res.json(error);
                     });
+            }
+        });
+
+    router.route('/change/email/of/user/:name/to/:email')
+
+        .get(function(req, res) {
+            var identity = container.get('identity');
+
+            var error = identity.checkCoach(req.user);
+
+            if (error) {
+                res.json(error);
+            } else {
+                var name = req.param('name');
+                var email = req.param('email');
+                identity.changeEmail(name, email);
             }
         });
 

@@ -130,5 +130,22 @@
         self.add = function(user) {
             return request('PUT', user._id, user);
         };
+
+        self.updateEmail = function(id, email) {
+
+            function update (user) {
+                var deferred = q.defer();
+                try {
+                    user.email = email;
+                    deferred.resolve(user);
+                } catch (err) {
+                    deferred.reject(err);
+                }
+
+                return deferred.promise;
+            }
+
+            return coachUtils.updateDoc(id, update);
+        };
     }
 })();

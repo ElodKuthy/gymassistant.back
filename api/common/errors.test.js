@@ -11,7 +11,7 @@
         stubLog.error = a.mock();
         var Errors = require('./errors.js');
         var errors = new Errors(stubLog);
-        var result;
+        var error;
 
         describe('Invalid user name or password', function() {
 
@@ -19,13 +19,13 @@
 
             before(function() {
                 stubLog.error.expect(expected);
-                result = errors.invalidUserNameOrPassword();
+                error = errors.invalidUserNameOrPassword();
             });
             it('should log error', function () {
                 stubLog.error.verify().should.be.ok;
             });
             it('should return error message', function () {
-                result.error.message.should.be.equal(expected);
+                error.message.should.be.equal(expected);
             });
         });
 
@@ -35,13 +35,13 @@
 
             before(function() {
                 stubLog.error.expect(expected);
-                result = errors.unauthorized();
+                error = errors.unauthorized();
             });
             it('should log error', function () {
                 stubLog.error.verify().should.be.ok;
             });
             it('should return error message', function () {
-                result.error.message.should.be.equal(expected);
+                error.message.should.be.equal(expected);
             });
         });
 
@@ -51,13 +51,13 @@
 
             before(function() {
                 stubLog.error.expect(expected);
-                result = errors.invalidTrainingId();
+                error = errors.invalidTrainingId();
             });
             it('should log error', function () {
                 stubLog.error.verify().should.be.ok;
             });
             it('should return error message', function () {
-                result.error.message.should.be.equal(expected);
+                error.message.should.be.equal(expected);
             });
         });
 
@@ -67,13 +67,13 @@
 
             before(function() {
                 stubLog.error.expect(expected);
-                result = errors.trainingEnded();
+                error = errors.trainingEnded();
             });
             it('should log error', function () {
                 stubLog.error.verify().should.be.ok;
             });
             it('should return error message', function () {
-                result.error.message.should.be.equal(expected);
+                error.message.should.be.equal(expected);
             });
         });
 
@@ -83,13 +83,13 @@
 
             before(function() {
                 stubLog.error.expect(expected);
-                result = errors.trainingFull();
+                error = errors.trainingFull();
             });
             it('should log error', function () {
                 stubLog.error.verify().should.be.ok;
             });
             it('should return error message', function () {
-                result.error.message.should.be.equal(expected);
+                error.message.should.be.equal(expected);
             });
         });
 
@@ -99,13 +99,13 @@
 
             before(function() {
                 stubLog.error.expect(expected);
-                result = errors.unknownUserName();
+                error = errors.unknownUserName();
             });
             it('should log error', function () {
                 stubLog.error.verify().should.be.ok;
             });
             it('should return error message', function () {
-                result.error.message.should.be.equal(expected);
+                error.message.should.be.equal(expected);
             });
         });
 
@@ -115,13 +115,13 @@
 
             before(function() {
                 stubLog.error.expect(expected);
-                result = errors.alreadySignedUp();
+                error = errors.alreadySignedUp();
             });
             it('should log error', function () {
                 stubLog.error.verify().should.be.ok;
             });
             it('should return error message', function () {
-                result.error.message.should.be.equal(expected);
+                error.message.should.be.equal(expected);
             });
         });
 
@@ -131,13 +131,13 @@
 
             before(function() {
                 stubLog.error.expect(expected);
-                result = errors.selfAttend();
+                error = errors.selfAttend();
             });
             it('should log error', function () {
                 stubLog.error.verify().should.be.ok;
             });
             it('should return error message', function () {
-                result.error.message.should.be.equal(expected);
+                error.message.should.be.equal(expected);
             });
         });
 
@@ -147,13 +147,13 @@
 
             before(function() {
                 stubLog.error.expect(expected);
-                result = errors.noCredit();
+                error = errors.noCredit();
             });
             it('should log error', function () {
                 stubLog.error.verify().should.be.ok;
             });
             it('should return error message', function () {
-                result.error.message.should.be.equal(expected);
+                error.message.should.be.equal(expected);
             });
         });
 
@@ -163,13 +163,13 @@
 
             before(function() {
                 stubLog.error.expect(expected);
-                result = errors.notSignedUp();
+                error = errors.notSignedUp();
             });
             it('should log error', function () {
                 stubLog.error.verify().should.be.ok;
             });
             it('should return error message', function () {
-                result.error.message.should.be.equal(expected);
+                error.message.should.be.equal(expected);
             });
         });
 
@@ -179,13 +179,13 @@
 
             before(function() {
                 stubLog.error.expect(expected);
-                result = errors.alreadyCheckedIn();
+                error = errors.alreadyCheckedIn();
             });
             it('should log error', function () {
                 stubLog.error.verify().should.be.ok;
             });
             it('should return error message', function () {
-                result.error.message.should.be.equal(expected);
+                error.message.should.be.equal(expected);
             });
         });
 
@@ -195,13 +195,13 @@
 
             before(function() {
                 stubLog.error.expect(expected);
-                result = errors.notCheckedIn();
+                error = errors.notCheckedIn();
             });
             it('should log error', function () {
                 stubLog.error.verify().should.be.ok;
             });
             it('should return error message', function () {
-                result.error.message.should.be.equal(expected);
+                error.message.should.be.equal(expected);
             });
         });
 
@@ -211,13 +211,13 @@
 
             before(function() {
                 stubLog.error.expect(expected);
-                result = errors.toLateToLeave();
+                error = errors.toLateToLeave();
             });
             it('should log error', function () {
                 stubLog.error.verify().should.be.ok;
             });
             it('should return error message', function () {
-                result.error.message.should.be.equal(expected);
+                error.message.should.be.equal(expected);
             });
         });
 
@@ -227,13 +227,13 @@
 
             before(function() {
                 stubLog.error.expect(expected);
-                result = errors.onlyPositiveIntegers();
+                error = errors.onlyPositiveIntegers();
             });
             it('should log error', function () {
                 stubLog.error.verify().should.be.ok;
             });
             it('should return error message', function () {
-                result.error.message.should.be.equal(expected);
+                error.message.should.be.equal(expected);
             });
         });
 
@@ -243,13 +243,13 @@
 
             before(function() {
                 stubLog.error.expect(expected);
-                result = errors.passwordChangeFailed();
+                error = errors.passwordChangeFailed();
             });
             it('should log error', function () {
                 stubLog.error.verify().should.be.ok;
             });
             it('should return error message', function () {
-                result.error.message.should.be.equal(expected);
+                error.message.should.be.equal(expected);
             });
         });
 
