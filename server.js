@@ -15,13 +15,16 @@ var express = require('express'),
 
 var app = module.exports = express();
 
+var container = require('./api/container.js')('config.json');
+var config = container.get('config');
 
 /**
  * Configuration
  */
 
+
 // all environments
-app.set('port', process.env.PORT || 8000);
+app.set('port', process.env.PORT || config.server.port);
 app.set('views', __dirname + '/views');
 app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');

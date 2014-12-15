@@ -10,6 +10,7 @@
 
         self.log = config.log;
         self.db = config.db;
+        self.server = config.server;
     }
 
 })();

@@ -8,5 +8,8 @@
   "db": {
     "server": "http://127.0.0.1:5984/",
     "name": "test_gym"
+  },
+  "server": {
+    "port": 9000
   }
 }

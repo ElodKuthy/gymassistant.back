@@ -4,8 +4,8 @@
 
     describe('Configuration', function () {
 
-        var expect = require('chai').expect;
         var container = require('../container.js')('test_config.json');
+        var expect = container.get('plugins').expect;
         var config = container.get('config');
 
         it('should be defined', function() {
@@ -51,6 +51,19 @@
 
             it('should include name setting', function () {
                 expect(db).to.have.property('name');
+            });
+        });
+
+        describe('Server section', function() {
+
+            var server = config.server;
+
+            it('should be defined', function() {
+                expect(server).to.exist;
+            });
+
+            it('should include server setting', function () {
+                expect(server).to.have.property('port');
             });
         });
     });
