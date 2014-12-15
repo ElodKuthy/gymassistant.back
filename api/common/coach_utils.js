@@ -1,8 +1,6 @@
 (function () {
     'use strict';
 
-    var container = require('../container.js');
-
     module.exports = Utils;
 
     Utils.$inject = ['log', 'plugins', 'config'];
@@ -55,6 +53,14 @@
             }
 
             return deferred.promise;
+        };
+
+        self.get = function (request) {
+            return self.request('GET', request);
+        };
+
+        self.put = function(request, body) {
+            return self.request('PUT', request, body);
         };
 
         self.request = function(method, request, body) {

@@ -1,8 +1,6 @@
 (function () {
     'use strict';
 
-    var container = require('../container.js');
-
     module.exports = Plugins;
 
     function Plugins () {
@@ -17,6 +15,8 @@
         self.crypto = require('crypto');
         self.generatePassword = require('password-generator');
         self.validator = require('validator');
+        self.expect = require('chai').expect;
+        self.a = require('a');
     }
 
 })();

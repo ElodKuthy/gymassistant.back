@@ -1,4 +1,4 @@
-var container = require('./container.js');
+var container = require('./container.js')('config.json');
 
 var plugins = container.get('plugins');
 var request = plugins.request;

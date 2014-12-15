@@ -28,6 +28,23 @@
             return request('GET', '_design/trainings/_view/bySeriesAndDate' + keys);
         };
 
+        self.updateStatus = function (id, status) {
+
+            function update (training) {
+                var deferred = q.defer();
+                try {
+                    training.status = status;
+                    deferred.resolve(training);
+                } catch (err) {
+                    deferred.reject(err);
+                }
+
+                return deferred.promise;
+            }
+
+            return coachUtils.updateDoc(id, update);
+        };
+
         self.updateAttendees = function(id, attendees) {
             var deferred = q.defer();
 

@@ -1,15 +1,13 @@
 (function () {
     'use strict';
 
-    module.exports = Schedule;
+    module.exports = TrainingService;
 
-    Schedule.$inject = ['plugins', 'coachUtils', 'trainings', 'log', 'roles', 'errors'];
-    function Schedule(plugins, coachUtils, trainings, log, roles, errors) {
+    TrainingService.$inject = ['plugins', 'trainings', 'log', 'roles', 'errors'];
+    function TrainingService(plugins, trainings, log, roles, errors) {
         var self = this;
         var moment = plugins.moment;
         var q = plugins.q;
-        var request = coachUtils.request;
-        var addKey = coachUtils.addKey;
 
         self.isAttendee = function (training, user) {
             if (user && user.name) {
@@ -61,21 +59,7 @@
             return result;
         }
 
-        self.thisWeek = function(user) {
-            var startDate = moment().startOf('isoWeek').format();
-            var endDate = moment().startOf('isoWeek').add({ days: 7 }).format();
-
-            return self.fetch(startDate, endDate, user);
-        };
-
-        self.today = function(user) {
-            var startDate = moment().startOf('day').format();
-            var endDate = moment().startOf('day').add({ days: 1 }).format();
-
-            return self.fetch(startDate, endDate, user);
-        };
-
-        self.fetch = function(startDate, endDate, user) {
+        self.findByDate = function(startDate, endDate, user) {
 
             var deferred = q.defer();
 
@@ -93,7 +77,8 @@
                     console.log(user);
                     var results = [];
                     trainings.forEach(function (training) {
-                        results.push(convertTraining(training, user));
+                        if (training.status != 'cancel')
+                            results.push(convertTraining(training, user));
                     });
 
                     deferred.resolve(results);
@@ -125,6 +110,9 @@
 
             return deferred.promise;
         };
-    }
 
+        self.cancel = function (id) {
+            return trainings.updateStatus(id, 'cancel');
+        };
+    }
 })();

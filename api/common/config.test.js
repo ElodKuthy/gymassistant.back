@@ -5,7 +5,7 @@
     describe('Configuration', function () {
 
         var expect = require('chai').expect;
-        var container = require('../container.js');
+        var container = require('../container.js')('test_config.json');
         var config = container.get('config');
 
         it('should be defined', function() {

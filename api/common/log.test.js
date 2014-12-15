@@ -5,7 +5,7 @@
     var should = require('should');
     var a = require('a');
 
-    var container = require('../container.js');
+    var container = require('../container.js')('test_config.json');
     var log = container.get('log');
 
     describe('Logger', function () {

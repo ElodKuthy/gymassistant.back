@@ -30,7 +30,8 @@
             notEnoughTrainingsForDailyTicket: 'Nincs ennyi napijeggyel elérhető óra ma',
             invalidCreditId: 'Ismeretlen kredit azonosító',
             dateIsInPast: 'Ez a dátum már elmúlt',
-            invalidEmailFormat: 'Érvénytelen email cím formátum'
+            invalidEmailFormat: 'Érvénytelen email cím formátum',
+            trainingCanceled: 'Ez az óra elmarad'
         };
 
         self.serverError = function () {
@@ -151,6 +152,11 @@
         self.invalidEmailFormat = function() {
             log.error(errorMessages.invalidEmailFormat);
             return new Error(errorMessages.invalidEmailFormat);
+        };
+
+        self.trainingCanceled = function() {
+            log.error(errorMessages.trainingCanceled);
+            return new Error(errorMessages.trainingCanceled);
         };
     }
 })();

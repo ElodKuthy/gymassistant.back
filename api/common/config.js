@@ -3,10 +3,10 @@
 
     module.exports = Config;
 
-    Config.$inject = ['plugins'];
-    function Config(plugins) {
+    Config.$inject = ['plugins', 'configFileName'];
+    function Config(plugins, configFileName) {
         var self = this;
-        var config = plugins.jsonfile.readFileSync(__dirname + '/../../config.json');
+        var config = plugins.jsonfile.readFileSync(__dirname + '/../../' + configFileName);
 
         self.log = config.log;
         self.db = config.db;

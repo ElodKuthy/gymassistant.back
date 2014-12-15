@@ -8,7 +8,7 @@
 
     exports.router = router;
 
-    var container = require('./container.js');
+    var container = require('./container.js')('config.json');
 
     var log = container.get('log');
     var errors = container.get('errors');
@@ -48,9 +48,9 @@
 
         .get(function(req, res) {
             var response = new Response(res);
-            var schedule = container.get('schedule');
+            var scheduleService = container.get('scheduleService');
 
-            schedule.thisWeek(req.user).then(response.success, response.error);
+            scheduleService.thisWeek(req.user).then(response.success, response.error);
         });
 
 
@@ -58,20 +58,20 @@
 
         .get(function(req, res) {
             var response = new Response(res);
-            var schedule = container.get('schedule');
+            var scheduleService = container.get('scheduleService');
 
-            schedule.today(req.user).then(response.success, response.error);
+            scheduleService.today(req.user).then(response.success, response.error);
         });
 
     router.route('/schedule/from/:firstDate/to/:lastDate')
 
         .get(function(req, res) {
             var response = new Response(res);
-            var schedule = container.get('schedule');
+            var scheduleService = container.get('scheduleService');
             var firstDate = req.param('firstDate');
             var lastDate = req.param('lastDate');
 
-            schedule.fetch(firstDate, lastDate, req.user).then(response.success, response.error);
+            scheduleService.fetch(firstDate, lastDate, req.user).then(response.success, response.error);
         });
 
     router.route('/training/id/:id')
@@ -82,8 +82,8 @@
 
             if (!response.error(identity.checkCoach(req.user))) {
                 var id = req.param('id');
-                var schedule = container.get('schedule');
-                schedule.findById(id, req.user).then(response.success, response.error);
+                var trainingService = container.get('trainingService');
+                trainingService.findById(id, req.user).then(response.success, response.error);
             }
         });
 
@@ -317,6 +317,19 @@
                 var name = req.param('name');
                 var email = req.param('email');
                 identity.changeEmail(name, email).then(response.success, response.error);
+            }
+        });
+
+    router.route('/cancel/training/id/:id')
+
+        .get(function(req, res) {
+            var response = new Response(res);
+            var identity = container.get('identity');
+
+            if (!response.error(identity.checkCoach(req.user))) {
+                var id = req.param('id');
+                var scheduleService = container.get('scheduleService');
+                scheduleService.cancelTraining(id, req.user).then(response.success, response.error);
             }
         });
 

@@ -2,17 +2,17 @@
     'use strict';
     /*jshint expr: true*/
 
-    describe('Users data access layer', function () {
+    describe('Trainings data access layer', function () {
 
         var expect = require('chai').expect;
         var a = require('a');
 
         var container = require('../container.js')('test_config.json');
-        var Users = require('./users.js');
+        var Trainings = require('./trainings.js');
 
         var plugins = container.get('plugins');
         var config = container.get('config');
-        config.db.name = 'test_users_db';
+        config.db.name = 'test_trainings_db';
 
         var logMock = {
             debug: function (message) { console.log('debug: ' + message); },
@@ -26,9 +26,9 @@
             var coachUtilsMock = a.mock();
             var errorsMock = a.mock();
 
-            var users = new Users(plugins, coachUtils, logMock, errorsMock);
+            var trainings = new Trainings(plugins, coachUtils, logMock, errorsMock);
 
-            expect(users).to.exist;
+            expect(trainings).to.exist;
         });
 
         beforeEach('Set up test db', function (done) {
@@ -39,35 +39,35 @@
             coachUtils.deleteDb().then(function () { done(); }, function () { done(); });
         });
 
-        describe('update email', function () {
+        describe('update status', function () {
 
             var id = 'test_id';
-            var oldEmail = 'oldName@mail.com';
-            var email = 'testUser@mail.com';
+            var oldStatus = 'normal';
+            var status = 'canceled';
 
-            beforeEach('Create test user', function (done) {
-                coachUtils.request('PUT', id, { email: oldEmail }).then(function () { done(); }, done);
+            beforeEach('Create test training', function (done) {
+                coachUtils.request('PUT', id, { status: oldStatus }).then(function () { done(); }, done);
             });
 
-            it('should update the email of the proper user', function (done) {
+            it('should update the status of the proper training', function (done) {
                 var errorsMock = a.mock();
 
-                var users = new Users(plugins, coachUtils, logMock, errorsMock);
+                var trainings = new Trainings(plugins, coachUtils, logMock, errorsMock);
 
-                users.updateEmail(id, email).then(emailUpdated, error);
+                trainings.updateStatus(id, status).then(statusUpdated, error);
 
-                function emailUpdated(result) {
+                function statusUpdated(result) {
                     try {
                         expect(result).to.have.property('ok', true);
-                        coachUtils.request('GET', id).then(checkUpdatedUser, error);
+                        coachUtils.request('GET', id).then(checkUpdatedTraining, error);
                     } catch (err) {
                         error(err);
                     }
                 }
 
-                function checkUpdatedUser(user) {
+                function checkUpdatedTraining(training) {
                     try {
-                        expect(user).to.have.property('email', email);
+                        expect(training).to.have.property('status', status);
                         done();
                     } catch (err) {
                         error(err);
@@ -79,15 +79,15 @@
                 }
             });
 
-            it('should return error, if no user with that id ', function (done) {
+            it('should return error, if no training with that id', function (done) {
                 var invalid_id = 'foo';
                 var errorsMock = a.mock();
 
-                var users = new Users(plugins, coachUtils, logMock, errorsMock);
+                var trainings = new Trainings(plugins, coachUtils, logMock, errorsMock);
 
-                users.updateEmail(invalid_id, email).then(emailUpdated, expectedError);
+                trainings.updateStatus(invalid_id, status).then(statusUpdated, expectedError);
 
-                function emailUpdated() {
+                function statusUpdated() {
                     error(new Error('That should not be happened'));
                 }
 
@@ -108,5 +108,4 @@
             });
         });
     });
-
 })();

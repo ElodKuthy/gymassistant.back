@@ -7,7 +7,7 @@
         var expect = require('chai').expect;
         var a = require('a');
 
-        var container = require('../container.js');
+        var container = require('../container.js')('test_config.json');
         var Identity = require('./identity.js');
 
         var plugins = container.get('plugins');
@@ -58,7 +58,7 @@
                     try {
                         expect(usersMock.byName.verify()).to.be.true;
                         expect(usersMock.updateEmail.verify()).to.be.true;
-                        expect(result).to.be.equal('success');
+                        expect(result).to.be.equal('Az email címet sikeresen megváltoztattuk');
                         done();
                     } catch (err) {
                         error(err);

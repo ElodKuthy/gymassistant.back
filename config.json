@@ -1,6 +1,6 @@
 {
   "log": {
-    "console": "true",
+    "console": true,
     "logFile": "server.log",
     "exceptions": "exceptions.log",
     "level": "debug"

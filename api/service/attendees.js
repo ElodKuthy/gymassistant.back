@@ -3,8 +3,8 @@
 
     module.exports = Attendees;
 
-    Attendees.$inject = ['plugins', 'errors', 'schedule', 'credits', 'log', 'users', 'trainings', 'roles', 'identity'];
-    function Attendees(plugins, errors, schedule, credits, log, users, trainings, roles, identity) {
+    Attendees.$inject = ['plugins', 'errors', 'trainingService', 'credits', 'log', 'users', 'trainings', 'roles', 'identity'];
+    function Attendees(plugins, errors, trainingService, credits, log, users, trainings, roles, identity) {
         var self = this;
         var q = plugins.q;
         var moment = plugins.moment;
@@ -15,6 +15,10 @@
                 return errors.trainingEnded();
             }
 
+            if (training.status === 'cancel') {
+                return errors.trainingCanceled();
+            }
+
             if ((['join', 'add']).indexOf(purpose) > -1 && training.current === training.max) {
                 return errors.trainingFull();
             }
@@ -23,7 +27,7 @@
                 return errors.tooEarlyToCheckIn();
             }
 
-            if ((['join', 'add']).indexOf(purpose) > -1 && schedule.isAttendee(training, user)) {
+            if ((['join', 'add']).indexOf(purpose) > -1 && trainingService.isAttendee(training, user)) {
                 return errors.alreadySignedUp();
             }
 
@@ -35,7 +39,7 @@
                 return errors.cantModifyNotOwnTraining();
             }
 
-            if ((['leave', 'remove', 'check in']).indexOf(purpose) > -1 && !schedule.isAttendee(training, user)) {
+            if ((['leave', 'remove', 'check in']).indexOf(purpose) > -1 && !trainingService.isAttendee(training, user)) {
                 return errors.notSignedUp();
             }
 
@@ -105,7 +109,7 @@
         self.addToTraining = function(id, userName, coach) {
             var deferred = q.defer();
 
-            q.all([identity.findByName(userName), schedule.findByIdFull(id)])
+            q.all([identity.findByName(userName), trainingService.findByIdFull(id)])
                 .then(function (results) {
                     var user = results[0];
                     var training = results[1];
@@ -135,7 +139,7 @@
         self.joinTraining = function(id, user) {
             var deferred = q.defer();
 
-            schedule.findByIdFull(id)
+            trainingService.findByIdFull(id)
                 .then(function (training) {
 
                     var error = validateTraining(training, user, 'join');
@@ -222,7 +226,7 @@
         self.leaveTraining = function(id, user) {
             var deferred = q.defer();
 
-            schedule.findByIdFull(id)
+            trainingService.findByIdFull(id)
                 .then(function (training) {
 
                     var error = validateTraining(training, user, 'leave');
@@ -249,7 +253,7 @@
         self.removeFromTraining = function(id, userName, coach) {
             var deferred = q.defer();
 
-            q.all([identity.findByName(userName, true), schedule.findByIdFull(id)])
+            q.all([identity.findByName(userName, true), trainingService.findByIdFull(id)])
                 .then(function (results) {
                     var user = results[0];
                     var training = results[1];
@@ -278,7 +282,7 @@
         self.checkIn = function(id, userName, coach) {
             var deferred = q.defer();
 
-            q.all([identity.findByName(userName, true), schedule.findByIdFull(id)])
+            q.all([identity.findByName(userName, true), trainingService.findByIdFull(id)])
                 .then(function (results) {
                     var user = results[0];
                     var training = results[1];
@@ -308,7 +312,7 @@
         self.undoCheckIn = function(id, userName, coach) {
             var deferred = q.defer();
 
-            q.all([identity.findByName(userName, true), schedule.findByIdFull(id)])
+            q.all([identity.findByName(userName, true), trainingService.findByIdFull(id)])
                 .then(function (results) {
                     var user = results[0];
                     var training = results[1];

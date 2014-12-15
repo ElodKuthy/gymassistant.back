@@ -7,7 +7,7 @@
         var expect = require('chai').expect;
         var a = require('a');
 
-        var container = require('../container.js');
+        var container = require('../container.js')('test_config.json');
         var CoachUtils = require('./coach_utils.js');
 
         var plugins = container.get('plugins');
