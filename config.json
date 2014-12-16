@@ -11,5 +11,16 @@
   },
   "server": {
     "port": 8000
+  },
+  "email": {
+    "from": "no-reply@testkulturamuhely.hu",
+    "host": "mail7.tarhelypark.hu",
+    "secureConnection": true,
+    "port": 465,
+    "transportMethod": "SMTP",
+    "auth": {
+      "user": "no-reply@testkulturamuhely.hu",
+      "pass": "1GG9{)kU)GQ?"
+    }
   }
 }

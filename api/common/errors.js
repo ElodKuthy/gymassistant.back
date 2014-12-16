@@ -14,6 +14,7 @@
             trainingEnded: 'Ez az óra már véget ért',
             trainingFull: 'Ez az edzés már megtelt',
             unknownUserName: 'Nincs ilyen nevű felhasználó',
+            unknownUserEmail: 'Nincs ilyen email címmel regisztrált felhasználó',
             alreadySignedUp: 'A felhasználó már feliratkozott',
             selfAttend: 'Saját órára nem lehet feliratkozni',
             noCredit: 'A felhasználónak nincs több szabad kreditje',
@@ -157,6 +158,11 @@
         self.trainingCanceled = function() {
             log.error(errorMessages.trainingCanceled);
             return new Error(errorMessages.trainingCanceled);
+        };
+
+        self.unknownUserEmail = function() {
+            log.error(errorMessages.unknownUserEmail);
+            return new Error(errorMessages.unknownUserEmail);
         };
     }
 })();

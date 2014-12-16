@@ -1,10 +1,10 @@
 (function () {
     'use strict';
 
-    module.exports = Identity;
+    module.exports = IdentityService;
 
-    Identity.$inject = ['plugins', 'log', 'users', 'errors', 'roles'];
-    function Identity(plugins, log, users, errors, roles) {
+    IdentityService.$inject = ['plugins', 'log', 'users', 'errors', 'roles'];
+    function IdentityService(plugins, log, users, errors, roles) {
         var self = this;
         var q = plugins.q;
         var crypto = plugins.crypto;
@@ -94,6 +94,12 @@
             return deferred.promise;
         };
 
+        self.resetPassword = function (user) {
+            var password = generatePassword(8, false);
+            return self.changePassword(user, password)
+                .then(function () { return { user: user, password: password }; });
+        };
+
         self.changePassword = function(user, newPassword) {
             var deferred = q.defer();
 
@@ -121,7 +127,6 @@
                     }
 
                     var password = generatePassword(8, false);
-                    log.debug(password);
 
                     var user = {
                         _id: uuid.v4(),
@@ -137,7 +142,7 @@
 
                     users.add(user)
                         .then(function() {
-                            deferred.resolve(user);
+                            deferred.resolve({ user: user, password: password });
                         }, function (error) {
                             deferred.reject(error);
                         });
@@ -172,6 +177,16 @@
             return deferred.promise;
         };
 
+        self.findByEmail = function (email) {
+            return users.byEmail(email)
+                .then(function (results) {
+                    if (results.length === 0) {
+                        throw errors.unknownUserEmail();
+                    }
+
+                    return results[0];
+                });
+        };
 
         self.checkLoggedIn = function(user) {
             if (!user) {

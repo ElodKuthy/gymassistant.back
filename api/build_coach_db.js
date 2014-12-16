@@ -7,7 +7,7 @@ var uuid = plugins.uuid;
 var q = plugins.q;
 var moment = plugins.moment;
 var coachUtils = container.get('coachUtils');
-var identity = container.get('identity');
+var identityService = container.get('identityService');
 
 var users = jsonfile.readFileSync(__dirname + '/users.json');
 var trainings = jsonfile.readFileSync(__dirname + '/trainings.json');
@@ -75,7 +75,7 @@ function rebuild() {
 
             users.forEach(function (user) {
 
-                user.hash = identity.createHash(user.password);
+                user.hash = identityService.createHash(user.password);
                 user.password = undefined;
                 user.credits = [];
                 user.type = 'user';

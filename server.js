@@ -1,17 +1,18 @@
 /**
  * Module dependencies
  */
+try {
 
 var express = require('express'),
     bodyParser = require('body-parser'),
     methodOverride = require('method-override'),
     morgan = require('morgan'),
     routes = require('./routes'),
-    api = require('./api/api'),
     https = require('https'),
     path = require('path'),
     fs = require('fs'),
-    favicon = require('serve-favicon');
+    favicon = require('serve-favicon'),
+    mailer = require('express-mailer');
 
 var app = module.exports = express();
 
@@ -21,7 +22,6 @@ var config = container.get('config');
 /**
  * Configuration
  */
-
 
 // all environments
 app.set('port', process.env.PORT || config.server.port);
@@ -35,9 +35,21 @@ app.use(methodOverride());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(favicon("public/favicon.ico"));
 
+mailer.extend(app, {
+    from: config.email.from,
+    host: config.email.host,
+    secureConnection: config.email.secureConnection,
+    port: config.email.port,
+    transportMethod: config.email.transportMethod,
+    auth: config.email.auth
+});
+
 /**
  * Routes
  */
+
+container.register('mailer', app.mailer);
+var api = container.get('api');
 
 var options = {
     key: fs.readFileSync(__dirname + "/ssl/key.pem"),
@@ -62,3 +74,8 @@ app.get('*', routes.index);
 https.createServer(options, app).listen(app.get('port'), function () {
     console.log('Express server listening on port ' + app.get('port'));
 });
+
+} catch (err) {
+    console.log(err);
+    throw err;
+}

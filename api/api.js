@@ -1,27 +1,20 @@
-
 (function () {
-
     'use strict';
+    module.exports = Api;
+
+    Api.$inject = ['errors', 'log', 'identityService', 'scheduleService', 'trainingService', 'mailerService', 'attendees', 'credits', 'subscription', 'users', 'series'];
+    function Api(errors, log, identityService, scheduleService, trainingService, mailerService, attendees, credits, subscription, users, series) {
 
     var express = require('express');
     var router = express.Router();
-
-    exports.router = router;
-
-    var container = require('./container.js')('config.json');
-
-    var log = container.get('log');
-    var errors = container.get('errors');
 
     router.use(function(req, res, next) {
 
         res.header("Access-Control-Allow-Origin", "*");
         res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
 
-        var identity = container.get('identity');
-
         log.info(req.method + ' ' + req.originalUrl + ' from: ' + req.connection.remoteAddress);
-        identity.authenticate(req.headers.authorization)
+        identityService.authenticate(req.headers.authorization)
             .then(function (result) {
                 req.user = result;
                 next();
@@ -48,8 +41,6 @@
 
         .get(function(req, res) {
             var response = new Response(res);
-            var scheduleService = container.get('scheduleService');
-
             scheduleService.thisWeek(req.user).then(response.success, response.error);
         });
 
@@ -58,7 +49,6 @@
 
         .get(function(req, res) {
             var response = new Response(res);
-            var scheduleService = container.get('scheduleService');
 
             scheduleService.today(req.user).then(response.success, response.error);
         });
@@ -67,7 +57,6 @@
 
         .get(function(req, res) {
             var response = new Response(res);
-            var scheduleService = container.get('scheduleService');
             var firstDate = req.param('firstDate');
             var lastDate = req.param('lastDate');
 
@@ -78,11 +67,9 @@
 
         .get(function(req, res) {
             var response = new Response(res);
-            var identity = container.get('identity');
 
-            if (!response.error(identity.checkCoach(req.user))) {
+            if (!response.error(identityService.checkCoach(req.user))) {
                 var id = req.param('id');
-                var trainingService = container.get('trainingService');
                 trainingService.findById(id, req.user).then(response.success, response.error);
             }
         });
@@ -91,10 +78,8 @@
 
         .get(function(req, res) {
             var response = new Response(res);
-            var identity = container.get('identity');
 
-            if (!response.error(identity.checkLoggedIn(req.user))) {
-                var attendees = container.get('attendees');
+            if (!response.error(identityService.checkLoggedIn(req.user))) {
                 var id = req.param('id');
 
                 attendees.joinTraining(id, req.user).then(response.success, response.error);
@@ -105,10 +90,8 @@
 
         .get(function(req, res) {
             var response = new Response(res);
-            var identity = container.get('identity');
 
-            if (!response.error(identity.checkCoach(req.user))) {
-                var attendees = container.get('attendees');
+            if (!response.error(identityService.checkCoach(req.user))) {
                 var userName = req.param('userName');
                 var id = req.param('id');
 
@@ -121,10 +104,8 @@
 
         .get(function(req, res) {
             var response = new Response(res);
-            var identity = container.get('identity');
 
-            if (!response.error(identity.checkLoggedIn(req.user))) {
-                var attendees = container.get('attendees');
+            if (!response.error(identityService.checkLoggedIn(req.user))) {
                 var id = req.param('id');
 
                 attendees.leaveTraining(id, req.user).then(response.success, response.error);
@@ -135,10 +116,8 @@
 
         .get(function(req, res) {
             var response = new Response(res);
-            var identity = container.get('identity');
 
-            if (!response.error(identity.checkCoach(req.user))) {
-                var attendees = container.get('attendees');
+            if (!response.error(identityService.checkCoach(req.user))) {
                 var userName = req.param('userName');
                 var id = req.param('id');
 
@@ -150,10 +129,8 @@
 
         .get(function(req, res) {
             var response = new Response(res);
-            var identity = container.get('identity');
 
-            if (!response.error(identity.checkCoach(req.user))) {
-                var attendees = container.get('attendees');
+            if (!response.error(identityService.checkCoach(req.user))) {
                 var userName = req.param('userName');
                 var id = req.param('id');
 
@@ -165,10 +142,8 @@
 
         .get(function(req, res) {
             var response = new Response(res);
-            var identity = container.get('identity');
 
-            if (!response.error(identity.checkCoach(req.user))) {
-                var attendees = container.get('attendees');
+            if (!response.error(identityService.checkCoach(req.user))) {
                 var userName = req.param('userName');
                 var id = req.param('id');
 
@@ -180,11 +155,8 @@
 
         .get(function(req, res) {
             var response = new Response(res);
-            var identity = container.get('identity');
 
-            if (!response.error(identity.checkLoggedIn(req.user))) {
-                var credits = container.get('credits');
-
+            if (!response.error(identityService.checkLoggedIn(req.user))) {
                 credits.getUserCredits(req.user).then(response.success, response.error);
             }
         });
@@ -193,10 +165,8 @@
 
         .get(function(req, res) {
             var response = new Response(res);
-            var identity = container.get('identity');
 
-            if (!response.error(identity.checkCoach(req.user))) {
-                var credits = container.get('credits');
+            if (!response.error(identityService.checkCoach(req.user))) {
                 var userName = req.param('userName');
 
                 credits.getUserCreditsFromName(userName).then(response.success, response.error);
@@ -207,10 +177,8 @@
 
         .get(function(req, res) {
             var response = new Response(res);
-            var identity = container.get('identity');
 
-            if (!response.error(identity.checkCoach(req.user))) {
-                var subscription = container.get('subscription');
+            if (!response.error(identityService.checkCoach(req.user))) {
                 var amount = req.param('amount');
                 var userName = req.param('userName');
                 var period = req.param('period');
@@ -227,10 +195,8 @@
 
         .get(function(req, res) {
             var response = new Response(res);
-            var identity = container.get('identity');
 
-            if (!response.error(identity.checkCoach(req.user))) {
-                var subscription = container.get('subscription');
+            if (!response.error(identityService.checkCoach(req.user))) {
                 var amountPerWeek = req.param('amountPerWeek');
                 var userName = req.param('userName');
                 var date = req.param('date');
@@ -247,10 +213,8 @@
 
         .get(function (req, res) {
             var response = new Response(res);
-            var identity = container.get('identity');
 
-            if (!response.error(identity.checkCoach(req.user))) {
-                var users = container.get('users');
+            if (!response.error(identityService.checkCoach(req.user))) {
 
                 users.byName().then(response.success, response.error);
             }
@@ -260,12 +224,11 @@
 
         .get(function (req, res) {
             var response = new Response(res);
-            var identity = container.get('identity');
 
-            if (!response.error(identity.checkCoach(req.user))) {
+            if (!response.error(identityService.checkCoach(req.user))) {
                 var name = req.param('name');
 
-                identity.findByName(name).then(response.success, response.error);
+                identityService.findByName(name).then(response.success, response.error);
             }
         });
 
@@ -273,13 +236,15 @@
 
         .get(function(req, res) {
             var response = new Response(res);
-            var identity = container.get('identity');
 
-            if (!response.error(identity.checkCoach(req.user))) {
+            if (!response.error(identityService.checkCoach(req.user))) {
                 var name = req.param('name');
                 var email = req.param('email');
 
-                identity.addUser(name, email).then(response.success, response.error);
+                identityService.addUser(name, email)
+                    .then(mailerService.sendRegistrationMail)
+                    .then(response.success)
+                    .catch(response.error);
             }
         });
 
@@ -287,11 +252,10 @@
 
         .post(function(req, res) {
             var response = new Response(res);
-            var identity = container.get('identity');
 
-            if (!response.error(identity.checkLoggedIn(req.user))) {
+            if (!response.error(identityService.checkLoggedIn(req.user))) {
                 var password = req.body.password;
-                identity.changePassword(req.user, password).then(response.success, response.error);
+                identityService.changePassword(req.user, password).then(response.success, response.error);
             }
         });
 
@@ -299,10 +263,8 @@
 
         .get(function(req, res) {
             var response = new Response(res);
-            var identity = container.get('identity');
 
-            if (!response.error(identity.checkCoach(req.user))) {
-                var series = container.get('series');
+            if (!response.error(identityService.checkCoach(req.user))) {
                 series.byCoach(req.user.name).then(response.success, response.error);
             }
         });
@@ -311,12 +273,11 @@
 
         .get(function(req, res) {
             var response = new Response(res);
-            var identity = container.get('identity');
 
-            if (!response.error(identity.checkCoach(req.user))) {
+            if (!response.error(identityService.checkCoach(req.user))) {
                 var name = req.param('name');
                 var email = req.param('email');
-                identity.changeEmail(name, email).then(response.success, response.error);
+                identityService.changeEmail(name, email).then(response.success, response.error);
             }
         });
 
@@ -324,13 +285,25 @@
 
         .get(function(req, res) {
             var response = new Response(res);
-            var identity = container.get('identity');
 
-            if (!response.error(identity.checkCoach(req.user))) {
+            if (!response.error(identityService.checkCoach(req.user))) {
                 var id = req.param('id');
-                var scheduleService = container.get('scheduleService');
                 scheduleService.cancelTraining(id, req.user).then(response.success, response.error);
             }
+        });
+
+    router.route('/reset/password/user/email/:email')
+
+        .get(function(req, res) {
+            var response = new Response(res);
+
+            var email = req.param('email');
+
+            identityService.findByEmail(email)
+                .then(identityService.resetPassword)
+                .then(function (result) { return mailerService.sendResetPasswordMail(result.user, result.password); })
+                .then(response.success('Az új jelszót elküldtük a felhasználó email címére'))
+                .catch(response.error);
         });
 
     router.get('/', function(req, res) {
@@ -352,4 +325,6 @@
         };
     }
 
+    this.router = router;
+}
 })();

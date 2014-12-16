@@ -8,7 +8,7 @@
         var a = require('a');
 
         var container = require('../container.js')('test_config.json');
-        var Identity = require('./identity.js');
+        var Identity = require('./identity.service.js');
 
         var plugins = container.get('plugins');
         var config = container.get('config');

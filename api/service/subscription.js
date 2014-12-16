@@ -3,8 +3,8 @@
 
     module.exports = Subscription;
 
-    Subscription.$inject = ['plugins', 'users', 'errors', 'log', 'periods', 'identity', 'trainings', 'attendees'];
-    function Subscription(plugins, users, errors, log, periods, identity, trainings, attendees) {
+    Subscription.$inject = ['plugins', 'users', 'errors', 'log', 'periods', 'identityService', 'trainings', 'attendees'];
+    function Subscription(plugins, users, errors, log, periods, identityService, trainings, attendees) {
         var self = this;
         var q = plugins.q;
         var moment = plugins.moment;
@@ -107,7 +107,7 @@
             }
 
 
-            identity.findByName(userName)
+            identityService.findByName(userName)
                 .then(function (user) {
 
                     var now = moment();
@@ -160,7 +160,7 @@
                 return deferred.promise;
             }
 
-            identity.findByName(userName)
+            identityService.findByName(userName)
                 .then(function (user) {
 
                     var newCredit = {

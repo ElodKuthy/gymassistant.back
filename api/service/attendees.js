@@ -3,8 +3,8 @@
 
     module.exports = Attendees;
 
-    Attendees.$inject = ['plugins', 'errors', 'trainingService', 'credits', 'log', 'users', 'trainings', 'roles', 'identity'];
-    function Attendees(plugins, errors, trainingService, credits, log, users, trainings, roles, identity) {
+    Attendees.$inject = ['plugins', 'errors', 'trainingService', 'credits', 'log', 'users', 'trainings', 'roles', 'identityService'];
+    function Attendees(plugins, errors, trainingService, credits, log, users, trainings, roles, identityService) {
         var self = this;
         var q = plugins.q;
         var moment = plugins.moment;
@@ -109,7 +109,7 @@
         self.addToTraining = function(id, userName, coach) {
             var deferred = q.defer();
 
-            q.all([identity.findByName(userName), trainingService.findByIdFull(id)])
+            q.all([identityService.findByName(userName), trainingService.findByIdFull(id)])
                 .then(function (results) {
                     var user = results[0];
                     var training = results[1];
@@ -253,7 +253,7 @@
         self.removeFromTraining = function(id, userName, coach) {
             var deferred = q.defer();
 
-            q.all([identity.findByName(userName, true), trainingService.findByIdFull(id)])
+            q.all([identityService.findByName(userName, true), trainingService.findByIdFull(id)])
                 .then(function (results) {
                     var user = results[0];
                     var training = results[1];
@@ -282,7 +282,7 @@
         self.checkIn = function(id, userName, coach) {
             var deferred = q.defer();
 
-            q.all([identity.findByName(userName, true), trainingService.findByIdFull(id)])
+            q.all([identityService.findByName(userName, true), trainingService.findByIdFull(id)])
                 .then(function (results) {
                     var user = results[0];
                     var training = results[1];
@@ -312,7 +312,7 @@
         self.undoCheckIn = function(id, userName, coach) {
             var deferred = q.defer();
 
-            q.all([identity.findByName(userName, true), trainingService.findByIdFull(id)])
+            q.all([identityService.findByName(userName, true), trainingService.findByIdFull(id)])
                 .then(function (results) {
                     var user = results[0];
                     var training = results[1];

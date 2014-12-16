@@ -18,7 +18,7 @@
         });
 
         var coachUtils = container.get('coachUtils');
-        var buildViews = container.get('buildViews');
+        var designDocumentsUpdater = container.get('designDocumentsUpdater');
         var errors = container.get('errors');
 
         function success(end) {
@@ -29,7 +29,7 @@
 
         beforeEach('Set up test db', function (end) {
             coachUtils.createDb()
-                .then(buildViews.build, buildViews.build)
+                .then(designDocumentsUpdater.build, designDocumentsUpdater.build)
                 .then(success(end))
                 .catch(end)
                 .done();
