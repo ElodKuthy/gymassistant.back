@@ -27,12 +27,18 @@
             cantModifyNotOwnTraining: 'Csak a saját óráit módosíthatja az edző',
             tooEarlyToCheckIn: 'Erre az órára még korai bejelentkezni',
             userNameAlreadyExist: 'Már van ilyen nevű felhasználó',
+            emailAlreadyExist: 'Ezzel az email címmel már regisztrált felhasználó',
             invalidPeriod: 'Ismeretlen periódus',
             notEnoughTrainingsForDailyTicket: 'Nincs ennyi napijeggyel elérhető óra ma',
             invalidCreditId: 'Ismeretlen kredit azonosító',
             dateIsInPast: 'Ez a dátum már elmúlt',
             invalidEmailFormat: 'Érvénytelen email cím formátum',
             trainingCanceled: 'Ez az óra elmarad'
+        };
+
+        self.emailAlreadyExist = function () {
+            log.error(errorMessages.emailAlreadyExist);
+            return new Error(errorMessages.emailAlreadyExist);
         };
 
         self.serverError = function () {

@@ -67,31 +67,16 @@
         };
 
         self.changeEmail = function(name, email) {
-            var deferred = q.defer();
 
-            if (validator.isEmail(email)) {
-                self.findByName(name).then(userFound, error);
-            } else {
-                error(errors.invalidEmailFormat());
-            }
-
-            function userFound(user) {
-                try {
-                    users.updateEmail(user._id, email).then(emailUpdated, error);
-                } catch (err) {
-                    error(err);
-                }
-            }
-
-            function emailUpdated() {
-                deferred.resolve('Az email címet sikeresen megváltoztattuk');
-            }
-
-            function error (err) {
-                deferred.reject(err);
-            }
-
-            return deferred.promise;
+            return q.all([
+                    self.findByName(name),
+                    self.checkEmailFormat(email),
+                    self.checkEmailFree(email)
+                ])
+                .spread(function (user) {
+                    return users.updateEmail(user._id, email);
+                })
+                .thenResolve('Az email címet sikeresen megváltoztattuk');
         };
 
         self.resetPassword = function (user) {
@@ -115,18 +100,40 @@
             return deferred.promise;
         };
 
-        self.addUser = function(userName, email) {
-            var deferred = q.defer();
-
-            users.byName(userName)
+        self.checkUserNameFree = function (userName) {
+            return users.byName(userName)
                 .then(function (results) {
-
                     if (results.length > 0) {
-                        deferred.reject(errors.userNameAlreadyExist());
-                        return;
+                        throw errors.userNameAlreadyExist();
                     }
+                });
+        };
 
-                    var password = generatePassword(8, false);
+        self.checkEmailFormat = function (email) {
+            if (!validator.isEmail(email)) {
+                return q.reject(errors.invalidEmailFormat());
+            }
+        };
+
+        self.checkEmailFree = function (email) {
+            return users.byEmail(email)
+                .then(function (results) {
+                    if (results.length > 0) {
+                        throw errors.emailAlreadyExist();
+                    }
+                });
+        };
+
+        self.addUser = function(userName, email) {
+
+            var password = generatePassword(8, false);
+
+            return q.all([
+                    self.checkUserNameFree(userName),
+                    self.checkEmailFormat(email),
+                    self.checkEmailFree(email)
+                ])
+                .then(function () {
 
                     var user = {
                         _id: uuid.v4(),
@@ -140,17 +147,12 @@
                         type: 'user'
                     };
 
-                    users.add(user)
-                        .then(function() {
-                            deferred.resolve({ user: user, password: password });
-                        }, function (error) {
-                            deferred.reject(error);
-                        });
-                }, function (error) {
-                    deferred.reject(error);
+                    return user;
+                })
+                .tap(users.add)
+                .then(function (user) {
+                    return { user: user, password: password };
                 });
-
-            return deferred.promise;
         };
 
         self.findByName = function (name) {
