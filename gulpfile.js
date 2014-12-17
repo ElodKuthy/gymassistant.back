@@ -13,7 +13,8 @@ gulp.task("deploy", function () {
         "api/**/*",
         "public/*",
         "routes/*",
-        "ssl/*"
+        "ssl/*",
+        "views/*"
     ], { "base" : "." })
         .pipe(gulp.dest("../gymassistant"));
 });
