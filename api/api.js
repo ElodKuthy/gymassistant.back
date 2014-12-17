@@ -13,6 +13,9 @@
         res.header("Access-Control-Allow-Origin", "*");
         res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
 
+        res.success = function (result) { res.send(result); };
+        res.error = function (err) { res.send({ error: err.message }); };
+
         log.info(req.method + ' ' + req.originalUrl + ' from: ' + req.connection.remoteAddress);
         identityService.authenticate(req.headers.authorization)
             .then(function (result) {
@@ -243,8 +246,22 @@
 
                 identityService.addUser(name, email)
                     .then(mailerService.sendRegistrationMail)
-                    .then(response.success)
-                    .catch(response.error);
+                    .done(res.success, res.error);
+            }
+        });
+
+    router.route('/send/registration/email/to/user/:name')
+
+        .get(function(req, res) {
+            var response = new Response(res);
+
+            if (!response.error(identityService.checkCoach(req.user))) {
+                var name = req.param('name');
+
+            identityService.findByName(name)
+                .then(identityService.resetPassword)
+                .then(mailerService.sendRegistrationMail)
+                .done(res.success, res.error);
             }
         });
 
@@ -295,15 +312,12 @@
     router.route('/reset/password/user/email/:email')
 
         .get(function(req, res) {
-            var response = new Response(res);
-
             var email = req.param('email');
 
             identityService.findByEmail(email)
                 .then(identityService.resetPassword)
-                .then(function (result) { return mailerService.sendResetPasswordMail(result.user, result.password); })
-                .then(response.success('Az új jelszót elküldtük a felhasználó email címére'))
-                .catch(response.error);
+                .then(mailerService.sendResetPasswordMail)
+                .done(res.success, res.error);
         });
 
     router.get('/', function(req, res) {
