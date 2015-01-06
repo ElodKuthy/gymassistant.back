@@ -5,201 +5,112 @@
     describe('Identity service', function () {
 
         var expect = require('chai').expect;
-        var a = require('a');
 
         var container = require('../container.js')('test_config.json');
-        var Identity = require('./identity.service.js');
 
         var plugins = container.get('plugins');
-        var config = container.get('config');
-
-        var logMock = {
-            debug: function (message) { console.log('debug: ' + message); },
-            error: function (message) { console.log('error: ' + message); },
-            info: function (message) { console.log('info: ' + message); }
-        };
+        var q = plugins.q;
+        var coachUtils = container.get('coachUtils');
+        var design = container.get('designDocumentsUpdater');
+        var errors = container.get('errors');
 
         it('should be defined', function () {
-            var usersMock = a.mock();
-            var errorsMock = a.mock();
-            var rolesMock = a.mock();
+            var identityService = container.get('identityService');
 
-            var identity = new Identity(plugins, logMock, usersMock, errorsMock, rolesMock);
-
-            expect(identity).to.exist;
+            expect(identityService).to.exist;
         });
 
         describe('change email of user', function () {
 
-            var id = 'test_id';
-            var name = 'Test User';
-            var oldEmail = 'oldName@mail.com';
-            var email = 'testUser@mail.com';
+            var testUser = {
+                _id: 'test_id',
+                name: 'Test User',
+                email: 'oldName@mail.com',
+                type: 'user'
+            };
+            var otherTestUser = {
+                _id: 'other_test_id',
+                name: 'Other User',
+                email: 'otherName@gmail.com',
+                type: 'user'
+            };
+            var newEmail = 'testUser@mail.com';
+
+            beforeEach('set up test db', function (done) {
+                coachUtils.createDb()
+                    .then(design.build)
+                    .then(function () {
+                        return q.all([
+                            coachUtils.put(testUser._id, testUser),
+                            coachUtils.put(otherTestUser._id, otherTestUser)
+                        ]);
+                    })
+                    .nodeify(done);
+            });
+
+            afterEach('tear down test db', function (done) {
+                coachUtils.deleteDb().nodeify(done);
+            });
 
             it('should change the email of the proper user', function (done) {
-                var usersMock = {
-                    byName: a.mock(),
-                    updateEmail: a.mock()
-                };
-                var byNamePromiseMock = a.then();
-                byNamePromiseMock.resolve([{ _id: id, name: name, email: oldEmail }]);
-                usersMock.byName.expect(name).return(byNamePromiseMock);
-                var updateEmailPromiseMock = a.then();
-                updateEmailPromiseMock.resolve('success');
-                usersMock.updateEmail.expect(id, email).return(updateEmailPromiseMock);
-                var errorsMock = a.mock();
-                var rolesMock = a.mock();
 
-                var identity = new Identity(plugins, logMock, usersMock, errorsMock, rolesMock);
+                var identityService = container.get('identityService');
 
-                identity.changeEmail(name, email).then(emailChanged, error);
-
-                function emailChanged(result) {
-                    try {
-                        expect(usersMock.byName.verify()).to.be.true;
-                        expect(usersMock.updateEmail.verify()).to.be.true;
+                identityService.changeEmail(testUser.name, newEmail)
+                    .then(function (result) {
                         expect(result).to.be.equal('Az email címet sikeresen megváltoztattuk');
-                        done();
-                    } catch (err) {
-                        error(err);
-                    }
-                }
+                        return testUser._id;
+                    })
+                    .then(coachUtils.get)
+                    .then(function (user) {
+                        expect(user).to.have.property('email', newEmail);
+                    })
+                    .nodeify(done);
 
-                function error(err) {
-                    done(err);
-                }
             });
 
             it('should return invalid email format error, if email format is invalid', function (done) {
+
                 var invalidEmail = 'foo';
-                var usersMock = a.mock();
-                var errorsMock = {
-                    invalidEmailFormat: a.mock()
-                };
-                errorsMock.invalidEmailFormat.expect().return(new Error('error'));
-                var rolesMock = a.mock();
 
-                var identity = new Identity(plugins, logMock, usersMock, errorsMock, rolesMock);
+                var identityService = container.get('identityService');
 
-                identity.changeEmail(name, invalidEmail).then(emailChanged, expectedError);
+                identityService.changeEmail(testUser.name, invalidEmail)
+                    .then(function () {
+                        throw new Error('That should not be happened');
+                    }, function (error) {
+                        expect(error).to.have.property('message', errors.messages.invalidEmailFormat);
+                    })
+                    .nodeify(done);
 
-                function emailChanged() {
-                    error(new Error('That should not be happened'));
-                }
-
-                function expectedError(err) {
-                    try {
-                        expect(err).to.have.property('message', 'error');
-                        done();
-                    } catch (unexpectedError) {
-                        error(unexpectedError);
-                    }
-                }
-
-                function error(err) {
-                    done(err);
-                }
             });
 
             it('should return unknown user name error, if user not found', function (done) {
-                var usersMock = {
-                    byName: a.mock()
-                };
-                var byNamePromiseMock = a.then();
-                byNamePromiseMock.resolve([]);
-                usersMock.byName.expect(name).return(byNamePromiseMock);
-                var errorsMock = {
-                    unknownUserName: a.mock()
-                };
-                errorsMock.unknownUserName.expect().return(new Error('error'));
-                var rolesMock = a.mock();
 
-                var identity = new Identity(plugins, logMock, usersMock, errorsMock, rolesMock);
+                var invalidName = 'No One';
 
-                identity.changeEmail(name, email).then(emailChanged, expectedError);
+                var identityService = container.get('identityService');
 
-                function emailChanged() {
-                    error(new Error('That should not be happened'));
-                }
-
-                function expectedError(err) {
-                    try {
-                        expect(err).to.have.property('message', 'error');
-                        done();
-                    } catch (unexpectedError) {
-                        error(unexpectedError);
-                    }
-                }
-
-                function error(err) {
-                    done(err);
-                }
+                identityService.changeEmail(invalidName, newEmail)
+                    .then(function () {
+                        throw new Error('That should not be happened');
+                    }, function (error) {
+                        expect(error).to.have.property('message', errors.messages.unknownUserName);
+                    })
+                    .nodeify(done);
             });
 
-            it('should return error, if user findig failed', function (done) {
-                var usersMock = {
-                    byName: a.mock()
-                };
-                var byNamePromiseMock = a.then();
-                byNamePromiseMock.reject(new Error('error'));
-                usersMock.byName.expect(name).return(byNamePromiseMock);
-                var errorsMock = a.mock();
-                var rolesMock = a.mock();
+            it('should return email already exist error, if email address already used by other user', function (done) {
 
-                var identity = new Identity(plugins, logMock, usersMock, errorsMock, rolesMock);
+                var identityService = container.get('identityService');
 
-                identity.changeEmail(name, email).then(emailChanged, expectedError);
-
-                function emailChanged() {
-                    error(new Error('That should not be happened'));
-                }
-
-                function expectedError(err) {
-                    try {
-                        expect(err).to.have.property('message', 'error');
-                        done();
-                    } catch (unexpectedError) {
-                        error(unexpectedError);
-                    }
-                }
-
-                function error(err) {
-                    done(err);
-                }
-            });
-
-            it('should return error, if update failed', function (done) {
-                var usersMock = {
-                    byName: a.mock(),
-                    updateEmail: a.mock()
-                };
-                var byNamePromiseMock = a.then();
-                usersMock.byName.expect(name).return(byNamePromiseMock.resolve([{ _id: id, name: name, email: oldEmail }]));
-                var updateEmailPromiseMock = a.then();
-                usersMock.updateEmail.expect(id, email).return(updateEmailPromiseMock.reject(new Error('error')));
-                var errorsMock = a.mock();
-                var rolesMock = a.mock();
-
-                var identity = new Identity(plugins, logMock, usersMock, errorsMock, rolesMock);
-
-                identity.changeEmail(name, email).then(emailChanged, expectedError);
-
-                function emailChanged() {
-                    error(new Error('That should not be happened'));
-                }
-
-                function expectedError(err) {
-                    try {
-                        expect(err).to.have.property('message', 'error');
-                        done();
-                    } catch (unexpectedError) {
-                        error(unexpectedError);
-                    }
-                }
-
-                function error(err) {
-                    done(err);
-                }
+                identityService.changeEmail(testUser.name, otherTestUser.email)
+                    .then(function () {
+                        throw new Error('That should not be happened');
+                    }, function (error) {
+                        expect(error).to.have.property('message', errors.messages.emailAlreadyExist);
+                    })
+                    .nodeify(done);
             });
         });
     });
