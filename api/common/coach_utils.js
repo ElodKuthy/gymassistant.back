@@ -26,33 +26,22 @@
         };
 
         self.updateDoc = function(id, update, retries) {
+
             var deferred = q.defer();
-
             var currentTry = isNaN(retries) ? 1 : retries + 1;
-            self.request('GET', id).then(update, error).then(put, error);
 
-            function put(result) {
-
-                self.request('PUT', id, result).then(success, checkError);
-
-                function success(result) {
-                    deferred.resolve(result);
-                }
-
-                function checkError(err) {
-                    if (currentTry <= 10 && err.message.indexOf('Document update conflict.') > -1) {
-                        self.updateDoc(id, update, currentTry).then(success, error);
+            return self.get(id)
+                .then(update)
+                .then(function (doc) {
+                    return self.put(id, doc);
+                })
+                .catch(function (error) {
+                    if (currentTry <= 10 && error.message.indexOf('Document update conflict.') > -1) {
+                        return self.updateDoc(id, update, currentTry);
                     } else {
-                        error(err);
+                        throw error;
                     }
-                }
-            }
-
-            function error(err) {
-                deferred.reject(err);
-            }
-
-            return deferred.promise;
+                });
         };
 
         self.get = function (request) {
@@ -64,35 +53,31 @@
         };
 
         self.request = function(method, request, body) {
-            var deferred = q.defer();
 
             log.debug('request: ' + method + ' ' + url + '/' + request + (body ? ' body: ' + JSON.stringify(body) : ''));
-            plugins.request({
+
+            return q.denodeify(plugins.request)({
                 method: method,
                 url: url + '/' + (request ? request : ''),
                 body: (body ? JSON.stringify(body) : '')
-            }, function(error, response, body) {
-                if (error) {
-                    log.error(error);
-                    deferred.reject(error);
-                } else {
-                    var bodyParsed = JSON.parse(body);
-                    if (bodyParsed.error) {
-                        log.error(body);
-                        deferred.reject(new Error(body));
-                    } else if (bodyParsed.rows){
-                        var results = [];
-                        bodyParsed.rows.forEach(function (row) {
-                            results.push(row.value);
-                        });
-                        deferred.resolve(results);
-                    } else {
-                        deferred.resolve(bodyParsed);
-                    }
-                }
-            });
+            })
+            .then(function (results) {
+                var parsed = JSON.parse(results[1]);
 
-            return deferred.promise;
+                if (parsed.error) {
+                    throw new Error(results[1]);
+                }
+
+                if (parsed.rows) {
+                    var rows = [];
+                    parsed.rows.forEach(function (row) {
+                        rows.push(row.value);
+                    });
+                    return rows;
+                }
+
+                return parsed;
+            });
         };
     }
 
