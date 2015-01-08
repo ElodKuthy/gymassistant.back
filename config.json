@@ -1,4 +1,7 @@
 {
+  "deploy": {
+    "target": "../gymassistant"
+  },
   "log": {
     "console": false,
     "logFile": "server.log",
