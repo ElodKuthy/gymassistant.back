@@ -20,50 +20,60 @@
             return hash.toString('base64');
         };
 
-        self.authenticate = function (authorizationHeader) {
-
-            var deferred = q.defer();
+        self.parseBasicAuthorizationHeader = function (authorizationHeader) {
 
             if (!authorizationHeader) {
-                log.info('Anonymus request');
-                deferred.resolve(null);
-            } else {
-                try {
-                    var base64 = authorizationHeader.replace('Basic ', '');
-                    base64 = new Buffer(base64, 'base64');
-                    var userNameAndPassword = unescape(decodeURIComponent(base64.toString('utf8')));
-                    log.debug(userNameAndPassword);
-                    userNameAndPassword = userNameAndPassword.split(':');
-                    var userName = userNameAndPassword[0];
-                    var password = userNameAndPassword[1];
-                    var hashBase64 = self.createHash(password);
-
-                    users.byNameFull(userName)
-                        .then(function (results) {
-                            var result = results[0];
-                            if (result.hash === hashBase64) {
-                                    var user = {
-                                        _id: result._id,
-                                        name: result.name,
-                                        email: result.email,
-                                        roles: result.roles
-                                    };
-                                    log.info('Authenticated as ' + user.name);
-                                    deferred.resolve(user);
-                            }
-
-                            deferred.reject(errors.invalidUserNameOrPassword);
-                        }, function (error) {
-                            deferred.reject(errors.invalidUserNameOrPassword);
-                        });
-
-                } catch (error) {
-                    log.error(error.stack);
-                    deferred.reject(errors.invalidUserNameOrPassword);
-                }
+                return;
             }
 
-            return deferred.promise;
+            if (authorizationHeader.indexOf('Basic ') !== 0) {
+                throw errors.invalidUserNameOrPassword();
+            }
+
+            var base64 = authorizationHeader.replace('Basic ', '');
+
+            if (!validator.isBase64(base64)) {
+                throw errors.invalidUserNameOrPassword();
+            }
+
+            base64 = new Buffer(base64, 'base64');
+            var userNameAndPassword = unescape(decodeURIComponent(base64.toString('utf8')));
+            userNameAndPassword = userNameAndPassword.split(':');
+
+            if (userNameAndPassword.length != 2) {
+                throw errors.invalidUserNameOrPassword();
+            }
+
+            return {
+                userName: userNameAndPassword[0],
+                password: userNameAndPassword[1]
+            };
+        };
+
+        self.authenticate = function (args) {
+
+            if (!args || !args.userName || !args.password) {
+                return;
+            }
+
+            var hashBase64 = self.createHash(args.password);
+
+            return users.byNameFull(args.userName)
+                .then(function (results) {
+                    var result = results[0];
+                    if (result.hash === hashBase64) {
+                        var user = {
+                            _id: result._id,
+                            name: result.name,
+                            email: result.email,
+                            roles: result.roles
+                        };
+
+                        return user;
+                    }
+
+                    throw errors.invalidUserNameOrPassword();
+                });
         };
 
         self.changeEmail = function(name, email) {
