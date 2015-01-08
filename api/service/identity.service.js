@@ -23,7 +23,7 @@
         self.parseBasicAuthorizationHeader = function (authorizationHeader) {
 
             if (!authorizationHeader) {
-                return;
+                return q.when(null);
             }
 
             if (authorizationHeader.indexOf('Basic ') !== 0) {
@@ -53,7 +53,7 @@
         self.authenticate = function (args) {
 
             if (!args || !args.userName || !args.password) {
-                return;
+                return q.when(null);
             }
 
             var hashBase64 = self.createHash(args.password);

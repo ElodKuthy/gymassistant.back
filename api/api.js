@@ -10,13 +10,15 @@
 
     router.use(function(req, res, next) {
 
+        res.header("Access-Control-Allow-Origin", "*");
+        res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+
         res.success = function (result) { res.send(result); };
         res.error = function (err) { res.send({ error: err.message }); };
 
         log.info(req.method + ' ' + req.originalUrl + ' from: ' + req.connection.remoteAddress);
 
-        identityService.parseBasicAuthorizationHeader(req.headers.authorization)
-            .then(authenticate)
+        identityService.authenticate(identityService.parseBasicAuthorizationHeader(req.headers.authorization))
             .then(function (result) {
                 req.user = result;
                 next();
