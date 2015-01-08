@@ -13,7 +13,7 @@
     "name": "gym"
   },
   "server": {
-    "port": 8000
+    "port": 443
   },
   "email": {
     "from": "no-reply@testkulturamuhely.hu",
