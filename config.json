@@ -1,6 +1,6 @@
 {
   "deploy": {
-    "target": "../gymassistant"
+    "target": "/home/strider/gymassistant"
   },
   "log": {
     "console": false,
