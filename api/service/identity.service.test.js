@@ -82,7 +82,7 @@
                     .to.throw(errors.messages.invalidUserNameOrPassword);
             });
 
-            it('should return user info, if proper user name and password was provided', function (done) {
+            it('should return user info, if proper user name and password were provided', function (done) {
 
                 var identityService = container.get('identityService');
 
@@ -101,6 +101,76 @@
                         expect(user.roles[0]).to.equal('client');
                         expect(user).to.not.have.property('hash');
                         return user;
+                    })
+                    .nodeify(done);
+            });
+
+            it('should return null, if user name was not provided', function (done) {
+
+                var identityService = container.get('identityService');
+
+                var args = {
+                    userName: null,
+                    password: password
+                };
+
+                identityService.authenticate(args)
+                    .then(function (user) {
+                        expect(user).to.be.null;
+                        return user;
+                    })
+                    .nodeify(done);
+            });
+
+            it('should return null, if password was not provided', function (done) {
+
+                var identityService = container.get('identityService');
+
+                var args = {
+                    userName: testUser.name,
+                    password: null
+                };
+
+                identityService.authenticate(args)
+                    .then(function (user) {
+                        expect(user).to.be.null;
+                        return user;
+                    })
+                    .nodeify(done);
+            });
+
+            it('should return ivalid user name or password, if invalid user name was provided', function (done) {
+
+                var identityService = container.get('identityService');
+
+                var args = {
+                    userName: 'No One',
+                    password: password
+                };
+
+                identityService.authenticate(args)
+                    .then(function () {
+                        throw new Error('That should not be happened');
+                    }, function (error) {
+                        expect(error).to.have.property('message', errors.messages.invalidUserNameOrPassword);
+                    })
+                    .nodeify(done);
+            });
+
+            it('should return ivalid user name or password, if invalid password was provided', function (done) {
+
+                var identityService = container.get('identityService');
+
+                var args = {
+                    userName: testUser.name,
+                    password: 'thatisnotthevalidpassword'
+                };
+
+                identityService.authenticate(args)
+                    .then(function () {
+                        throw new Error('That should not be happened');
+                    }, function (error) {
+                        expect(error).to.have.property('message', errors.messages.invalidUserNameOrPassword);
                     })
                     .nodeify(done);
             });

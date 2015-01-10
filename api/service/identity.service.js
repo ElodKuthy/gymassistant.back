@@ -60,6 +60,10 @@
 
             return users.byNameFull(args.userName)
                 .then(function (results) {
+                    if (results.length != 1) {
+                        throw errors.invalidUserNameOrPassword();
+                    }
+
                     var result = results[0];
                     if (result.hash === hashBase64) {
                         var user = {
