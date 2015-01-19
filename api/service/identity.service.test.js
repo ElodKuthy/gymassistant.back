@@ -269,6 +269,41 @@
                     .nodeify(done);
             });
         });
+
+        describe('reset password', function () {
+
+            var password = 'pwd123';
+
+            var testUser = {
+                _id: 'test_id',
+                name: 'Test User',
+                hash: '8Z96jPtDdgOgPuEBRNKDadgqYIe56j6VkaxbxIzP2dCaw7CQbCVZmPwQnB+aFdDohkHEYgyNS8BngH0FebxKUw==',
+                email: 'test_user@gmail.com',
+                roles: ['client'],
+                type: 'user'
+            };
+
+            beforeEach('set up test db', function (done) {
+                coachUtils.createDb()
+                    .then(design.build)
+                    .then(function () {
+                        return q.all([
+                            coachUtils.put(testUser._id, testUser),
+                        ]);
+                    })
+                    .nodeify(done);
+            });
+
+            afterEach('tear down test db', function (done) {
+                coachUtils.deleteDb().nodeify(done);
+            });
+
+            it('should return the user and new password, if the password was successfully reset', function () {
+
+                var identityService = container.get('identityService');
+
+            });
+        });
     });
 
 })();
