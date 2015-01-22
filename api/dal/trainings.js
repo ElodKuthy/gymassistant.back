@@ -23,8 +23,8 @@
             return request('GET', '_design/trainings/_view/byCoachAndDate' + keys);
         };
 
-        self.bySeriesTillOffset = function(series, offset) {
-            var keys = '?startkey=["' + series + '",' + moment().unix().toString() + ']&endkey=["' + series + '",' + moment().add({days: offset}).endOf('day').unix().toString() + ']';
+        self.bySeriesTillOffset = function(series, start, offset) {
+            var keys = '?startkey=["' + series + '",' + start.toString() + ']&endkey=["' + series + '",' + moment().add({days: offset}).endOf('day').unix().toString() + ']';
             return request('GET', '_design/trainings/_view/bySeriesAndDate' + keys);
         };
 

@@ -9,9 +9,9 @@
         var q = plugins.q;
         var moment = plugins.moment;
 
-        function validateTraining(training, user, purpose, coach) {
+        function validateTraining(training, user, purpose, coach, adminMode) {
 
-            if (moment().subtract({ hours: 1 }).isAfter(training.date)) {
+            if (!adminMode && moment().subtract({ hours: 1 }).isAfter(training.date)) {
                 return errors.trainingEnded();
             }
 
@@ -35,7 +35,7 @@
                 return errors.selfAttend();
             }
 
-            if ((['add', 'remove', 'check in', 'check out']).indexOf(purpose) > -1 && training.coach != coach.name) {
+            if ((['add', 'remove', 'check in', 'check out']).indexOf(purpose) > -1 && !adminMode && training.coach != coach.name) {
                 return errors.cantModifyNotOwnTraining();
             }
 
@@ -106,7 +106,7 @@
             return roles.isCoach(user) ? addCoach(user, training) : addClient(user, training);
         }
 
-        self.addToTraining = function(id, userName, coach) {
+        self.addToTraining = function(id, userName, coach, adminMode) {
             var deferred = q.defer();
 
             q.all([identityService.findByName(userName), trainingService.findByIdFull(id)])
@@ -114,7 +114,7 @@
                     var user = results[0];
                     var training = results[1];
 
-                    var error = validateTraining(training, user, 'add', coach);
+                    var error = validateTraining(training, user, 'add', coach, (coach.roles.indexOf('admin') > -1) || adminMode);
 
                     if (error) {
                         log.debug(error);

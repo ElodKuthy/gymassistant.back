@@ -32,7 +32,7 @@
         container.register('periods', require('./service/periods.js'), 'singleton');
         container.register('roles', require('./service/roles.js'), 'singleton');
         container.register('scheduleService', require('./service/schedule.service.js'));
-        container.register('subscription', require('./service/subscription.js'));
+        container.register('subscriptionService', require('./service/subscription.service.js'));
         container.register('trainingService', require('./service/training.service.js'));
 
         /* api */

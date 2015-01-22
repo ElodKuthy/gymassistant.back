@@ -1,16 +1,16 @@
 (function () {
     'use strict';
 
-    module.exports = Subscription;
+    module.exports = SubscriptionService;
 
-    Subscription.$inject = ['plugins', 'users', 'errors', 'log', 'periods', 'identityService', 'trainings', 'attendees'];
-    function Subscription(plugins, users, errors, log, periods, identityService, trainings, attendees) {
+    SubscriptionService.$inject = ['plugins', 'users', 'errors', 'log', 'periods', 'identityService', 'trainings', 'attendees'];
+    function SubscriptionService(plugins, users, errors, log, periods, identityService, trainings, attendees) {
         var self = this;
         var q = plugins.q;
         var moment = plugins.moment;
         var uuid = plugins.uuid;
 
-        function addForToday(amount, user, coach) {
+        function addForToday(amount, user, coach, adminMode) {
             var deferred = q.defer();
 
             trainings.todayByCoach(coach.name)
@@ -23,7 +23,7 @@
 
                     var promises = [];
                     trainings.forEach(function (training) {
-                        promises.push(attendees.addToTraining(training._id, user.name, coach));
+                        promises.push(attendees.addToTraining(training._id, user.name, coach, adminMode));
                     });
 
                     q.allSettled(promises)
@@ -43,7 +43,7 @@
             return deferred.promise;
         }
 
-        function addToSeries(amount, user, offset, series, coach) {
+        function addToSeries(amount, user, start, offset, series, coach, adminMode) {
             var deferred = q.defer();
 
             if (!series || !series.length || series.length === 0) {
@@ -54,7 +54,7 @@
             var promises = [];
 
             series.forEach(function (current) {
-                promises.push(trainings.bySeriesTillOffset(current, offset));
+                promises.push(trainings.bySeriesTillOffset(current, start, offset));
             });
 
             var trainingsToAdd = [];
@@ -72,7 +72,8 @@
                     var promises = [];
 
                     trainingsToAdd.forEach(function (training) {
-                        promises.push(attendees.addToTraining(training._id, user.name, coach));
+                        console.log(adminMode);
+                        promises.push(attendees.addToTraining(training._id, user.name, coach, adminMode));
                     });
 
                     q.allSettled(promises)
@@ -80,7 +81,7 @@
                             var errors = [];
                             results.forEach(function (result) {
                                 if (result.state != "fulfilled") {
-                                    errors.push(result.reason);
+                                    errors.push(result.reason.toString());
                                 }
                             });
                         deferred.resolve({ result: 'Sikeres bérlet vásárlás', remarks: errors });
@@ -144,60 +145,42 @@
             return deferred.promise;
         };
 
-        self.add = function(amount, userName, period, series, coach) {
-            var deferred = q.defer();
+        self.add = function(args) { // amount, client, period, date, series, coach, admin
 
-            var amountParsed = parseInt(amount);
-            var periodParsed = periods.parse(period);
-
-            if (isNaN(amountParsed) || amountParsed < 1) {
-                deferred.reject(errors.onlyPositiveIntegers());
-                return deferred.promise;
+            if (!args.client || !args.coach) {
+                throw errors.serverError();
             }
 
-            if (!periodParsed) {
-                deferred.reject(errors.invalidPeriod());
-                return deferred.promise;
+            var amount = parseInt(args.amount);
+            var period = periods.parse(args.period);
+            var date = parseInt(args.date);
+
+            if (isNaN(amount) || amount < 1) {
+                throw errors.onlyPositiveIntegers();
             }
 
-            identityService.findByName(userName)
-                .then(function (user) {
+            if (!period) {
+                throw errors.invalidPeriod();
+            }
 
-                    var newCredit = {
-                        id: uuid.v4(),
-                        date: moment().unix(),
-                        expiry: moment().add({ days: periodParsed.days() }).endOf('day').unix(),
-                        coach: coach.name,
-                        amount: amount,
-                        free: amount
-                    };
+            var newCredit = {
+                id: uuid.v4(),
+                date: date ? date : moment().unix(),
+                expiry: moment().add({ days: period.days() }).endOf('day').unix(),
+                coach: args.coach.name,
+                amount: amount,
+                free: amount
+            };
 
-                    users.addCredit(user._id, newCredit)
-                        .then(function() {
-                            if (periodParsed === periods.today) {
-                                addForToday(amountParsed, user, coach)
-                                    .then(function (result) {
-                                        deferred.resolve(result);
-                                    }, function (error) {
-                                        deferred.reject(error);
-                                    });
-                            } else {
-                                addToSeries(amountParsed, user, periodParsed.days(), series, coach)
-                                     .then(function (result) {
-                                        deferred.resolve(result);
-                                    }, function (error) {
-                                        deferred.reject(error);
-                                    });
-                            }
-                        }, function (error) {
-                            deferred.reject(error);
-                        });
-
-                }, function (error) {
-                    deferred.reject(error);
+            return users.addCredit(args.client._id, newCredit)
+                .then(function() {
+                    if (period === periods.today) {
+                        return addForToday(amount, args.client, args.coach, args.admin);
+                    } else {
+                        return addToSeries(amount, args.client, newCredit.date, period.days(), args.series, args.coach, args.admin);
+                    }
                 });
 
-            return deferred.promise;
         };
     }
 })();

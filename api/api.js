@@ -2,11 +2,12 @@
     'use strict';
     module.exports = Api;
 
-    Api.$inject = ['errors', 'log', 'identityService', 'scheduleService', 'trainingService', 'mailerService', 'attendees', 'credits', 'subscription', 'users', 'series'];
-    function Api(errors, log, identityService, scheduleService, trainingService, mailerService, attendees, credits, subscription, users, series) {
+    Api.$inject = ['plugins', 'errors', 'log', 'identityService', 'scheduleService', 'trainingService', 'mailerService', 'attendees', 'credits', 'subscriptionService', 'users', 'series'];
+    function Api(plugins, errors, log, identityService, scheduleService, trainingService, mailerService, attendees, credits, subscriptionService, users, series) {
 
     var express = require('express');
     var router = express.Router();
+    var q = plugins.q;
 
     router.use(function(req, res, next) {
 
@@ -180,37 +181,42 @@
     router.route('/add/subscription/with/:amount/credits/to/user/:userName/for/:period')
 
         .get(function(req, res) {
-            var response = new Response(res);
 
-            if (!response.error(identityService.checkCoach(req.user))) {
-                var amount = req.param('amount');
-                var userName = req.param('userName');
-                var period = req.param('period');
-                var series = [];
-                if (req.query.series) {
-                    series = req.query.series.split(',');
-                }
-
-                subscription.add(amount, userName, period, series, req.user).then(response.success, response.error);
-            }
+            q.all([
+                identityService.checkCoach2(req.user),
+                identityService.findByName(req.param('userName'))
+                ]).spread(function (coach, client) {
+                    return subscriptionService.add({
+                        client: client,
+                        coach: coach,
+                        amount: req.param('amount'),
+                        period: req.param('period'),
+                        series: req.query.series ? req.query.series.split(',') : []
+                    });
+                })
+                .done(res.success, res.error);
         });
 
-    router.route('/add/subscription/with/:amountPerWeek/credits/per/week/to/user/:userName/till/date/:date')
+    router.route('/add/subscription/with/:amount/credits/to/user/:userName/from/date/:date/for/:period/by/:coachName')
 
         .get(function(req, res) {
-            var response = new Response(res);
 
-            if (!response.error(identityService.checkCoach(req.user))) {
-                var amountPerWeek = req.param('amountPerWeek');
-                var userName = req.param('userName');
-                var date = req.param('date');
-                var series = [];
-                if (req.query.series) {
-                    series = req.query.series.split(',');
-                }
-
-                subscription.addTillDate(amountPerWeek, userName, date, series, req.user).then(response.success, response.error);
-            }
+            q.all([
+                identityService.checkAdmin(req.user),
+                identityService.findByName(req.param('coachName')),
+                identityService.findByName(req.param('userName'))
+                ]).spread(function (admin, coach, client) {
+                    return subscriptionService.add({
+                        client: client,
+                        coach: coach,
+                        admin: admin,
+                        date: req.param('date'),
+                        amount: req.param('amount'),
+                        period: req.param('period'),
+                        series: req.query.series ? req.query.series.split(',') : []
+                    });
+                })
+                .done(res.success, res.error);
         });
 
     router.route('/all/users')
@@ -282,8 +288,14 @@
         .get(function(req, res) {
             var response = new Response(res);
 
-            if (!response.error(identityService.checkCoach(req.user))) {
-                series.byCoach(req.user.name).then(response.success, response.error);
+            if (req.user && req.user.roles.indexOf('admin') > -1) {
+                series.byCoach().then(res.success, res.error);
+            } else {
+                identityService.checkCoach2(req.user)
+                .then(function (coach) {
+                    return series.byCoach(coach.name);
+                })
+                .then(response.success, response.error);
             }
         });
 

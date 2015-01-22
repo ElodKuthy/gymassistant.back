@@ -210,6 +210,7 @@
             }
         };
 
+
         self.checkCoach = function(user) {
             if (!user) {
                 return errors.invalidUserNameOrPassword();
@@ -220,14 +221,28 @@
             }
         };
 
+        self.checkCoach2 = function(user) {
+            if (!user) {
+                throw errors.invalidUserNameOrPassword();
+            }
+
+            if (!roles.isCoach(user)) {
+                throw errors.unauthorized();
+            }
+
+            return q.when(user);
+        };
+
         self.checkAdmin = function(user) {
             if (!user) {
-                return errors.invalidUserNameOrPassword();
+                throw errors.invalidUserNameOrPassword();
             }
 
             if (!roles.isAdmin(user)) {
-                return errors.unauthorized();
+                throw errors.unauthorized();
             }
+
+            return user;
         };
     }
 })();
