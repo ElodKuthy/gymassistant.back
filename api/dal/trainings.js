@@ -24,7 +24,7 @@
         };
 
         self.bySeriesTillOffset = function(series, start, offset) {
-            var keys = '?startkey=["' + series + '",' + start.toString() + ']&endkey=["' + series + '",' + moment().add({days: offset}).endOf('day').unix().toString() + ']';
+            var keys = '?startkey=["' + series + '",' + start.toString() + ']&endkey=["' + series + '",' + moment.unix(start).add({days: offset}).endOf('day').unix().toString() + ']';
             return request('GET', '_design/trainings/_view/bySeriesAndDate' + keys);
         };
 

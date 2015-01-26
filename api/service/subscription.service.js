@@ -44,11 +44,9 @@
         }
 
         function addToSeries(amount, user, start, offset, series, coach, adminMode) {
-            var deferred = q.defer();
 
             if (!series || !series.length || series.length === 0) {
-                deferred.resolve({ result: 'Sikeres bérlet vásárlás (feliratkozások nélkül)'});
-                return deferred.promise;
+                return q.when({ result: 'Sikeres bérlet vásárlás (feliratkozások nélkül)'});
             }
 
             var promises = [];
@@ -59,7 +57,7 @@
 
             var trainingsToAdd = [];
 
-            q.allSettled(promises)
+            return q.allSettled(promises)
                 .then(function (results) {
                     results.forEach(function (result) {
                         if (result.state === "fulfilled") {
@@ -69,83 +67,27 @@
                         }
                     });
 
-                    var promises = [];
+                    var errors = [];
 
-                    trainingsToAdd.forEach(function (training) {
-                        console.log(adminMode);
-                        promises.push(attendees.addToTraining(training._id, user.name, coach, adminMode));
-                    });
+                    function addToTraining (index) {
+                        if (index === trainingsToAdd.length) {
+                            return q.when({ result: 'Sikeres bérlet vásárlás', remarks: errors });
+                        }
 
-                    q.allSettled(promises)
-                        .then(function (results) {
-                            var errors = [];
-                            results.forEach(function (result) {
-                                if (result.state != "fulfilled") {
-                                    errors.push(result.reason.toString());
-                                }
+                        return attendees.addToTraining(trainingsToAdd[index]._id, user.name, coach, adminMode)
+                            .then(function () {
+                                return addToTraining(index + 1);
+                            }, function (error) {
+                                errors.push(error);
+                                return addToTraining(index + 1);
                             });
-                        deferred.resolve({ result: 'Sikeres bérlet vásárlás', remarks: errors });
-                    });
-                });
+                    }
 
-            return deferred.promise;
+                    return addToTraining(0);
+                });
         }
 
-        self.addTillDate = function(amountPerWeek, userName, date, series, coach) {
-            var deferred = q.defer();
-
-            var amountParsed = parseInt(amountPerWeek);
-
-            if (isNaN(amountParsed) || amountParsed < 1) {
-                deferred.reject(errors.onlyPositiveIntegers());
-                return deferred.promise;
-            }
-
-            var dateParsed = moment.unix(date);
-            if (!dateParsed.isValid() || moment().isAfter(dateParsed)) {
-                deferred.reject(errors.dateIsInPast());
-                return deferred.promise;
-            }
-
-
-            identityService.findByName(userName)
-                .then(function (user) {
-
-                    var now = moment();
-                    var expiry = moment(dateParsed).endOf('day');
-                    var periodParsed = expiry.diff(now, 'days');
-                    var allAmount = amountParsed * periodParsed;
-
-                    var newCredit = {
-                        id: uuid.v4(),
-                        date: now.unix(),
-                        expiry: expiry.unix(),
-                        coach: coach.name,
-                        amount: allAmount,
-                        free: allAmount
-                    };
-
-                    users.addCredit(user._id, newCredit)
-                        .then(function() {
-
-                            addToSeries(amountParsed, user, periodParsed, series, coach)
-                                 .then(function (result) {
-                                    deferred.resolve(result);
-                                }, function (error) {
-                                    deferred.reject(error);
-                                });
-                        }, function (error) {
-                            deferred.reject(error);
-                        });
-
-                }, function (error) {
-                    deferred.reject(error);
-                });
-
-            return deferred.promise;
-        };
-
-        self.add = function(args) { // amount, client, period, date, series, coach, admin
+        self.add = function(args) {
 
             if (!args.client || !args.coach) {
                 throw errors.serverError();
@@ -163,10 +105,12 @@
                 throw errors.invalidPeriod();
             }
 
+            var begin = date ? date : moment().unix();
+
             var newCredit = {
                 id: uuid.v4(),
-                date: date ? date : moment().unix(),
-                expiry: moment().add({ days: period.days() }).endOf('day').unix(),
+                date: begin,
+                expiry: moment.unix(begin).add({ days: period.days() }).endOf('day').unix(),
                 coach: args.coach.name,
                 amount: amount,
                 free: amount

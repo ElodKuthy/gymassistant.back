@@ -51,7 +51,7 @@
                 return errors.notCheckedIn();
             }
 
-            if ((['leave', 'remove']).indexOf(purpose) > -1 && moment().add({ hours: 3 }).isAfter(training.date)) {
+            if (!adminMode && (['leave', 'remove']).indexOf(purpose) > -1 && moment().add({ hours: 3 }).isAfter(training.date)) {
                 return errors.toLateToLeave();
             }
 
@@ -258,7 +258,7 @@
                     var user = results[0];
                     var training = results[1];
 
-                    var error = validateTraining(training, user, 'remove', coach);
+                    var error = validateTraining(training, user, 'remove', coach, coach.roles.indexOf('admin') > -1);
 
                     if (error) {
                         deferred.reject(error);
@@ -287,7 +287,7 @@
                     var user = results[0];
                     var training = results[1];
 
-                    var error = validateTraining(training, user, 'check in', coach);
+                    var error = validateTraining(training, user, 'check in', coach, coach.roles.indexOf('admin') > -1);
 
                     if (error) {
                         deferred.reject(error);
@@ -317,7 +317,7 @@
                     var user = results[0];
                     var training = results[1];
 
-                    var error = validateTraining(training, user, 'undo check in', coach);
+                    var error = validateTraining(training, user, 'undo check in', coach, coach.roles.indexOf('admin') > -1);
 
                     if (error) {
                         deferred.reject(error);
