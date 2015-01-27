@@ -2,8 +2,8 @@
     'use strict';
     module.exports = Api;
 
-    Api.$inject = ['plugins', 'errors', 'log', 'identityService', 'scheduleService', 'trainingService', 'mailerService', 'attendees', 'credits', 'subscriptionService', 'users', 'series'];
-    function Api(plugins, errors, log, identityService, scheduleService, trainingService, mailerService, attendees, credits, subscriptionService, users, series) {
+    Api.$inject = ['plugins', 'errors', 'log', 'identityService', 'scheduleService', 'trainingService', 'mailerService', 'attendees', 'creditsService', 'subscriptionService', 'users', 'series'];
+    function Api(plugins, errors, log, identityService, scheduleService, trainingService, mailerService, attendees, creditsService, subscriptionService, users, series) {
 
     var express = require('express');
     var router = express.Router();
@@ -14,8 +14,13 @@
         res.header("Access-Control-Allow-Origin", "*");
         res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
 
-        res.success = function (result) { res.send(result); };
-        res.error = function (err) { res.send({ error: err.message }); };
+        res.done = function (err, result) {
+            if (err) {
+                res.send({ error: err.message });
+            } else {
+                res.send(result);
+            }
+        };
 
         log.info(req.method + ' ' + req.originalUrl + ' from: ' + req.connection.remoteAddress);
 
@@ -159,23 +164,19 @@
     router.route('/my/credits')
 
         .get(function(req, res) {
-            var response = new Response(res);
 
-            if (!response.error(identityService.checkLoggedIn(req.user))) {
-                credits.getUserCredits(req.user).then(response.success, response.error);
-            }
+             return identityService.checkLoggedIn2(req.user)
+                .then(creditsService.getUserCredits)
+                .nodeify(res.done);
         });
 
     router.route('/credits/of/user/:userName')
 
         .get(function(req, res) {
-            var response = new Response(res);
 
-            if (!response.error(identityService.checkCoach(req.user))) {
-                var userName = req.param('userName');
-
-                credits.getUserCreditsFromName(userName).then(response.success, response.error);
-            }
+            return identityService.checkCoach2(req.user)
+                .then (function () { return creditsService.getUserCreditsFromName(req.param('userName')); })
+                .nodeify(res.done);
         });
 
     router.route('/add/subscription/with/:amount/credits/to/user/:userName/for/:period')
@@ -194,7 +195,7 @@
                         series: req.query.series ? req.query.series.split(',') : []
                     });
                 })
-                .done(res.success, res.error);
+                .nodeify(res.done);
         });
 
     router.route('/add/subscription/with/:amount/credits/to/user/:userName/from/date/:date/for/:period/by/:coachName')
@@ -216,7 +217,7 @@
                         series: req.query.series ? req.query.series.split(',') : []
                     });
                 })
-                .done(res.success, res.error);
+                .nodeify(res.done);
         });
 
     router.route('/all/users')
@@ -253,7 +254,7 @@
 
                 identityService.addUser(name, email)
                     .then(mailerService.sendRegistrationMail)
-                    .done(res.success, res.error);
+                    .nodeify(res.done);
             }
         });
 
@@ -268,7 +269,7 @@
             identityService.findByName(name)
                 .then(identityService.resetPassword)
                 .then(mailerService.sendRegistrationMail)
-                .done(res.success, res.error);
+                .nodeify(res.done);
             }
         });
 
@@ -289,7 +290,7 @@
             var response = new Response(res);
 
             if (req.user && req.user.roles.indexOf('admin') > -1) {
-                series.byCoach().then(res.success, res.error);
+                series.byCoach().nodeify(res.done);
             } else {
                 identityService.checkCoach2(req.user)
                 .then(function (coach) {
@@ -330,7 +331,7 @@
             identityService.findByEmail(email)
                 .then(identityService.resetPassword)
                 .then(mailerService.sendResetPasswordMail)
-                .done(res.success, res.error);
+                .nodeify(res.done);
         });
 
     router.get('/', function(req, res) {

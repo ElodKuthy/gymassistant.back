@@ -26,7 +26,7 @@
 
         /* service layer */
         container.register('attendees', require('./service/attendees.js'));
-        container.register('credits', require('./service/credits.js'));
+        container.register('creditsService', require('./service/credits.service.js'));
         container.register('identityService', require('./service/identity.service.js'));
         container.register('mailerService', require('./service/mailer.service.js'));
         container.register('periods', require('./service/periods.js'), 'singleton');

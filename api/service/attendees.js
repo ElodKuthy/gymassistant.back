@@ -3,8 +3,8 @@
 
     module.exports = Attendees;
 
-    Attendees.$inject = ['plugins', 'errors', 'trainingService', 'credits', 'log', 'users', 'trainings', 'roles', 'identityService'];
-    function Attendees(plugins, errors, trainingService, credits, log, users, trainings, roles, identityService) {
+    Attendees.$inject = ['plugins', 'errors', 'trainingService', 'creditsService', 'log', 'users', 'trainings', 'roles', 'identityService'];
+    function Attendees(plugins, errors, trainingService, creditsService, log, users, trainings, roles, identityService) {
         var self = this;
         var q = plugins.q;
         var moment = plugins.moment;
@@ -75,10 +75,10 @@
             return deferred.promise;
         }
 
-        function addClient(user, training) {
+        function addClient(user, training, adminMode) {
             var deferred = q.defer();
 
-            credits.bookFreeCredit(user, training.coach)
+            creditsService.bookFreeCredit(user, training, adminMode)
                 .then(function(bookedCredit) {
 
                     training.attendees.push({
@@ -102,8 +102,8 @@
             return deferred.promise;
         }
 
-        function add(user, training) {
-            return roles.isCoach(user) ? addCoach(user, training) : addClient(user, training);
+        function add(user, training, adminMode) {
+            return roles.isCoach(user) ? addCoach(user, training, adminMode) : addClient(user, training, adminMode);
         }
 
         self.addToTraining = function(id, userName, coach, adminMode) {
@@ -122,7 +122,7 @@
                         return;
                     }
 
-                    add(user, training)
+                    add(user, training, (coach.roles.indexOf('admin') > -1) || adminMode)
                         .then(function (result) {
                             deferred.resolve(result);
                         }, function (error) {

@@ -210,6 +210,13 @@
             }
         };
 
+        self.checkLoggedIn2 = function(user) {
+            if (!user) {
+                throw errors.unauthorized();
+            }
+
+            return q.when(user);
+        };
 
         self.checkCoach = function(user) {
             if (!user) {
