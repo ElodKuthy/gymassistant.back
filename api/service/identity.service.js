@@ -138,7 +138,15 @@
                 });
         };
 
-        self.addUser = function(userName, email) {
+        self.addClient = function (userName, email) {
+            return addUser(userName, email, [roles.client]);
+        };
+
+        self.addCoach = function (userName, email) {
+            return addUser(userName, email, [roles.client, roles.coach]);
+        };
+
+        function addUser (userName, email, roles) {
 
             var password = generatePassword(8, false);
 
@@ -154,7 +162,7 @@
                         name: userName,
                         email: email,
                         registration: moment().unix(),
-                        roles: [roles.client],
+                        roles: roles,
                         qr: uuid.v4(),
                         hash: self.createHash(password),
                         credits: [],
@@ -167,7 +175,7 @@
                 .then(function (user) {
                     return { user: user, password: password };
                 });
-        };
+        }
 
         self.findByName = function (name) {
             var deferred = q.defer();
@@ -249,7 +257,7 @@
                 throw errors.unauthorized();
             }
 
-            return user;
+            return q.when(user);
         };
     }
 })();

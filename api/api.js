@@ -246,16 +246,25 @@
     router.route('/add/new/user/with/name/:name/and/email/:email')
 
         .get(function(req, res) {
-            var response = new Response(res);
 
-            if (!response.error(identityService.checkCoach(req.user))) {
-                var name = req.param('name');
-                var email = req.param('email');
+            return identityService.checkCoach2(req.user)
+                .then(function () {
+                    return identityService.addClient(req.param('name'), req.param('email'));
+                })
+                .then(mailerService.sendRegistrationMail)
+                .nodeify(res.done);
+        });
 
-                identityService.addUser(name, email)
-                    .then(mailerService.sendRegistrationMail)
-                    .nodeify(res.done);
-            }
+    router.route('/add/new/coach/with/name/:name/and/email/:email')
+
+        .get(function(req, res) {
+
+            return identityService.checkAdmin(req.user)
+                .then(function () {
+                    return identityService.addCoach(req.param('name'), req.param('email'));
+                })
+                .then(mailerService.sendCoachRegistrationMail)
+                .nodeify(res.done);
         });
 
     router.route('/send/registration/email/to/user/:name')
