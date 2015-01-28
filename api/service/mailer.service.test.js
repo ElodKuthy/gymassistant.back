@@ -24,7 +24,7 @@
                     send: function (template, params, callback) {
                         expect(template).to.equal('emails/registration');
                         expect(params.to).to.equal(refParams.user.email);
-                        expect(params.subject).to.equal('Testkultúra Terem - Üdvözölünk');
+                        expect(params.subject).to.equal('Edzőterem Segéd - Üdvözölünk');
                         expect(params.userName).to.equal(refParams.user.name);
                         expect(params.password).to.equal(refParams.password);
                         callback(null, 'ok');
@@ -37,7 +37,7 @@
 
                 mailerService.sendRegistrationMail(refParams)
                     .then(function (result) {
-                        expect(result).to.equal('Az üdvözlő emailt sikeresen elküldük az új felhasználónak');
+                        expect(result).to.equal('Az üdvözlő emailt sikeresen elküldtük az új felhasználónak');
                     })
                     .nodeify(done);
             });
@@ -50,7 +50,7 @@
                     send: function (template, params, callback) {
                         expect(template).to.equal('emails/reset_password');
                         expect(params.to).to.equal(refParams.user.email);
-                        expect(params.subject).to.equal('Testkultúra Terem - Jelszó csere');
+                        expect(params.subject).to.equal('Edzőterem Segéd - Jelszó csere');
                         expect(params.userName).to.equal(refParams.user.name);
                         expect(params.password).to.equal(refParams.password);
                         callback(null, 'ok');

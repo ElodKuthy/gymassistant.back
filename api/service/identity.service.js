@@ -60,6 +60,10 @@
 
             return users.byNameFull(args.userName)
                 .then(function (results) {
+                    if (results.length != 1) {
+                        throw errors.invalidUserNameOrPassword();
+                    }
+
                     var result = results[0];
                     if (result.hash === hashBase64) {
                         var user = {
@@ -134,7 +138,15 @@
                 });
         };
 
-        self.addUser = function(userName, email) {
+        self.addClient = function (userName, email) {
+            return addUser(userName, email, [roles.client]);
+        };
+
+        self.addCoach = function (userName, email) {
+            return addUser(userName, email, [roles.client, roles.coach]);
+        };
+
+        function addUser (userName, email, roles) {
 
             var password = generatePassword(8, false);
 
@@ -150,7 +162,7 @@
                         name: userName,
                         email: email,
                         registration: moment().unix(),
-                        roles: [roles.client],
+                        roles: roles,
                         qr: uuid.v4(),
                         hash: self.createHash(password),
                         credits: [],
@@ -163,7 +175,7 @@
                 .then(function (user) {
                     return { user: user, password: password };
                 });
-        };
+        }
 
         self.findByName = function (name) {
             var deferred = q.defer();
@@ -206,6 +218,14 @@
             }
         };
 
+        self.checkLoggedIn2 = function(user) {
+            if (!user) {
+                throw errors.unauthorized();
+            }
+
+            return q.when(user);
+        };
+
         self.checkCoach = function(user) {
             if (!user) {
                 return errors.invalidUserNameOrPassword();
@@ -216,14 +236,28 @@
             }
         };
 
+        self.checkCoach2 = function(user) {
+            if (!user) {
+                throw errors.invalidUserNameOrPassword();
+            }
+
+            if (!roles.isCoach(user)) {
+                throw errors.unauthorized();
+            }
+
+            return q.when(user);
+        };
+
         self.checkAdmin = function(user) {
             if (!user) {
-                return errors.invalidUserNameOrPassword();
+                throw errors.invalidUserNameOrPassword();
             }
 
             if (!roles.isAdmin(user)) {
-                return errors.unauthorized();
+                throw errors.unauthorized();
             }
+
+            return q.when(user);
         };
     }
 })();

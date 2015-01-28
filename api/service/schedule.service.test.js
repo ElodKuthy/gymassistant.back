@@ -56,8 +56,14 @@
             var otherCoachName = 'Test Coach 2';
             var trainingName = 'Test training';
 
-            var coach = { name: coachName };
-            var otherCoach = { name: otherCoachName };
+            var coach = {
+                name: coachName,
+                roles: ['client', 'coach']
+            };
+            var otherCoach = {
+                name: otherCoachName,
+                roles: ['client', 'coach']
+            };
 
             var user = {
                 name: userName,

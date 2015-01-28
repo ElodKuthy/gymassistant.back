@@ -3,15 +3,15 @@
 
     module.exports = Attendees;
 
-    Attendees.$inject = ['plugins', 'errors', 'trainingService', 'credits', 'log', 'users', 'trainings', 'roles', 'identityService'];
-    function Attendees(plugins, errors, trainingService, credits, log, users, trainings, roles, identityService) {
+    Attendees.$inject = ['plugins', 'errors', 'trainingService', 'creditsService', 'log', 'users', 'trainings', 'roles', 'identityService'];
+    function Attendees(plugins, errors, trainingService, creditsService, log, users, trainings, roles, identityService) {
         var self = this;
         var q = plugins.q;
         var moment = plugins.moment;
 
-        function validateTraining(training, user, purpose, coach) {
+        function validateTraining(training, user, purpose, coach, adminMode) {
 
-            if (moment().subtract({ hours: 1 }).isAfter(training.date)) {
+            if (!adminMode && moment().subtract({ hours: 1 }).isAfter(training.date)) {
                 return errors.trainingEnded();
             }
 
@@ -35,7 +35,7 @@
                 return errors.selfAttend();
             }
 
-            if ((['add', 'remove', 'check in', 'check out']).indexOf(purpose) > -1 && training.coach != coach.name) {
+            if ((['add', 'remove', 'check in', 'check out']).indexOf(purpose) > -1 && !adminMode && training.coach != coach.name) {
                 return errors.cantModifyNotOwnTraining();
             }
 
@@ -51,7 +51,7 @@
                 return errors.notCheckedIn();
             }
 
-            if ((['leave', 'remove']).indexOf(purpose) > -1 && moment().add({ hours: 3 }).isAfter(training.date)) {
+            if (!adminMode && (['leave', 'remove']).indexOf(purpose) > -1 && moment().add({ hours: 3 }).isAfter(training.date)) {
                 return errors.toLateToLeave();
             }
 
@@ -75,10 +75,10 @@
             return deferred.promise;
         }
 
-        function addClient(user, training) {
+        function addClient(user, training, adminMode) {
             var deferred = q.defer();
 
-            credits.bookFreeCredit(user, training.coach)
+            creditsService.bookFreeCredit(user, training, adminMode)
                 .then(function(bookedCredit) {
 
                     training.attendees.push({
@@ -102,11 +102,11 @@
             return deferred.promise;
         }
 
-        function add(user, training) {
-            return roles.isCoach(user) ? addCoach(user, training) : addClient(user, training);
+        function add(user, training, adminMode) {
+            return roles.isCoach(user) ? addCoach(user, training, adminMode) : addClient(user, training, adminMode);
         }
 
-        self.addToTraining = function(id, userName, coach) {
+        self.addToTraining = function(id, userName, coach, adminMode) {
             var deferred = q.defer();
 
             q.all([identityService.findByName(userName), trainingService.findByIdFull(id)])
@@ -114,7 +114,7 @@
                     var user = results[0];
                     var training = results[1];
 
-                    var error = validateTraining(training, user, 'add', coach);
+                    var error = validateTraining(training, user, 'add', coach, (coach.roles.indexOf('admin') > -1) || adminMode);
 
                     if (error) {
                         log.debug(error);
@@ -122,7 +122,7 @@
                         return;
                     }
 
-                    add(user, training)
+                    add(user, training, (coach.roles.indexOf('admin') > -1) || adminMode)
                         .then(function (result) {
                             deferred.resolve(result);
                         }, function (error) {
@@ -258,7 +258,7 @@
                     var user = results[0];
                     var training = results[1];
 
-                    var error = validateTraining(training, user, 'remove', coach);
+                    var error = validateTraining(training, user, 'remove', coach, coach.roles.indexOf('admin') > -1);
 
                     if (error) {
                         deferred.reject(error);
@@ -287,7 +287,7 @@
                     var user = results[0];
                     var training = results[1];
 
-                    var error = validateTraining(training, user, 'check in', coach);
+                    var error = validateTraining(training, user, 'check in', coach, coach.roles.indexOf('admin') > -1);
 
                     if (error) {
                         deferred.reject(error);
@@ -317,7 +317,7 @@
                     var user = results[0];
                     var training = results[1];
 
-                    var error = validateTraining(training, user, 'undo check in', coach);
+                    var error = validateTraining(training, user, 'undo check in', coach, coach.roles.indexOf('admin') > -1);
 
                     if (error) {
                         deferred.reject(error);

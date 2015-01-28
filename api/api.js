@@ -2,19 +2,25 @@
     'use strict';
     module.exports = Api;
 
-    Api.$inject = ['errors', 'log', 'identityService', 'scheduleService', 'trainingService', 'mailerService', 'attendees', 'credits', 'subscription', 'users', 'series'];
-    function Api(errors, log, identityService, scheduleService, trainingService, mailerService, attendees, credits, subscription, users, series) {
+    Api.$inject = ['plugins', 'errors', 'log', 'identityService', 'scheduleService', 'trainingService', 'mailerService', 'attendees', 'creditsService', 'subscriptionService', 'users', 'series'];
+    function Api(plugins, errors, log, identityService, scheduleService, trainingService, mailerService, attendees, creditsService, subscriptionService, users, series) {
 
     var express = require('express');
     var router = express.Router();
+    var q = plugins.q;
 
     router.use(function(req, res, next) {
 
         res.header("Access-Control-Allow-Origin", "*");
         res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
 
-        res.success = function (result) { res.send(result); };
-        res.error = function (err) { res.send({ error: err.message }); };
+        res.done = function (err, result) {
+            if (err) {
+                res.send({ error: err.message });
+            } else {
+                res.send(result);
+            }
+        };
 
         log.info(req.method + ' ' + req.originalUrl + ' from: ' + req.connection.remoteAddress);
 
@@ -158,59 +164,60 @@
     router.route('/my/credits')
 
         .get(function(req, res) {
-            var response = new Response(res);
 
-            if (!response.error(identityService.checkLoggedIn(req.user))) {
-                credits.getUserCredits(req.user).then(response.success, response.error);
-            }
+             return identityService.checkLoggedIn2(req.user)
+                .then(creditsService.getUserCredits)
+                .nodeify(res.done);
         });
 
     router.route('/credits/of/user/:userName')
 
         .get(function(req, res) {
-            var response = new Response(res);
 
-            if (!response.error(identityService.checkCoach(req.user))) {
-                var userName = req.param('userName');
-
-                credits.getUserCreditsFromName(userName).then(response.success, response.error);
-            }
+            return identityService.checkCoach2(req.user)
+                .then (function () { return creditsService.getUserCreditsFromName(req.param('userName')); })
+                .nodeify(res.done);
         });
 
     router.route('/add/subscription/with/:amount/credits/to/user/:userName/for/:period')
 
         .get(function(req, res) {
-            var response = new Response(res);
 
-            if (!response.error(identityService.checkCoach(req.user))) {
-                var amount = req.param('amount');
-                var userName = req.param('userName');
-                var period = req.param('period');
-                var series = [];
-                if (req.query.series) {
-                    series = req.query.series.split(',');
-                }
-
-                subscription.add(amount, userName, period, series, req.user).then(response.success, response.error);
-            }
+            q.all([
+                identityService.checkCoach2(req.user),
+                identityService.findByName(req.param('userName'))
+                ]).spread(function (coach, client) {
+                    return subscriptionService.add({
+                        client: client,
+                        coach: coach,
+                        amount: req.param('amount'),
+                        period: req.param('period'),
+                        series: req.query.series ? req.query.series.split(',') : []
+                    });
+                })
+                .nodeify(res.done);
         });
 
-    router.route('/add/subscription/with/:amountPerWeek/credits/per/week/to/user/:userName/till/date/:date')
+    router.route('/add/subscription/with/:amount/credits/to/user/:userName/from/date/:date/for/:period/by/:coachName')
 
         .get(function(req, res) {
-            var response = new Response(res);
 
-            if (!response.error(identityService.checkCoach(req.user))) {
-                var amountPerWeek = req.param('amountPerWeek');
-                var userName = req.param('userName');
-                var date = req.param('date');
-                var series = [];
-                if (req.query.series) {
-                    series = req.query.series.split(',');
-                }
-
-                subscription.addTillDate(amountPerWeek, userName, date, series, req.user).then(response.success, response.error);
-            }
+            q.all([
+                identityService.checkAdmin(req.user),
+                identityService.findByName(req.param('coachName')),
+                identityService.findByName(req.param('userName'))
+                ]).spread(function (admin, coach, client) {
+                    return subscriptionService.add({
+                        client: client,
+                        coach: coach,
+                        admin: admin,
+                        date: req.param('date'),
+                        amount: req.param('amount'),
+                        period: req.param('period'),
+                        series: req.query.series ? req.query.series.split(',') : []
+                    });
+                })
+                .nodeify(res.done);
         });
 
     router.route('/all/users')
@@ -239,16 +246,25 @@
     router.route('/add/new/user/with/name/:name/and/email/:email')
 
         .get(function(req, res) {
-            var response = new Response(res);
 
-            if (!response.error(identityService.checkCoach(req.user))) {
-                var name = req.param('name');
-                var email = req.param('email');
+            return identityService.checkCoach2(req.user)
+                .then(function () {
+                    return identityService.addClient(req.param('name'), req.param('email'));
+                })
+                .then(mailerService.sendRegistrationMail)
+                .nodeify(res.done);
+        });
 
-                identityService.addUser(name, email)
-                    .then(mailerService.sendRegistrationMail)
-                    .done(res.success, res.error);
-            }
+    router.route('/add/new/coach/with/name/:name/and/email/:email')
+
+        .get(function(req, res) {
+
+            return identityService.checkAdmin(req.user)
+                .then(function () {
+                    return identityService.addCoach(req.param('name'), req.param('email'));
+                })
+                .then(mailerService.sendCoachRegistrationMail)
+                .nodeify(res.done);
         });
 
     router.route('/send/registration/email/to/user/:name')
@@ -262,7 +278,7 @@
             identityService.findByName(name)
                 .then(identityService.resetPassword)
                 .then(mailerService.sendRegistrationMail)
-                .done(res.success, res.error);
+                .nodeify(res.done);
             }
         });
 
@@ -282,8 +298,14 @@
         .get(function(req, res) {
             var response = new Response(res);
 
-            if (!response.error(identityService.checkCoach(req.user))) {
-                series.byCoach(req.user.name).then(response.success, response.error);
+            if (req.user && req.user.roles.indexOf('admin') > -1) {
+                series.byCoach().nodeify(res.done);
+            } else {
+                identityService.checkCoach2(req.user)
+                .then(function (coach) {
+                    return series.byCoach(coach.name);
+                })
+                .then(response.success, response.error);
             }
         });
 
@@ -318,7 +340,7 @@
             identityService.findByEmail(email)
                 .then(identityService.resetPassword)
                 .then(mailerService.sendResetPasswordMail)
-                .done(res.success, res.error);
+                .nodeify(res.done);
         });
 
     router.get('/', function(req, res) {

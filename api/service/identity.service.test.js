@@ -82,7 +82,7 @@
                     .to.throw(errors.messages.invalidUserNameOrPassword);
             });
 
-            it('should return user info, if proper user name and password was provided', function (done) {
+            it('should return user info, if proper user name and password were provided', function (done) {
 
                 var identityService = container.get('identityService');
 
@@ -101,6 +101,76 @@
                         expect(user.roles[0]).to.equal('client');
                         expect(user).to.not.have.property('hash');
                         return user;
+                    })
+                    .nodeify(done);
+            });
+
+            it('should return null, if user name was not provided', function (done) {
+
+                var identityService = container.get('identityService');
+
+                var args = {
+                    userName: null,
+                    password: password
+                };
+
+                identityService.authenticate(args)
+                    .then(function (user) {
+                        expect(user).to.be.null;
+                        return user;
+                    })
+                    .nodeify(done);
+            });
+
+            it('should return null, if password was not provided', function (done) {
+
+                var identityService = container.get('identityService');
+
+                var args = {
+                    userName: testUser.name,
+                    password: null
+                };
+
+                identityService.authenticate(args)
+                    .then(function (user) {
+                        expect(user).to.be.null;
+                        return user;
+                    })
+                    .nodeify(done);
+            });
+
+            it('should return ivalid user name or password, if invalid user name was provided', function (done) {
+
+                var identityService = container.get('identityService');
+
+                var args = {
+                    userName: 'No One',
+                    password: password
+                };
+
+                identityService.authenticate(args)
+                    .then(function () {
+                        throw new Error('That should not be happened');
+                    }, function (error) {
+                        expect(error).to.have.property('message', errors.messages.invalidUserNameOrPassword);
+                    })
+                    .nodeify(done);
+            });
+
+            it('should return ivalid user name or password, if invalid password was provided', function (done) {
+
+                var identityService = container.get('identityService');
+
+                var args = {
+                    userName: testUser.name,
+                    password: 'thatisnotthevalidpassword'
+                };
+
+                identityService.authenticate(args)
+                    .then(function () {
+                        throw new Error('That should not be happened');
+                    }, function (error) {
+                        expect(error).to.have.property('message', errors.messages.invalidUserNameOrPassword);
                     })
                     .nodeify(done);
             });
@@ -197,6 +267,41 @@
                         expect(error).to.have.property('message', errors.messages.emailAlreadyExist);
                     })
                     .nodeify(done);
+            });
+        });
+
+        describe('reset password', function () {
+
+            var password = 'pwd123';
+
+            var testUser = {
+                _id: 'test_id',
+                name: 'Test User',
+                hash: '8Z96jPtDdgOgPuEBRNKDadgqYIe56j6VkaxbxIzP2dCaw7CQbCVZmPwQnB+aFdDohkHEYgyNS8BngH0FebxKUw==',
+                email: 'test_user@gmail.com',
+                roles: ['client'],
+                type: 'user'
+            };
+
+            beforeEach('set up test db', function (done) {
+                coachUtils.createDb()
+                    .then(design.build)
+                    .then(function () {
+                        return q.all([
+                            coachUtils.put(testUser._id, testUser),
+                        ]);
+                    })
+                    .nodeify(done);
+            });
+
+            afterEach('tear down test db', function (done) {
+                coachUtils.deleteDb().nodeify(done);
+            });
+
+            it('should return the user and new password, if the password was successfully reset', function () {
+
+                var identityService = container.get('identityService');
+
             });
         });
     });
