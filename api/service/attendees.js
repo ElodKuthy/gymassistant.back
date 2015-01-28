@@ -59,13 +59,13 @@
 
         function addCoach(user, training) {
             var deferred = q.defer();
-            attendees.push({
+            training.attendees.push({
                 name: user.name,
                 type: 'coach',
                 checkedIn: false
             });
 
-            trainings.updateAttendees(training._id, attendees)
+            trainings.updateAttendees(training._id, training.attendees)
                 .then(function () {
                     deferred.resolve({ result: 'Sikeres jelentkezés'});
                 }, function (error) {
