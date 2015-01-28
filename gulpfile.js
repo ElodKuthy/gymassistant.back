@@ -15,7 +15,7 @@ gulp.task("deploy", function () {
         "api/**/*",
         "public/*",
         "routes/*",
-        "views/*"
+        "views/**/*"
     ], { "base" : "." })
         .pipe(gulp.dest(config.deploy.target));
 });
