@@ -2,8 +2,8 @@
     'use strict';
     module.exports = Api;
 
-    Api.$inject = ['plugins', 'errors', 'log', 'identityService', 'scheduleService', 'trainingService', 'mailerService', 'attendees', 'creditsService', 'subscriptionService', 'users', 'series'];
-    function Api(plugins, errors, log, identityService, scheduleService, trainingService, mailerService, attendees, creditsService, subscriptionService, users, series) {
+    Api.$inject = ['plugins', 'errors', 'log', 'identityService', 'scheduleService', 'trainingService', 'mailerService', 'attendees', 'creditsService', 'subscriptionService', 'users', 'series', 'seriesServiceFactory', 'usersServiceFactory'];
+    function Api(plugins, errors, log, identityService, scheduleService, trainingService, mailerService, attendees, creditsService, subscriptionService, users, series, seriesServiceFactory, usersServiceFactory) {
 
     var express = require('express');
     var router = express.Router();
@@ -223,12 +223,25 @@
     router.route('/all/users')
 
         .get(function (req, res) {
-            var response = new Response(res);
 
-            if (!response.error(identityService.checkCoach(req.user))) {
+            nodeify(res, function () {
+                var usersService = usersServiceFactory.use('init', { user: req.user }).get();
+                var promise = usersService.getAllUsers();
 
-                users.byName().then(response.success, response.error);
-            }
+                return promise;
+            });
+        });
+
+    router.route('/all/coaches')
+
+        .get(function (req, res) {
+
+            nodeify(res, function () {
+                var usersService = usersServiceFactory.use('init', { user: req.user }).get();
+                var promise = usersService.getAllCoaches();
+
+                return promise;
+            });
         });
 
     router.route('/user/:name')
@@ -343,9 +356,47 @@
                 .nodeify(res.done);
         });
 
+    router.route('/all/series')
+
+        .get(function(req, res) {
+
+            identityService.checkAdmin(req.user)
+                .then(function () { return series.byCoach(); })
+                .nodeify(res.done);
+        });
+
+    router.route('/series/:id')
+
+        .get(function(req, res) {
+
+            identityService.checkAdmin(req.user)
+                .then(function () { return series.get(req.param('id')); })
+                .nodeify(res.done);
+        })
+
+        .post(function(req, res) {
+
+            nodeify(res, function () {
+                var init = {
+                    user: req.user,
+                    id: req.param('id')
+                };
+
+                var seriesService = seriesServiceFactory.use('init', init).get();
+                var promise = seriesService.set(req.body);
+
+                return promise;
+            });
+        });
+
     router.get('/', function(req, res) {
         res.json({ message: 'GymAssistant REST API' });
     });
+
+    function nodeify (res, action) {
+
+        q.try(action).done(function (result) { res.json(result); }, function (err) { res.json({ error : err.message }); });
+    }
 
     function Response (res) {
         var self = this;

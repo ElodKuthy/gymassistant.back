@@ -33,7 +33,7 @@
             return self.get(id)
                 .then(update)
                 .then(function (doc) {
-                    return self.put(id, doc);
+                    return self.put(id, doc).then(function () { return doc; });
                 })
                 .catch(function (error) {
                     if (currentTry <= 10 && error.message.indexOf('Document update conflict.') > -1) {
