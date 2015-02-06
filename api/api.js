@@ -293,6 +293,18 @@
             }
         });
 
+    router.route('/all/training/series')
+
+        .get(function(req, res) {
+
+            identityService.checkCoach2(req.user)
+            .then(function () {
+                return series.byCoach();
+            })
+            .nodeify(res.done);
+
+        });
+
     router.route('/my/training/series')
 
         .get(function(req, res) {
@@ -305,7 +317,7 @@
                 .then(function (coach) {
                     return series.byCoach(coach.name);
                 })
-                .then(response.success, response.error);
+                .nodeify(res.done);
             }
         });
 
