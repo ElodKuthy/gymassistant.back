@@ -3,7 +3,7 @@
  */
 
 exports.index = function(req, res){
-    res.render('index', { title: 'ejs' });
+    res.render('maintenance', { title: 'ejs' });
 };
 
 exports.partials = function (req, res) {
