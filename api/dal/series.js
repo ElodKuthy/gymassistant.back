@@ -48,10 +48,10 @@
             return coachUtils.updateDoc(id, update);
         };
 
-        self.updateDates = function (id, dates) {
+        self.updateDate = function (id, date) {
 
             function update (instance) {
-                instance.dates = dates;
+                instance.date = date;
                 return q(instance);
             }
 

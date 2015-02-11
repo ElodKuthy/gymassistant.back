@@ -67,10 +67,10 @@
                 return instance;
             }
 
-            function updateDates (instance) {
+            function updateDate (instance) {
 
-                if (args.dates && args.dates.length) {
-                    return series.updateDates(instance._id, args.dates);
+                if (args.date) {
+                    return series.updateDate(instance._id, args.date);
                 }
 
                 return instance;
