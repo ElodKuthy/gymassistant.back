@@ -11,6 +11,7 @@ gulp.task("deploy", function () {
         "node_modules/*",
         "package.json",
         "server.js",
+        "static.js",
         "config.json",
         "api/**/*",
         "public/*",

@@ -7,7 +7,7 @@ var express = require('express'),
     bodyParser = require('body-parser'),
     methodOverride = require('method-override'),
     morgan = require('morgan'),
-    routes = require('./routes'),
+    maintenance = require('./routes/maintenance.js'),
     https = require('https'),
     path = require('path'),
     fs = require('fs'),
@@ -43,7 +43,7 @@ var options = {
 };
 
 // redirect all request to the static page (HTML5 history)
-app.get('*', routes.index);
+app.get('*', maintenance.index);
 
 
 /**

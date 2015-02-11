@@ -19,12 +19,12 @@ function split() {
             var results = [];
             original.forEach(function (instance) {
 
-                instance.date = instance.dates[0];
+                instance.date = (instance.dates && instance.dates.length > 0) ? instance.dates[0] : instance.date;
                 instance.status = 'normal';
                 results.push(instance);
                 originals[instance._id] = instance.date;
 
-                if (instance.dates.length > 1) {
+                if (instance.dates && instance.dates.length > 1) {
                     var additionalDates = instance.dates.slice(1);
 
                     additionalDates.forEach(function (additionalDate) {
@@ -34,7 +34,7 @@ function split() {
                             coach: instance.coach,
                             date: additionalDate,
                             max: instance.max,
-                            status: instance.max,
+                            status: instance.status,
                             type: instance.type
                         };
 
@@ -43,7 +43,8 @@ function split() {
                     })
                 }
 
-                delete instance.dates;
+                if (instance.dates)
+                    delete instance.dates;
 
             });
 
