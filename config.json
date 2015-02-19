@@ -16,7 +16,7 @@
     "port": 8000
   },
   "email": {
-    "from": "no-reply@testkulturamuhely.hu",
+    "from": "Testkultúra Terem <no-reply@testkulturamuhely.hu>",
     "host": "mail7.tarhelypark.hu",
     "secureConnection": true,
     "port": 465,
