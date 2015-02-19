@@ -35,7 +35,7 @@
                 return errors.selfAttend();
             }
 
-            if ((['add', 'remove', 'check in', 'check out']).indexOf(purpose) > -1 && !adminMode && training.coach != coach.name) {
+            if ((['remove', 'check in', 'check out']).indexOf(purpose) > -1 && !adminMode && training.coach != coach.name) {
                 return errors.cantModifyNotOwnTraining();
             }
 
