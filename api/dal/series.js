@@ -7,6 +7,7 @@
     function Series(plugins, coachUtils) {
         var self = this;
         var get = coachUtils.get;
+        var put = coachUtils.put;
         var q = plugins.q;
         var moment = plugins.moment;
 
@@ -14,8 +15,16 @@
             return get('_design/series/_view/byCoach' + coachUtils.addKey(coachName));
         };
 
+        self.byDate = function (date) {
+            return get('_design/series/_view/byDate' + coachUtils.addKey(date));
+        };
+
         self.get = function (id) {
             return get(id);
+        };
+
+        self.add = function(series) {
+            return put(series._id, series);
         };
 
         self.updateName = function (id, name) {

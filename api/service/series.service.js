@@ -3,21 +3,11 @@
 
     module.exports = SeriesService;
 
-    SeriesService.$inject = ['init', 'plugins', 'errors', 'identityService', 'series'];
-    function SeriesService(init, plugins, errors, identityService, series) {
+    SeriesService.$inject = ['plugins', 'errors', 'identityService', 'series'];
+    function SeriesService(plugins, errors, identityService, series) {
 
         var self = this;
-
-        var q = plugins.q;
-
-        var _user = init.user;
-        var _id = init.id;
-
-        function getInstance () {
-            return series.get(_id).catch(function (err) {
-                throw errors.invalidTrainingId(err);
-            });
-        }
+        var uuid = plugins.uuid;
 
         self.statuses = {
             normal: 'normal',
@@ -30,15 +20,69 @@
             }
         };
 
+        self.getAll = function (args) {
+            return identityService.checkAdmin(args.user)
+                .then(function () { return series.byDate() });
+        }
+
+        self.getAllOfCoach = function (args) {
+            return identityService.checkAdmin(args.user)
+                .then(function () { return series.byCoach(args.coach) });
+        }
+
+        self.get = function (args) {
+            return identityService.checkAdmin(args.user)
+                .then(function () {
+                    return series.get(args.id).catch(function (err) {
+                        throw errors.invalidTrainingId(err);
+                    });
+                });
+        }
+
+
+        self.add = function (args) {
+
+            return identityService.checkAdmin(args.user)
+                .then(check)
+                .then(addAdditionalProperties)
+                .then(addToDb);
+
+                function check() {
+                    if (!args.name) {
+                        throw errors.missingProperty('Új edzés', 'név');
+                    }
+                    if (!args.coach) {
+                        throw errors.missingProperty('Új edzés', 'edző');
+                    }
+                    if (!args.max) {
+                        throw errors.missingProperty('Új edzés', 'maximális létszám');
+                    }
+                    if (!args.date) {
+                        throw errors.missingProperty('Új edzés', 'dátum');
+                    }
+                }
+
+                function addAdditionalProperties () {
+                    args._id = uuid.v4();
+                    args.status = self.statuses.normal;
+                    args.type = 'training series';
+                }
+
+                function addToDb() {
+                    return series.add(args);
+                }
+        }
+
         self.set = function (args) {
 
-            return identityService.checkAdmin(_user)
-                .then(getInstance)
+            return identityService.checkAdmin(args.user)
+                .then(function () { return self.get(args); })
                 .then(updateName)
                 .then(updateCoach)
                 .then(updateMax)
-                .then(updateDates)
+                .then(updateDate)
                 .then(updateStatus);
+
 
             function updateName (instance) {
 

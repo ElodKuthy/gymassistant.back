@@ -2,8 +2,8 @@
     'use strict';
     module.exports = Api;
 
-    Api.$inject = ['plugins', 'errors', 'log', 'identityService', 'scheduleService', 'trainingService', 'mailerService', 'attendees', 'creditsService', 'subscriptionService', 'users', 'series', 'seriesServiceFactory', 'usersServiceFactory'];
-    function Api(plugins, errors, log, identityService, scheduleService, trainingService, mailerService, attendees, creditsService, subscriptionService, users, series, seriesServiceFactory, usersServiceFactory) {
+    Api.$inject = ['plugins', 'errors', 'log', 'identityService', 'scheduleService', 'trainingService', 'mailerService', 'attendees', 'creditsService', 'subscriptionService', 'users', 'series', 'seriesService', 'usersServiceFactory'];
+    function Api(plugins, errors, log, identityService, scheduleService, trainingService, mailerService, attendees, creditsService, subscriptionService, users, series, seriesService, usersServiceFactory) {
 
     var express = require('express');
     var router = express.Router();
@@ -306,22 +306,6 @@
             }
         });
 
-    router.route('/my/training/series')
-
-        .get(function(req, res) {
-            var response = new Response(res);
-
-            if (req.user && req.user.roles.indexOf('admin') > -1) {
-                series.byCoach().nodeify(res.done);
-            } else {
-                identityService.checkCoach2(req.user)
-                .then(function (coach) {
-                    return series.byCoach(coach.name);
-                })
-                .then(response.success, response.error);
-            }
-        });
-
     router.route('/change/email/of/user/:name/to/:email')
 
         .get(function(req, res) {
@@ -360,38 +344,71 @@
 
         .get(function(req, res) {
 
-            identityService.checkAdmin(req.user)
-                .then(function () { return series.byCoach(); })
-                .nodeify(res.done);
+            nodeify(res, function () {
+
+                var args = {
+                    user: req.user
+                };
+
+                return seriesService.getAll(args);
+            });
         });
 
     router.route('/series/:id')
 
         .get(function(req, res) {
 
-            identityService.checkAdmin(req.user)
-                .then(function () { return series.get(req.param('id')); })
-                .nodeify(res.done);
+            nodeify(res, function () {
+                var args = {
+                    user: req.user,
+                    id: req.param('id')
+                };
+
+                return seriesService.get(args);
+            });
         })
 
         .post(function(req, res) {
 
             nodeify(res, function () {
-                var init = {
+                var args = {
                     user: req.user,
                     id: req.param('id')
                 };
 
-                var seriesService = seriesServiceFactory.use('init', init).get();
-                var promise = seriesService.set(req.body);
+                addBodyToArgs(args, req.body);
 
-                return promise;
+                return seriesService.set(args);
+            });
+        });
+
+    router.route('/add/new/series')
+
+        .post(function(req, res) {
+
+            nodeify(res, function () {
+                var args = {
+                    user: req.user,
+                };
+
+                addBodyToArgs(args, req.body);
+                console.log(args);
+
+                return seriesService.add(args);
             });
         });
 
     router.get('/', function(req, res) {
         res.json({ message: 'GymAssistant REST API' });
     });
+
+    function addBodyToArgs(args, body) {
+        for (var key in body) {
+            if (body.hasOwnProperty(key)) {
+                args[key] = body[key];
+            }
+        }
+    }
 
     function nodeify (res, action) {
 
