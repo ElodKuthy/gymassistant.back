@@ -63,10 +63,10 @@
         self.updateAttendees = function(id, attendees) {
             var deferred = q.defer();
 
-            request('GET', id)
+            get(id)
                 .then(function (result) {
                     result.attendees = attendees;
-                    request('PUT', id, result)
+                    put(id, result)
                         .then(function (result) {
                             deferred.resolve(result);
                         }, function (error) {
