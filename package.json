@@ -37,6 +37,6 @@
     "gulp-nodemon": "^1.0.4"
   },
   "scripts": {
-    "test": "mocha api/**/*.test.js"
+
   }
 }
