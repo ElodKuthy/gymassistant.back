@@ -8,6 +8,7 @@
     var express = require('express');
     var router = express.Router();
     var q = plugins.q;
+    var moment = plugins.moment;
 
     router.use(function(req, res, next) {
 
@@ -392,7 +393,6 @@
                 };
 
                 addBodyToArgs(args, req.body);
-                console.log(args);
 
                 return seriesService.add(args);
             });
@@ -401,6 +401,23 @@
     router.get('/', function(req, res) {
         res.json({ message: 'GymAssistant REST API' });
     });
+
+    router.route('/update/trainings/from/:from/to/:to')
+
+        .get(function (req, res) {
+
+            nodeify(res, function () {
+
+                var args = {
+                    user: req.user,
+                    from: moment(req.param('from'), 'YYYY-MM-DD'),
+                    to: moment(req.param('to'), 'YYYY-MM-DD'),
+                    ids: req.query.series ? req.query.series.split(',') : []
+                }
+
+                return seriesService.updateTrainings(args);
+            });
+        });
 
     function addBodyToArgs(args, body) {
         for (var key in body) {

@@ -248,7 +248,7 @@
             return q.when(user);
         };
 
-        self.checkAdmin = function(user) {
+        self.checkAdmin = function(user, result) {
             if (!user) {
                 throw errors.invalidUserNameOrPassword();
             }
@@ -257,7 +257,7 @@
                 throw errors.unauthorized();
             }
 
-            return q.when(user);
+            return q.when(result ? result : user);
         };
     }
 })();
