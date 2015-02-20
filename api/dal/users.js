@@ -17,6 +17,10 @@
             return request('GET', '_design/users/_view/byName' + coachUtils.addKey(name));
         };
 
+        self.byNameAll = function () {
+            return request('GET', '_design/users/_view/byName');
+        };
+
         self.byEmail = function (email) {
             return request('GET', '_design/users/_view/byEmail' + coachUtils.addKey(email));
         };

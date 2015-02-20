@@ -33,8 +33,14 @@
             invalidCreditId: 'Ismeretlen kredit azonosító',
             dateIsInPast: 'Ez a dátum már elmúlt',
             invalidEmailFormat: 'Érvénytelen email cím formátum',
-            trainingCanceled: 'Ez az óra elmarad'
+            trainingCanceled: 'Ez az óra elmarad',
+            missingProperty: 'Hiányzó mező: '
         };
+
+        self.missingProperty = function (obj, prop) {
+            log.error(self.messages.missingProperty + obj + ' -> ' + prop);
+            return new Error(self.messages.missingProperty + obj + ' -> ' + prop);
+        }
 
         self.emailAlreadyExist = function () {
             log.error(self.messages.emailAlreadyExist);

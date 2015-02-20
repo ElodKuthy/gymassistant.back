@@ -52,6 +52,9 @@
                 views: {
                     byCoach: {
                         map: "function (doc) { if (doc.type === \"training series\" && doc.coach) { emit(doc.coach, doc ) } }"
+                    },
+                    byDate: {
+                        map: "function (doc) { if (doc.type === \"training series\" && doc.date) { emit(doc.date, doc ) } }"
                     }
                 }
             }

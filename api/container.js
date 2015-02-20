@@ -34,6 +34,8 @@
         container.register('scheduleService', require('./service/schedule.service.js'));
         container.register('subscriptionService', require('./service/subscription.service.js'));
         container.register('trainingService', require('./service/training.service.js'));
+        container.register('seriesService', require('./service/series.service.js'));
+        container.register('usersService', require('./service/users.service.js'));
 
         /* api */
         container.register('api', require('./api.js'));
