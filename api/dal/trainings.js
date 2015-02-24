@@ -19,11 +19,6 @@
             return get('_design/trainings/_view/byDate' + coachUtils.addDateKey(dates));
         };
 
-        self.todayByCoach = function(coachName) {
-            var keys = '?startkey=["' + coachName + '",' + moment().unix().toString() + ']&endkey=["' + coachName + '",' + moment().endOf('day').unix().toString() + ']';
-            return get('_design/trainings/_view/byCoachAndDate' + keys);
-        };
-
         self.bySeriesTillOffset = function(series, start, offset) {
             var keys = '?startkey=["' + series + '",' + start.toString() + ']&endkey=["' + series + '",' + moment.unix(start).add({days: offset}).endOf('day').unix().toString() + ']';
             return get('_design/trainings/_view/bySeriesAndDate' + keys);

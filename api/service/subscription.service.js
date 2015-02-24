@@ -10,39 +10,6 @@
         var moment = plugins.moment;
         var uuid = plugins.uuid;
 
-        function addForToday(amount, user, coach, adminMode) {
-            var deferred = q.defer();
-
-            trainings.todayByCoach(coach.name)
-                .then(function(trainings) {
-
-                    if (trainings.length < amount) {
-                        deferred.reject(errors.notEnoughTrainingsForDailyTicket());
-                        return;
-                    }
-
-                    var promises = [];
-                    trainings.forEach(function (training) {
-                        promises.push(attendees.addToTraining(training._id, user.name, coach, adminMode));
-                    });
-
-                    q.allSettled(promises)
-                        .then(function (results) {
-                            var errors = [];
-                            results.forEach(function (result) {
-                                if (result.state != "fulfilled") {
-                                    errors.push(result.reason);
-                                }
-                            });
-                        deferred.resolve({ result: 'Sikeres napijegy vásárlás', remarks: errors });
-                    });
-                }, function (error) {
-                    deferred.reject(error);
-                });
-
-            return deferred.promise;
-        }
-
         function addToSeries(amount, user, start, offset, series, coach, adminMode) {
 
             if (!series || !series.length || series.length === 0) {
@@ -118,11 +85,7 @@
 
             return users.addCredit(args.client._id, newCredit)
                 .then(function() {
-                    if (period === periods.today) {
-                        return addForToday(amount, args.client, args.coach, args.admin);
-                    } else {
-                        return addToSeries(amount, args.client, newCredit.date, period.days(), args.series, args.coach, args.admin);
-                    }
+                    return addToSeries(amount, args.client, newCredit.date, period.days(), args.series, args.coach, args.admin);
                 });
 
         };
