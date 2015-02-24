@@ -22,7 +22,7 @@
         };
 
         self.getAll = function(args) {
-            return identityService.checkAdmin(args.user)
+            return identityService.checkCoach2(args.user)
                 .then(function() { return series.byDate() });
         }
 
