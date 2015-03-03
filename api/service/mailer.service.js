@@ -11,7 +11,7 @@
 
         self.sendRegistrationMail = function (args) {
             return q.nfcall(mailer.send, 'emails/registration', {
-                to: args.email,
+                to: args.client.email,
                 subject: 'Edzőterem Segéd - Üdvözölünk',
                 userName: args.client.name,
                 token: args.token
@@ -20,7 +20,7 @@
 
         self.sendCoachRegistrationMail = function (args) {
             return q.nfcall(mailer.send, 'emails/coach_registration', {
-                to: args.email,
+                to: args.client.email,
                 subject: 'Edzőterem Segéd - Üdvözölünk',
                 userName: args.client.name,
                 token: args.token
@@ -29,7 +29,7 @@
 
         self.sendForgottenPasswordMail = function (args) {
             return q.nfcall(mailer.send, 'emails/forgotten_password', {
-                to: args.email,
+                to: args.client.email,
                 subject: 'Edzőterem Segéd - Elfelejtett jelszó',
                 userName: args.client.name,
                 token: args.token

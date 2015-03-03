@@ -354,11 +354,8 @@
                     name: req.param('name')
                 };
 
-                return q(identityService.checkCoach(args))
-                    .then(function (args) { return identityService.findByName(args.name); })
-                    .then(identityService.resetPassword)
-                    .then(mailerService.sendRegistrationMail);
-            });
+                return identityService.resendRegistrationEmail(args);
+            }, 'A regisztrációs emailt sikeresen elküldtük újra');
         });
 
     router.route('/change/password')
