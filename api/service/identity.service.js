@@ -139,7 +139,7 @@
             };
             args.token = hash.token;
 
-            return users.updateHash(args.client._id, hash).then(function () { return args; });
+            return users.updateHash(args.client._id, hash).thenResolve(args);
         }
 
         self.resetPassword = function (args) {
@@ -246,6 +246,26 @@
                 .then(mailerService.sendCoachRegistrationMail);
         };
 
+        self.resendRegistrationEmail = function(args) {
+
+            args.offset = { month: 1 };
+
+            return q(args)
+                .then(self.chechAdmin)
+                .then(findUser)
+                .then(setPasswordToken)
+                .then(sendEmail);
+
+            function sendEmail(args) {
+
+                if (roles.isCoach(args.client)) {
+                    return mailerService.sendCoachRegistrationMail(args);
+                } else {
+                    return mailerService.sendRegistrationMail(args);
+                }
+            }
+        }
+
         function addUser(args) {
 
             args.offset = { month: 1 };
@@ -255,7 +275,7 @@
                 .then(checkEmailFormat)
                 .then(checkEmailFree)
                 .then(createUser)
-                .tap(function (args) { return users.add(args.client); })
+                .then(addUser)
                 .then(setPasswordToken);
 
             function createUser(args) {
@@ -274,6 +294,10 @@
                 args.client = client;
 
                 return args;
+            }
+
+            function addUser(args) {
+                return users.add(args.client).thenResolve(args);
             }
         }
 
