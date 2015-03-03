@@ -9,31 +9,39 @@
         var q = plugins.q;
         var validator = plugins.validator;
 
-        self.sendRegistrationMail = function (params) {
+        self.sendRegistrationMail = function (args) {
             return q.nfcall(mailer.send, 'emails/registration', {
-                to: params.user.email,
+                to: args.email,
                 subject: 'Edzőterem Segéd - Üdvözölünk',
-                userName: params.user.name,
-                password: params.password
-            }).thenResolve('Az üdvözlő emailt sikeresen elküldtük az új felhasználónak');
+                userName: args.client.name,
+                token: args.token
+            });
         };
 
-        self.sendCoachRegistrationMail = function (params) {
+        self.sendCoachRegistrationMail = function (args) {
             return q.nfcall(mailer.send, 'emails/coach_registration', {
-                to: params.user.email,
+                to: args.email,
                 subject: 'Edzőterem Segéd - Üdvözölünk',
-                userName: params.user.name,
-                password: params.password
-            }).thenResolve('Az üdvözlő emailt sikeresen elküldtük az új edzőnek');
+                userName: args.client.name,
+                token: args.token
+            });
         };
 
-        self.sendResetPasswordMail = function (params) {
-            return q.nfcall(mailer.send, 'emails/reset_password', {
-                to: params.user.email,
-                subject: 'Edzőterem Segéd - Jelszó csere',
-                userName: params.user.name,
-                password: params.password
-            }).thenResolve('Az új jelszót elküldtük a felhasználó email címére');
+        self.sendForgottenPasswordMail = function (args) {
+            return q.nfcall(mailer.send, 'emails/forgotten_password', {
+                to: args.email,
+                subject: 'Edzőterem Segéd - Elfelejtett jelszó',
+                userName: args.client.name,
+                token: args.token
+            });
+        };
+
+        self.sendChangedPasswordMail = function (args) {
+            return q.nfcall(mailer.send, 'emails/changed_password', {
+                to: args.user.email,
+                subject: 'Edzőterem Segéd - Jelszóváltoztatás',
+                userName: args.user.name
+            });
         };
     }
 

@@ -2,8 +2,8 @@
     'use strict';
     module.exports = Api;
 
-    Api.$inject = ['plugins', 'errors', 'log', 'identityService', 'scheduleService', 'trainingService', 'mailerService', 'attendees', 'creditsService', 'subscriptionService', 'users', 'series', 'seriesService', 'usersServiceFactory'];
-    function Api(plugins, errors, log, identityService, scheduleService, trainingService, mailerService, attendees, creditsService, subscriptionService, users, series, seriesService, usersServiceFactory) {
+    Api.$inject = ['plugins', 'errors', 'log', 'identityService', 'scheduleService', 'trainingService', 'mailerService', 'attendeesService', 'creditsService', 'subscriptionService', 'users', 'series', 'seriesService', 'usersService'];
+    function Api(plugins, errors, log, identityService, scheduleService, trainingService, mailerService, attendeesService, creditsService, subscriptionService, users, series, seriesService, usersService) {
 
     var express = require('express');
     var router = express.Router();
@@ -12,16 +12,8 @@
 
     router.use(function(req, res, next) {
 
-        res.header("Access-Control-Allow-Origin", "*");
-        res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-
-        res.done = function (err, result) {
-            if (err) {
-                res.send({ error: err.message });
-            } else {
-                res.send(result);
-            }
-        };
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
 
         log.info(req.method + ' ' + req.originalUrl + ' from: ' + req.connection.remoteAddress);
 
@@ -31,194 +23,249 @@
                 next();
             }, function (error) {
                 log.error(error);
-                next();
+                res.json({ error : error.message });
             });
+    });
 
+    router.get('/', function(req, res) {
+        res.json({ message: 'GymAssistant REST API' });
     });
 
     router.route('/login')
 
-        .get(function(req, res) {
-            var response = new Response(res);
-            if (req.user) {
-                response.success(req.user);
-            } else {
-                response.error(errors.invalidUserNameOrPassword());
-            }
+        .get(function (req, res) {
+
+            nodeify(res, function () {
+
+                if (!req.user)
+                    throw errors.invalidUserNameOrPassword();
+
+                return q(req.user);
+            });
         });
 
     router.route('/schedule/this/week')
 
+        .get(function (req, res) {
 
-        .get(function(req, res) {
-            var response = new Response(res);
-            scheduleService.thisWeek(req.user).then(response.success, response.error);
+            nodeify(res, function () {
+
+                var args = {
+                    user: req.user
+                }
+
+                return scheduleService.thisWeek(args);
+            });
         });
 
 
     router.route('/schedule/today')
 
-        .get(function(req, res) {
-            var response = new Response(res);
+        .get(function (req, res) {
 
-            scheduleService.today(req.user).then(response.success, response.error);
+            nodeify(res, function () {
+
+                var args = {
+                    user: req.user
+                }
+
+                return scheduleService.today(args);
+            });
         });
 
     router.route('/schedule/from/:firstDate/to/:lastDate')
 
-        .get(function(req, res) {
-            var response = new Response(res);
-            var firstDate = req.param('firstDate');
-            var lastDate = req.param('lastDate');
+        .get(function (req, res) {
 
-            scheduleService.fetch(firstDate, lastDate, req.user).then(response.success, response.error);
+            nodeify(res, function () {
+
+                var args = {
+                    user: req.user,
+                    startDate: req.param('firstDate'),
+                    endDate: req.param('lastDate')
+                }
+
+                return scheduleService.fetch(args);
+            });
         });
 
     router.route('/training/id/:id')
 
-        .get(function(req, res) {
-            var response = new Response(res);
+        .get(function (req, res) {
 
-            if (!response.error(identityService.checkCoach(req.user))) {
-                var id = req.param('id');
-                trainingService.findById(id, req.user).then(response.success, response.error);
-            }
+            nodeify(res, function () {
+
+                var args = {
+                    user: req.user,
+                    id: req.param('id')
+                }
+
+                return trainingService.findById(args);
+            });
         });
 
     router.route('/join/training/id/:id')
 
-        .get(function(req, res) {
-            var response = new Response(res);
+        .get(function (req, res) {
 
-            if (!response.error(identityService.checkLoggedIn(req.user))) {
-                var id = req.param('id');
+            nodeify(res, function () {
 
-                attendees.joinTraining(id, req.user).then(response.success, response.error);
-            }
+                var args = {
+                    user: req.user,
+                    id: req.param('id')
+                };
+
+                return attendeesService.joinTraining(args);
+            }, 'Sikerült feliratkoznod az órára');
         });
 
     router.route('/add/user/:userName/to/training/id/:id')
 
-        .get(function(req, res) {
-            var response = new Response(res);
+        .get(function (req, res) {
 
-            if (!response.error(identityService.checkCoach(req.user))) {
-                var userName = req.param('userName');
-                var id = req.param('id');
+            nodeify(res, function () {
 
-                attendees.addToTraining(id, userName, req.user).then(response.success, response.error);
-            }
+                var args = {
+                    user: req.user,
+                    userName: req.param('userName'),
+                    id: req.param('id')
+                };
+
+                return attendeesService.addToTraining(args);
+            }, 'A tanítványt sikeresen felirtad az órára');
         });
 
 
     router.route('/leave/training/id/:id')
 
-        .get(function(req, res) {
-            var response = new Response(res);
+        .get(function (req, res) {
 
-            if (!response.error(identityService.checkLoggedIn(req.user))) {
-                var id = req.param('id');
+            nodeify(res, function () {
 
-                attendees.leaveTraining(id, req.user).then(response.success, response.error);
-            }
+                var args = {
+                    user: req.user,
+                    id: req.param('id')
+                };
+
+                return attendeesService.leaveTraining(args);
+            }, 'Sikerült lemondanod az órát');
         });
 
     router.route('/remove/user/:userName/from/training/id/:id')
 
-        .get(function(req, res) {
-            var response = new Response(res);
+        .get(function (req, res) {
 
-            if (!response.error(identityService.checkCoach(req.user))) {
-                var userName = req.param('userName');
-                var id = req.param('id');
+            nodeify(res, function () {
 
-                attendees.removeFromTraining(id, userName, req.user).then(response.success, response.error);
-            }
+                var args = {
+                    user: req.user,
+                    userName: req.param('userName'),
+                    id: req.param('id')
+                };
+
+                return attendeesService.removeFromTraining(args);
+            }, 'A tanítványt sikerült eltávolítani az óráról');
         });
 
     router.route('/check/in/user/:userName/to/training/id/:id')
 
-        .get(function(req, res) {
-            var response = new Response(res);
+        .get(function (req, res) {
 
-            if (!response.error(identityService.checkCoach(req.user))) {
-                var userName = req.param('userName');
-                var id = req.param('id');
+            nodeify(res, function () {
 
-                attendees.checkIn(id, userName, req.user).then(response.success, response.error);
-            }
+                var args = {
+                    user: req.user,
+                    userName: req.param('userName'),
+                    id: req.param('id')
+                };
+
+                return attendeesService.checkIn(args);
+            }, 'Sikeres bejelentkezés');
         });
 
     router.route('/undo/check/in/user/:userName/for/training/id/:id')
 
-        .get(function(req, res) {
-            var response = new Response(res);
+        .get(function (req, res) {
 
-            if (!response.error(identityService.checkCoach(req.user))) {
-                var userName = req.param('userName');
-                var id = req.param('id');
+            nodeify(res, function () {
 
-                attendees.undoCheckIn(id, userName, req.user).then(response.success, response.error);
-            }
+                var args = {
+                    user: req.user,
+                    userName: req.param('userName'),
+                    id: req.param('id')
+                };
+
+                return attendeesService.undoCheckIn(args);
+            }, 'Sikerült visszavonni a bejelentkezést');
         });
 
     router.route('/my/credits')
 
-        .get(function(req, res) {
+        .get(function (req, res) {
 
-             return identityService.checkLoggedIn2(req.user)
-                .then(creditsService.getUserCredits)
-                .nodeify(res.done);
+            nodeify(res, function () {
+
+                var args = {
+                    user: req.user
+                };
+
+                return creditsService.getCredits(args);
+            });
         });
 
     router.route('/credits/of/user/:userName')
 
-        .get(function(req, res) {
+        .get(function (req, res) {
 
-            return identityService.checkCoach2(req.user)
-                .then (function () { return creditsService.getUserCreditsFromName(req.param('userName')); })
-                .nodeify(res.done);
+            nodeify(res, function () {
+
+                var args = {
+                    user: req.user,
+                    userName: req.param('userName')
+                };
+
+                return creditsService.getUserCredits(args);
+            });
         });
 
     router.route('/add/subscription/with/:amount/credits/to/user/:userName/for/:period')
 
-        .get(function(req, res) {
+        .get(function (req, res) {
 
-            q.all([
-                identityService.checkCoach2(req.user),
-                identityService.findByName(req.param('userName'))
-                ]).spread(function (coach, client) {
-                    return subscriptionService.add({
-                        client: client,
-                        coach: coach,
-                        amount: req.param('amount'),
-                        period: req.param('period'),
-                        series: req.query.series ? req.query.series.split(',') : []
-                    });
-                })
-                .nodeify(res.done);
+            nodeify(res, function () {
+
+                var args = {
+                    user: req.user,
+                    userName: req.param('userName'),
+                    amount: req.param('amount'),
+                    period: req.param('period'),
+                    date: moment().startOf('day').unix(),
+                    series: req.query.series ? req.query.series.split(',') : []
+                }
+
+                return subscriptionService.add(args);
+            });
         });
+
 
     router.route('/add/subscription/with/:amount/credits/to/user/:userName/from/date/:date/for/:period/by/:coachName')
 
-        .get(function(req, res) {
+        .get(function (req, res) {
 
-            q.all([
-                identityService.checkAdmin(req.user),
-                identityService.findByName(req.param('coachName')),
-                identityService.findByName(req.param('userName'))
-                ]).spread(function (admin, coach, client) {
-                    return subscriptionService.add({
-                        client: client,
-                        coach: coach,
-                        admin: admin,
-                        date: req.param('date'),
-                        amount: req.param('amount'),
-                        period: req.param('period'),
-                        series: req.query.series ? req.query.series.split(',') : []
-                    });
-                })
-                .nodeify(res.done);
+            nodeify(res, function () {
+
+                var args = {
+                    user: req.user,
+                    coachName: req.param('coachName'),
+                    userName: req.param('userName'),
+                    date: req.param('date'),
+                    amount: req.param('amount'),
+                    period: req.param('period'),
+                    series: req.query.series ? req.query.series.split(',') : []
+                }
+
+                return subscriptionService.add(args);
+            });
         });
 
     router.route('/all/users')
@@ -226,10 +273,12 @@
         .get(function (req, res) {
 
             nodeify(res, function () {
-                var usersService = usersServiceFactory.use('init', { user: req.user }).get();
-                var promise = usersService.getAllUsers();
 
-                return promise;
+                var args = {
+                    user: req.user
+                };
+
+                return usersService.getAllUsers(args);
             });
         });
 
@@ -238,112 +287,145 @@
         .get(function (req, res) {
 
             nodeify(res, function () {
-                var usersService = usersServiceFactory.use('init', { user: req.user }).get();
-                var promise = usersService.getAllCoaches();
 
-                return promise;
+                var args = {
+                    user: req.user
+                };
+
+                return usersService.getAllCoaches(args);
             });
         });
 
     router.route('/user/:name')
 
         .get(function (req, res) {
-            var response = new Response(res);
 
-            if (!response.error(identityService.checkCoach(req.user))) {
-                var name = req.param('name');
+            nodeify(res, function () {
 
-                identityService.findByName(name).then(response.success, response.error);
-            }
+                var args = {
+                    user: req.user,
+                    name: req.param('name')
+                };
+
+                return usersService.getUserByName(args);
+            });
         });
 
     router.route('/add/new/user/with/name/:name/and/email/:email')
 
-        .get(function(req, res) {
+        .get(function (req, res) {
 
-            return identityService.checkCoach2(req.user)
-                .then(function () {
-                    return identityService.addClient(req.param('name'), req.param('email'));
-                })
-                .then(mailerService.sendRegistrationMail)
-                .nodeify(res.done);
+            nodeify(res, function () {
+
+                var args = {
+                    user: req.user,
+                    userName: req.param('name'),
+                    email: req.param('email')
+                };
+
+                return identityService.addClient(args);
+            }, 'Sikeresült létrehozni az új felhasználót');
         });
 
     router.route('/add/new/coach/with/name/:name/and/email/:email')
 
-        .get(function(req, res) {
+        .get(function (req, res) {
 
-            return identityService.checkAdmin(req.user)
-                .then(function () {
-                    return identityService.addCoach(req.param('name'), req.param('email'));
-                })
-                .then(mailerService.sendCoachRegistrationMail)
-                .nodeify(res.done);
+            nodeify(res, function () {
+
+                var args = {
+                    user: req.user,
+                    userName: req.param('name'),
+                    email: req.param('email')
+                };
+
+                return identityService.addCoach(args);
+            }, 'Sikeresült létrehozni az új felhasználót');
         });
 
     router.route('/send/registration/email/to/user/:name')
 
-        .get(function(req, res) {
-            var response = new Response(res);
+        .get(function (req, res) {
 
-            if (!response.error(identityService.checkCoach(req.user))) {
-                var name = req.param('name');
+            nodeify(res, function () {
 
-            identityService.findByName(name)
-                .then(identityService.resetPassword)
-                .then(mailerService.sendRegistrationMail)
-                .nodeify(res.done);
-            }
+                var args = {
+                    user: req.user,
+                    name: req.param('name')
+                };
+
+                return q(identityService.checkCoach(args))
+                    .then(function (args) { return identityService.findByName(args.name); })
+                    .then(identityService.resetPassword)
+                    .then(mailerService.sendRegistrationMail);
+            });
         });
 
     router.route('/change/password')
 
-        .post(function(req, res) {
-            var response = new Response(res);
+        .post(function (req, res) {
 
-            if (!response.error(identityService.checkLoggedIn(req.user))) {
-                var password = req.body.password;
-                identityService.changePassword(req.user, password).then(response.success, response.error);
-            }
+            nodeify(res, function () {
+                var args = {
+                    user: req.user
+                };
+
+                addBodyToArgs(args, req.body);
+
+                return identityService.changePassword(args);
+            }, 'Sikeres jelszóváltoztatás');
         });
 
     router.route('/change/email/of/user/:name/to/:email')
 
-        .get(function(req, res) {
-            var response = new Response(res);
+        .get(function (req, res) {
 
-            if (!response.error(identityService.checkCoach(req.user))) {
-                var name = req.param('name');
-                var email = req.param('email');
-                identityService.changeEmail(name, email).then(response.success, response.error);
-            }
+            nodeify(res, function () {
+
+                var args = {
+                    user: req.user,
+                    name: req.param('name'),
+                    email: req.param('email')
+                };
+
+                return identityService.changeEmail(args);
+
+            }, 'Az email címet sikeresen megváltoztattuk');
         });
 
     router.route('/cancel/training/id/:id')
 
-        .get(function(req, res) {
-            var response = new Response(res);
+        .get(function (req, res) {
 
-            if (!response.error(identityService.checkCoach(req.user))) {
-                var id = req.param('id');
-                scheduleService.cancelTraining(id, req.user).then(response.success, response.error);
-            }
+            nodeify(res, function () {
+
+                var args = {
+                    user: req.user,
+                    id: req.param('id')
+                };
+
+                return scheduleService.cancelTraining(args);
+            }, 'Az órát sikeresen lemondásra került');
         });
 
-    router.route('/reset/password/user/email/:email')
+    router.route('/reset/password/user/:name/email/:email')
 
-        .get(function(req, res) {
-            var email = req.param('email');
+        .get(function (req, res) {
 
-            identityService.findByEmail(email)
-                .then(identityService.resetPassword)
-                .then(mailerService.sendResetPasswordMail)
-                .nodeify(res.done);
+            nodeify(res, function () {
+
+                var args = {
+                    name: req.param('name'),
+                    email: req.param('email')
+                };
+
+                return identityService.resetPassword(args);
+            });
         });
 
     router.route('/all/series')
 
-        .get(function(req, res) {
+        .get(function (req, res) {
 
             nodeify(res, function () {
 
@@ -357,7 +439,7 @@
 
     router.route('/series/:id')
 
-        .get(function(req, res) {
+        .get(function (req, res) {
 
             nodeify(res, function () {
                 var args = {
@@ -369,7 +451,7 @@
             });
         })
 
-        .post(function(req, res) {
+        .post(function (req, res) {
 
             nodeify(res, function () {
                 var args = {
@@ -385,7 +467,7 @@
 
     router.route('/add/new/series')
 
-        .post(function(req, res) {
+        .post(function (req, res) {
 
             nodeify(res, function () {
                 var args = {
@@ -398,10 +480,6 @@
             });
         });
 
-    router.get('/', function(req, res) {
-        res.json({ message: 'GymAssistant REST API' });
-    });
-
     router.route('/update/trainings/from/:from/to/:to')
 
         .get(function (req, res) {
@@ -413,7 +491,7 @@
                     from: moment(req.param('from'), 'YYYY-MM-DD'),
                     to: moment(req.param('to'), 'YYYY-MM-DD'),
                     ids: req.query.series ? req.query.series.split(',') : []
-                }
+                };
 
                 return seriesService.updateTrainings(args);
             });
@@ -427,24 +505,9 @@
         }
     }
 
-    function nodeify (res, action) {
+    function nodeify (res, action, resultOverride) {
 
-        q.try(action).done(function (result) { res.json(result); }, function (err) { res.json({ error : err.message }); });
-    }
-
-    function Response (res) {
-        var self = this;
-
-        self.success = function (result) {
-            res.json(result);
-        };
-
-        self.error = function (err) {
-            if (err) {
-                res.send({ error : err.message });
-            }
-            return err;
-        };
+        q.try(action).done(function (result) { res.json(resultOverride ? resultOverride : result); }, function (err) { res.json({ error : err.message }); });
     }
 
     this.router = router;

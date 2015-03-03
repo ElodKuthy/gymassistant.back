@@ -3,8 +3,8 @@
 
     module.exports = CreditsService;
 
-    CreditsService.$inject = ['plugins', 'users', 'errors', 'log', 'trainings'];
-    function CreditsService(plugins, users, errors, log, trainings) {
+    CreditsService.$inject = ['plugins', 'users', 'errors', 'log', 'trainings', 'identityService', 'roles'];
+    function CreditsService(plugins, users, errors, log, trainings, identityService, roles) {
         var self = this;
         var q = plugins.q;
         var moment = plugins.moment;
@@ -58,36 +58,41 @@
             return q.all(promises);
         }
 
-        self.getUserCreditsFromName = function (userName) {
+        self.getUserCredits = function (args) {
 
-            return users.creditsByName(userName)
+            if (!args.userName) {
+                throw errors.missingProperty('Kreditlekérdezés', 'Tanítvány neve');
+            }
+
+            return q(args)
+                .then(identityService.checkCoach)
+                .then(function () { return users.creditsByName(args.userName); })
                 .then(parseCredits)
                 .then(decorateCredits);
         };
 
-        self.getUserCredits = function (user) {
+        self.getCredits = function (args) {
 
-            return users.creditsById(user._id)
+            return q(args)
+                .then(identityService.checkLoggedIn)
+                .then(function () { return users.creditsByName(args.user.name); })
                 .then(parseCredits)
                 .then(decorateCredits);
         };
 
-        function findCreditToBook(credits, training, adminMode) {
+        function findCreditToBook(args) {
 
+            var adminMode = roles.isAdmin(args.user.roles);
             var now = moment().unix();
             var creditToBook;
-            if (credits) {
-                for (var index = 0; index < credits.length; index++) {
-                    var current = credits[index];
-                    console.log('training.date: ' + training.date);
-                    console.log('current.date: ' + current.date);
-                    console.log('current.expiry: ' + current.expiry);
-                    console.log('adminMode: ' + adminMode);
-                    if ((current.date * 1000 < training.date && current.expiry * 1000 > training.date) &&
+            if (args.credits) {
+                for (var index = 0; index < args.credits.length; index++) {
+                    var current = args.credits[index];
+                    if ((current.date * 1000 < args.training.date && current.expiry * 1000 > args.training.date) &&
                         (current.expiry > now || adminMode) &&
                         current.free > 0) {
                         creditToBook = current;
-                        if (creditToBook.coach === training.coach) {
+                        if (creditToBook.coach === args.training.coach) {
                             break;
                         }
                     }
@@ -101,13 +106,14 @@
             return creditToBook;
         }
 
-        self.bookFreeCredit = function (user, training, adminMode) {
+        self.bookFreeCredit = function (args) {
 
-            return self.getUserCredits(user)
+            return (args.user.name == args.client.name ? self.getCredits(args) : self.getUserCredits(args))
                 .then(function (credits) {
-                    return findCreditToBook(credits, training, adminMode); })
+                    args.credits = credits;
+                    return findCreditToBook(args); })
                 .tap(function (creditToBook) {
-                    return users.decreaseFreeCredit(user._id, creditToBook.id);
+                    return users.decreaseFreeCredit(args.client._id, creditToBook.id);
                 });
 
         };
