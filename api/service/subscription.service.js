@@ -3,23 +3,86 @@
 
     module.exports = SubscriptionService;
 
-    SubscriptionService.$inject = ['plugins', 'users', 'errors', 'log', 'periods', 'identityService', 'trainings', 'attendees'];
-    function SubscriptionService(plugins, users, errors, log, periods, identityService, trainings, attendees) {
+    SubscriptionService.$inject = ['plugins', 'users', 'errors', 'log', 'periods', 'identityService', 'trainings', 'attendeesService'];
+    function SubscriptionService(plugins, users, errors, log, periods, identityService, trainings, attendeesService) {
         var self = this;
         var q = plugins.q;
         var moment = plugins.moment;
         var uuid = plugins.uuid;
 
-        function addToSeries(amount, user, start, offset, series, coach, adminMode) {
 
-            if (!series || !series.length || series.length === 0) {
-                return q.when({ result: 'Sikeres bérlet vásárlás (feliratkozások nélkül)'});
+        self.add = function(args) {
+
+            return q(args)
+                .then(checkArgs)
+                .then(findUser)
+                .then(addCredit)
+                .then(addToTrainings);
+        };
+
+        function findUser(args) {
+
+            return identityService.findByName(args.userName)
+                .then(function (client) {
+                    args.client = client;
+                    return args;
+                });
+        }
+
+        function checkArgs(args) {
+
+            args.amount = parseInt(args.amount);
+            args.period = periods.parse(args.period);
+
+            if (isNaN(args.amount) || args.amount < 1) {
+                throw errors.onlyPositiveIntegers();
+            }
+
+            if (!args.period) {
+                throw errors.invalidPeriod();
+            }
+
+            if (!moment(args.date).isValid) {
+                args.date = moment().startOf('day').unix();
+            }
+
+            if (args.coachName) {
+                return q(args)
+                    .then(identityService.checkAdmin)
+                    .then(function () { return identityService.findByName(args.coachName) })
+                    .then(function (coach) { args.coach = coach; })
+                    .thenResolve(args);
+            } else {
+                args.coach = args.user;
+                return identityService.checkCoach(args);
+            }
+        }
+
+        function addCredit(args) {
+
+            args.newCredit = {
+                id: uuid.v4(),
+                date: args.date,
+                expiry: moment.unix(args.date).add({ days: args.period.days() }).endOf('day').unix(),
+                coach: args.coach.name,
+                amount: args.amount,
+                free: args.amount
+            };
+
+            return users.addCredit(args.client._id, args.newCredit).thenResolve(args);
+        }
+
+        function addToTrainings(args) {
+
+            if (!args.series || !args.series.length || args.series.length === 0) {
+                return { result: 'Sikeres bérlet vásárlás (feliratkozások nélkül)'};
             }
 
             var promises = [];
+            var offset = args.period.days();
 
-            series.forEach(function (current) {
-                promises.push(trainings.bySeriesTillOffset(current, start, offset));
+            args.series.forEach(function (current) {
+                promises.push(trainings.bySeriesTillOffset(current, args.date, offset));
             });
 
             var trainingsToAdd = [];
@@ -38,10 +101,12 @@
 
                     function addToTraining (index) {
                         if (index === trainingsToAdd.length) {
-                            return q.when({ result: 'Sikeres bérlet vásárlás', remarks: errors });
+                            return { result: 'Sikeres bérlet vásárlás', remarks: errors };
                         }
 
-                        return attendees.addToTraining(trainingsToAdd[index]._id, user.name, coach, adminMode)
+                        args.id = trainingsToAdd[index]._id;
+
+                        return attendeesService.addToTraining(args)
                             .then(function () {
                                 return addToTraining(index + 1);
                             }, function (error) {
@@ -53,41 +118,5 @@
                     return addToTraining(0);
                 });
         }
-
-        self.add = function(args) {
-
-            if (!args.client || !args.coach) {
-                throw errors.serverError();
-            }
-
-            var amount = parseInt(args.amount);
-            var period = periods.parse(args.period);
-            var date = parseInt(args.date);
-
-            if (isNaN(amount) || amount < 1) {
-                throw errors.onlyPositiveIntegers();
-            }
-
-            if (!period) {
-                throw errors.invalidPeriod();
-            }
-
-            var begin = date ? date : moment().unix();
-
-            var newCredit = {
-                id: uuid.v4(),
-                date: begin,
-                expiry: moment.unix(begin).add({ days: period.days() }).endOf('day').unix(),
-                coach: args.coach.name,
-                amount: amount,
-                free: amount
-            };
-
-            return users.addCredit(args.client._id, newCredit)
-                .then(function() {
-                    return addToSeries(amount, args.client, newCredit.date, period.days(), args.series, args.coach, args.admin);
-                });
-
-        };
     }
 })();

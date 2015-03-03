@@ -3,8 +3,8 @@
 
     module.exports = IdentityService;
 
-    IdentityService.$inject = ['plugins', 'log', 'users', 'errors', 'roles'];
-    function IdentityService(plugins, log, users, errors, roles) {
+    IdentityService.$inject = ['plugins', 'log', 'users', 'errors', 'roles', 'mailerService'];
+    function IdentityService(plugins, log, users, errors, roles, mailerService) {
         var self = this;
         var q = plugins.q;
         var crypto = plugins.crypto;
@@ -58,13 +58,9 @@
 
             var hashBase64 = self.createHash(args.password);
 
-            return users.byNameFull(args.userName)
-                .then(function (results) {
-                    if (results.length != 1) {
-                        throw errors.invalidUserNameOrPassword();
-                    }
+            return findByNameFull(args.userName)
+                .then(function (result) {
 
-                    var result = results[0];
                     if (result.hash === hashBase64) {
                         var user = {
                             _id: result._id,
@@ -80,125 +76,217 @@
                 });
         };
 
-        self.changeEmail = function(name, email) {
+        function findByNameFull(name) {
 
-            return q.all([
-                    self.findByName(name),
-                    self.checkEmailFormat(email),
-                    self.checkEmailFree(email)
-                ])
-                .spread(function (user) {
-                    return users.updateEmail(user._id, email);
-                })
-                .thenResolve('Az email címet sikeresen megváltoztattuk');
-        };
-
-        self.resetPassword = function (user) {
-            var password = generatePassword(8, false);
-            return self.changePassword(user, password)
-                .then(function () { return { user: user, password: password }; });
-        };
-
-        self.changePassword = function(user, newPassword) {
-            var deferred = q.defer();
-
-            user.hash = self.createHash(newPassword);
-
-            users.updateHash(user._id, user.hash)
-                .then(function() {
-                    deferred.resolve('A jelszót sikeresen megváltoztattuk');
-                }, function (error) {
-                    deferred.reject(error);
-                });
-
-            return deferred.promise;
-        };
-
-        self.checkUserNameFree = function (userName) {
-            return users.byName(userName)
+            return users.byNameFull(name)
                 .then(function (results) {
-                    if (results.length > 0) {
-                        throw errors.userNameAlreadyExist();
+                    if (results.length != 1) {
+                        throw errors.invalidUserNameOrPassword();
                     }
+
+                    return q.when(results[0]);
                 });
-        };
+        }
 
-        self.checkEmailFormat = function (email) {
-            if (!validator.isEmail(email)) {
-                return q.reject(errors.invalidEmailFormat());
-            }
-        };
-
-        self.checkEmailFree = function (email) {
-            return users.byEmail(email)
+        function checkEmailFree(args) {
+            return users.byEmail(args.email)
                 .then(function (results) {
                     if (results.length > 0) {
                         throw errors.emailAlreadyExist();
                     }
-                });
-        };
 
-        self.addClient = function (userName, email) {
-            return addUser(userName, email, [roles.client]);
-        };
-
-        self.addCoach = function (userName, email) {
-            return addUser(userName, email, [roles.client, roles.coach]);
-        };
-
-        function addUser (userName, email, roles) {
-
-            var password = generatePassword(8, false);
-
-            return q.all([
-                    self.checkUserNameFree(userName),
-                    self.checkEmailFormat(email),
-                    self.checkEmailFree(email)
-                ])
-                .then(function () {
-
-                    var user = {
-                        _id: uuid.v4(),
-                        name: userName,
-                        email: email,
-                        registration: moment().unix(),
-                        roles: roles,
-                        qr: uuid.v4(),
-                        hash: self.createHash(password),
-                        credits: [],
-                        type: 'user'
-                    };
-
-                    return user;
-                })
-                .tap(users.add)
-                .then(function (user) {
-                    return { user: user, password: password };
+                    return args;
                 });
         }
 
-        self.findByName = function (name) {
-            var deferred = q.defer();
+        self.changeEmail = function(args) {
 
-            users.byName(name).then(byName, error);
+            return q(args)
+                .then(self.checkCoach)
+                .then(findUser)
+                .then(checkEmailFormat)
+                .then(checkEmailFree)
+                .then(updateEmail);
 
-            function byName(results) {
-                try {
-                    if (results.length === 0) {
-                        deferred.reject(errors.unknownUserName());
-                    } else {
-                        deferred.resolve(results[0]);
-                    }
-                } catch (err) {
-                    error(err);
+            function updateEmail(args) {
+                return users.updateEmail(args.client._id, args.email);
+            }
+
+        };
+
+        function findUser(args) {
+            return findByNameFull(args.name)
+                .then(function (client) {
+                    args.client = client;
+                    return args;
+                })
+                .catch(function () { throw errors.unknownUserName(); });
+        }
+
+        function checkEmailFormat(args) {
+            if (!validator.isEmail(args.email)) {
+                throw errors.invalidEmailFormat();
+            }
+
+            return args;
+        }
+
+        function setPasswordToken(args) {
+            var hash = {
+                token: uuid.v4(),
+                expiry: moment().add(args.offset).unix(),
+                old: args.client.hash
+            };
+            args.token = hash.token;
+
+            return users.updateHash(args.client._id, hash).then(function () { return args; });
+        }
+
+        self.resetPassword = function (args) {
+
+            args.offset = { day: 1 };
+
+            return findUser(args)
+                .then(checkEmailFormat)
+                .then(checkEmail)
+                .then(setPasswordToken)
+                .then(mailerService.sendForgottenPasswordMail);
+
+            function checkEmail(args) {
+
+                if (args.client.email != args.email) {
+                    throw errors.unknownUserEmail();
                 }
+
+                return args;
+            }
+        };
+
+        self.changePassword = function(args) {
+
+            return q(args)
+                .then(checkPassword)
+                .then(checkUser)
+                .then(updateHash)
+                .then(mailerService.sendChangedPasswordMail);
+
+            function checkPassword(args) {
+
+                if (!args.password) {
+                    throw errors.missingProperty('Jelszó változtatás', 'Új jelszó');
+                }
+
+                return args;
             }
 
-            function error(err) {
-                deferred.reject(err);
+            function checkUser(args) {
+
+                if (args.user) {
+                    args.userName = args.user.name;
+                    return args;
+                }
+
+                if (!args.token || !args.userName) {
+                    throw errors.missingProperty('Jelszó változtatás', 'Felhasználó azonosítás');
+                }
+
+                return q(args.userName)
+                    .then(findByNameFull)
+                    .then(function (user) {
+                            if (args.token != user.hash.token) {
+                                throw errors.invalidToken();
+                            }
+
+                            if (moment().isAfter(moment.unix(user.hash.expiry))) {
+                                throw errors.expiredToken();
+                            }
+
+                            args.user = user;
+
+                            return args;
+                    });
             }
 
-            return deferred.promise;
+            function updateHash(args) {
+
+                args.user.hash = self.createHash(args.password);
+
+                return users.updateHash(args.user._id, args.user.hash)
+                    .then(function () { return args });
+            }
+        };
+
+        function checkUserNameFree(args) {
+            return users.byName(args.userName)
+                .then(function (results) {
+                    if (results.length > 0) {
+                        throw errors.userNameAlreadyExist();
+                    }
+                    return args;
+                });
+        };
+
+        self.addClient = function (args) {
+
+            args.roles = [roles.client];
+
+            return q(args)
+                .then(self.chechCoach)
+                .then(addUser)
+                .then(mailerService.sendRegistrationMail);
+        };
+
+        self.addCoach = function (args) {
+
+            args.roles = [roles.client, roles.coach];
+
+            return q(args)
+                .then(self.chechAdmin)
+                .then(addUser)
+                .then(mailerService.sendCoachRegistrationMail);
+        };
+
+        function addUser(args) {
+
+            args.offset = { month: 1 };
+
+            return q(args)
+                .then(checkUserNameFree)
+                .then(checkEmailFormat)
+                .then(checkEmailFree)
+                .then(createUser)
+                .tap(function (args) { return users.add(args.client); })
+                .then(setPasswordToken);
+
+            function createUser(args) {
+
+                var client = {
+                    _id: uuid.v4(),
+                    name: args.userName,
+                    email: args.email,
+                    registration: moment().unix(),
+                    roles: args.roles,
+                    qr: uuid.v4(),
+                    credits: [],
+                    type: 'user'
+                };
+
+                args.client = client;
+
+                return args;
+            }
+        }
+
+        self.findByName = function (name) {
+
+            return users.byName(name)
+                .then(function (results) {
+                    if (results.length != 1) {
+                        throw errors.unknownUserName();
+                    }
+
+                    return q.when(results[0]);
+                });
         };
 
         self.findByEmail = function (email) {
@@ -212,52 +300,36 @@
                 });
         };
 
-        self.checkLoggedIn = function(user) {
-            if (!user) {
-                return errors.unauthorized();
-            }
-        };
-
-        self.checkLoggedIn2 = function(user) {
-            if (!user) {
+        self.checkLoggedIn = function(args) {
+            if (!args.user) {
                 throw errors.unauthorized();
             }
 
-            return q.when(user);
+            return args;
         };
 
-        self.checkCoach = function(user) {
-            if (!user) {
-                return errors.invalidUserNameOrPassword();
-            }
-
-            if (!roles.isCoach(user)) {
-                return errors.unauthorized();
-            }
-        };
-
-        self.checkCoach2 = function(user) {
-            if (!user) {
+        self.checkCoach = function(args) {
+            if (!args.user) {
                 throw errors.invalidUserNameOrPassword();
             }
 
-            if (!roles.isCoach(user)) {
+            if (!roles.isCoach(args.user)) {
                 throw errors.unauthorized();
             }
 
-            return q.when(user);
+            return args;
         };
 
-        self.checkAdmin = function(user, result) {
-            if (!user) {
+        self.checkAdmin = function(args) {
+            if (!args.user) {
                 throw errors.invalidUserNameOrPassword();
             }
 
-            if (!roles.isAdmin(user)) {
+            if (!roles.isAdmin(args.user)) {
                 throw errors.unauthorized();
             }
 
-            return q.when(result ? result : user);
+            return args;
         };
     }
 })();

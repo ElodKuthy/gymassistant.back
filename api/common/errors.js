@@ -11,7 +11,7 @@
             invalidUserNameOrPassword: 'Hibás felhasználónév vagy jelszó',
             unauthorized: 'Ehhez a művelethez nincs jogosultsága',
             invalidTrainingId: 'Hibás edzés azonosító',
-            trainingEnded: 'Ez az óra már véget ért',
+            trainingEnded: 'Ezt az órát már nem leget módosítani',
             trainingFull: 'Ez az edzés már megtelt',
             unknownUserName: 'Nincs ilyen nevű felhasználó',
             unknownUserEmail: 'Nincs ilyen email címmel regisztrált felhasználó',
@@ -34,7 +34,19 @@
             dateIsInPast: 'Ez a dátum már elmúlt',
             invalidEmailFormat: 'Érvénytelen email cím formátum',
             trainingCanceled: 'Ez az óra elmarad',
-            missingProperty: 'Hiányzó mező: '
+            missingProperty: 'Hiányzó mező: ',
+            invalidToken: 'Érvénytelen token',
+            expiredToken: 'Ez a token már lejárt'
+        };
+
+        self.invalidToken = function () {
+            log.error(self.messages.invalidToken);
+            return new Error(self.messages.invalidToken);
+        };
+
+        self.expiredToken = function () {
+            log.error(self.messages.expiredToken);
+            return new Error(self.messages.expiredToken);
         };
 
         self.missingProperty = function (obj, prop) {

@@ -5,12 +5,19 @@ var request = plugins.request;
 var jsonfile = plugins.jsonfile;
 var uuid = plugins.uuid;
 var q = plugins.q;
+var crypto = plugins.crypto;
 var moment = plugins.moment;
 var coachUtils = container.get('coachUtils');
-var identityService = container.get('identityService');
 
 var users = jsonfile.readFileSync(__dirname + '/users.json');
 var trainings = jsonfile.readFileSync(__dirname + '/trainings.json');
+
+function createHash(password) {
+    var sha512 = crypto.createHash('sha512');
+    sha512.update(password, 'utf8');
+    var hash = sha512.digest(password);
+    return hash.toString('base64');
+}
 
 function rebuild() {
 
@@ -75,7 +82,7 @@ function rebuild() {
 
             users.forEach(function (user) {
 
-                user.hash = identityService.createHash(user.password);
+                user.hash = createHash(user.password);
                 user.password = undefined;
                 user.credits = [];
                 user.type = 'user';
@@ -87,27 +94,24 @@ function rebuild() {
 
                 training.type = 'training series';
 
-                training.dates.forEach(function (offset) {
+                for (var date = firstDate.clone().day(training.date.day).hour(training.date.hour);
+                     date.isBefore(lastDate);
+                     date.add({weeks: 1})) {
 
-                    for (var date = firstDate.clone().day(offset.day).hour(offset.hour);
-                         date.isBefore(lastDate);
-                         date.add({weeks: 1})) {
+                    var instance = {
+                        _id: uuid.v4(),
+                        series: training._id,
+                        name: training.name,
+                        coach: training.coach,
+                        date: date.unix(),
+                        max: training.max,
+                        attendees: [],
+                        type: 'training',
+                        status: 'normal'
+                    };
 
-                        var instance = {
-                            _id: uuid.v4(),
-                            series: training._id,
-                            name: training.name,
-                            coach: training.coach,
-                            date: date.unix(),
-                            max: training.max,
-                            attendees: [],
-                            type: 'training',
-                            status: 'normal'
-                        };
-
-                        requests.push(coachUtils.request('PUT', instance._id, instance));
-                    }
-                });
+                    requests.push(coachUtils.request('PUT', instance._id, instance));
+                }
 
                 requests.push(coachUtils.request('PUT', training._id, training));
             });

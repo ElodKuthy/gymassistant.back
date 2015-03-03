@@ -74,7 +74,6 @@
 
             trainings.byDate([startDate, endDate])
                 .then(function (trainings) {
-                    console.log(user);
                     var results = [];
                     trainings.forEach(function (training) {
                         if (training.status != 'cancel')
@@ -90,25 +89,20 @@
         };
 
         self.findByIdFull = function(id) {
-            return self.findById(id, { name: 'internal', roles: [roles.admin] });
+            return self.findById({ id: id, user: { name: 'internal', roles: [roles.admin] } });
         };
 
-        self.findById = function(id, user) {
+        self.findById = function(args) {
 
-            var deferred = q.defer();
-
-            trainings.byId(id)
+            return trainings.byId(args.id)
                 .then(function (trainings) {
                     if (!trainings || trainings.length != 1) {
-                        deferred.reject(errors.invalidTrainingId());
-                    } else {
-                        deferred.resolve(convertTraining(trainings[0], user));
+                        throw errors.invalidTrainingId();
                     }
-                }, function (error) {
-                    deferred.reject(error);
+
+                    return convertTraining(trainings[0], args.user);
                 });
 
-            return deferred.promise;
         };
 
         self.cancel = function (id) {

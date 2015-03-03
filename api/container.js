@@ -25,7 +25,7 @@
         container.register('users', require('./dal/users.js'));
 
         /* service layer */
-        container.register('attendees', require('./service/attendees.js'));
+        container.register('attendeesService', require('./service/attendees.service.js'));
         container.register('creditsService', require('./service/credits.service.js'));
         container.register('identityService', require('./service/identity.service.js'));
         container.register('mailerService', require('./service/mailer.service.js'));

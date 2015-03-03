@@ -141,16 +141,9 @@
 
         self.updateEmail = function(id, email) {
 
-            function update (user) {
-                var deferred = q.defer();
-                try {
-                    user.email = email;
-                    deferred.resolve(user);
-                } catch (err) {
-                    deferred.reject(err);
-                }
-
-                return deferred.promise;
+            function update (instance) {
+                instance.email = email;
+                return q(instance);
             }
 
             return coachUtils.updateDoc(id, update);

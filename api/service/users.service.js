@@ -3,28 +3,34 @@
 
     module.exports = UsersService;
 
-    UsersService.$inject = ['init', 'plugins', 'errors', 'identityService', 'users', 'roles'];
-    function UsersService(init, plugins, errors, identityService, users, roles) {
+    UsersService.$inject = ['plugins', 'errors', 'identityService', 'users', 'roles'];
+    function UsersService(plugins, errors, identityService, users, roles) {
 
         var self = this;
-
         var q = plugins.q;
 
-        var _user = init.user;
+        self.getUserByName = function(args) {
 
-        self.getAllUsers = function () {
+            return q(args)
+                .then(identityService.checkCoach)
+                .then(function (args) { return identityService.findByName(args.name); });
+        };
 
-            return identityService.checkCoach2(_user)
+        self.getAllUsers = function(args) {
+
+            return q(args)
+                .then(identityService.checkCoach)
                 .then(users.byNameAll);
         };
 
-        self.getAllCoaches = function () {
+        self.getAllCoaches = function(args) {
 
-            return identityService.checkAdmin(_user)
+            return q(args)
+                .then(identityService.checkAdmin)
                 .then(self.getAllUsers)
                 .then(filterForCoaches);
 
-            function filterForCoaches (users) {
+            function filterForCoaches(users) {
 
                 var coaches = [];
 

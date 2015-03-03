@@ -22,17 +22,20 @@
         };
 
         self.getAll = function(args) {
-            return identityService.checkCoach2(args.user)
+            return q(args)
+                .then(identityService.checkCoach)
                 .then(function() { return series.byDate() });
         }
 
         self.getAllOfCoach = function(args) {
-            return identityService.checkAdmin(args.user)
+            return q(args)
+                .then(identityService.checkAdmin)
                 .then(function() { return series.byCoach(args.coach) });
         }
 
         self.get = function(args) {
-            return identityService.checkAdmin(args.user)
+            return q(args)
+                .then(identityService.checkAdmin)
                 .then(function() {
                     return series.get(args.id).catch(function (err) {
                         throw errors.invalidTrainingId(err);
@@ -43,12 +46,13 @@
 
         self.add = function(args) {
 
-            return identityService.checkAdmin(args.user)
+            return q(args)
+                .then(identityService.checkAdmin)
                 .then(check)
                 .then(addAdditionalProperties)
                 .then(addToDb);
 
-                function check() {
+                function check(args) {
                     if (!args.name) {
                         throw errors.missingProperty('Új edzés', 'név');
                     }
@@ -61,24 +65,28 @@
                     if (!args.date) {
                         throw errors.missingProperty('Új edzés', 'dátum');
                     }
+
+                    return args;
                 }
 
-                function addAdditionalProperties() {
+                function addAdditionalProperties(args) {
                     args._id = uuid.v4();
                     args.status = self.statuses.normal;
                     args.type = 'training series';
                     delete args.user;
+                    return args;
                 }
 
-                function addToDb() {
+                function addToDb(args) {
                     return series.add(args);
                 }
         }
 
         self.set = function(args) {
 
-            return identityService.checkAdmin(args.user)
-                .then(function() { return self.get(args); })
+            return q(args)
+                .then(identityService.checkAdmin)
+                .then(self.get)
                 .then(updateName)
                 .then(updateCoach)
                 .then(updateMax)
@@ -133,7 +141,8 @@
 
         self.updateTrainings = function(args) {
 
-            return identityService.checkAdmin(args.user, args)
+            return q(args)
+                .then(identityService.checkAdmin)
                 .then(getSeries)
                 .then(getTrainings)
                 .then(saveTrainings)

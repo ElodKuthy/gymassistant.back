@@ -40,16 +40,9 @@
 
         self.updateStatus = function (id, status) {
 
-            function update (training) {
-                var deferred = q.defer();
-                try {
-                    training.status = status;
-                    deferred.resolve(training);
-                } catch (err) {
-                    deferred.reject(err);
-                }
-
-                return deferred.promise;
+            function update (instance) {
+                instance.status = status;
+                return q(instance);
             }
 
             return coachUtils.updateDoc(id, update);
