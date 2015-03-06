@@ -135,6 +135,20 @@
             return deferred.promise;
         };
 
+        self.increaseExpiry = function(id, creditId, inc) {
+
+            function update (instance) {
+                var credit = findCreditById(instance.credits, creditId);
+                if (!credit) {
+                    throw errors.invalidCreditId();
+                }
+                credit.expiry += inc;
+                return q(instance);
+            }
+
+            return coachUtils.updateDoc(id, update);
+        };
+
         self.add = function(user) {
             return request('PUT', user._id, user);
         };

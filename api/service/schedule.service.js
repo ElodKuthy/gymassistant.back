@@ -25,7 +25,9 @@
 
         self.fetch = function(args) {
 
-            return trainingService.findByDate(args.startDate, args.endDate, args.user);
+            return q(args)
+                .then(identityService.checkLoggedIn)
+                .then(function () { return trainingService.findByDate(args.startDate, args.endDate, args.user); });
         };
 
         function validateTraining(args) {
