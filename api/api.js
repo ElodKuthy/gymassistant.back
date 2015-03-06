@@ -209,7 +209,7 @@
                     user: req.user
                 };
 
-                return creditsService.getCredits(args);
+                return creditsService.getCredits(args).then(function (args) { return args.credits });
             });
         });
 
@@ -224,9 +224,89 @@
                     userName: req.param('userName')
                 };
 
-                return creditsService.getUserCredits(args);
+                return creditsService.getUserCredits(args).then(function (args) { return args.credits });
             });
         });
+
+    router.route('/credit/details/:id')
+
+        .get(function (req, res) {
+
+            nodeify(res, function () {
+
+                var args = {
+                    user: req.user,
+                    id: req.param('id'),
+                    details: 'full'
+                };
+
+                return creditsService.getCredit(args);
+            });
+        });
+
+    router.route('/credit/details/:id/of/:name')
+
+        .get(function (req, res) {
+
+            nodeify(res, function () {
+
+                var args = {
+                    user: req.user,
+                    id: req.param('id'),
+                    userName: req.param('name'),
+                    details: 'full'
+                };
+
+                return creditsService.getCredit(args);
+            });
+        })
+
+        .post(function (req, res) {
+
+            nodeify(res, function () {
+
+                var args = {
+                    user: req.user,
+                    id: req.param('id'),
+                    userName: req.param('name')
+                };
+
+                addBodyToArgs(args, req.body);
+
+                return creditsService.updateCredit(args);
+            }, 'Sikeresen módosítottad a bérletet');
+        });
+
+    router.route('/add/first/time/to/user/:userName')
+
+        .get(function (req, res) {
+
+            nodeify(res, function () {
+
+                var args = {
+                    user: req.user,
+                    userName: req.param('userName'),
+                }
+
+                return subscriptionService.add(args);
+            });
+        });
+
+    router.route('/add/first/time/to/user/:userName/for/date/:date')
+
+        .get(function (req, res) {
+
+            nodeify(res, function () {
+
+                var args = {
+                    user: req.user,
+                    userName: req.param('userName'),
+                    date: req.param('date')
+                }
+
+                return subscriptionService.add(args);
+            });
+        })
 
     router.route('/add/subscription/with/:amount/credits/to/user/:userName/for/:period')
 

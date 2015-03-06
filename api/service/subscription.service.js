@@ -62,7 +62,7 @@
 
             args.newCredit = {
                 id: uuid.v4(),
-                date: args.date,
+                date: moment.unix(args.date).startOf('day').unix(),
                 expiry: moment.unix(args.date).add({ days: args.period.days() }).endOf('day').unix(),
                 coach: args.coach.name,
                 amount: args.amount,
