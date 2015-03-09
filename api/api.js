@@ -574,6 +574,22 @@
             });
         });
 
+    router.route('/active/subscriptions/from/:from/to/:to')
+
+        .get(function (req, res) {
+
+            nodeify(res, function () {
+
+                var args = {
+                    user: req.user,
+                    from: moment(req.param('from'), 'YYYY-MM-DD'),
+                    to: moment(req.param('to'), 'YYYY-MM-DD')
+                }
+
+                return subscriptionService.getActiveSubscriptions(args);
+            });
+        });
+
     function addBodyToArgs(args, body) {
         for (var key in body) {
             if (body.hasOwnProperty(key)) {
