@@ -118,5 +118,75 @@
                     return addToTraining(0);
                 });
         }
+
+        self.getActiveSubscriptions = function(args) {
+
+            return q(args)
+                .then(identityService.checkAdmin)
+                .then(getAllUser)
+                .then(countActiveSubscriptions);
+        }
+
+        function getAllUser(args) {
+            return users.byNameAll().then(function (results) {
+                args.clients = results;
+                return args;
+            })
+        }
+
+        function countActiveSubscriptions(args) {
+
+            var results = {
+                distinct: 0,
+                all: 0
+            };
+            var countedNames = {
+                overall: []
+            };
+
+            args.clients.forEach(function (client) {
+
+                client.credits.forEach(function (credit) {
+
+                    if (moment.unix(credit.expiry).isAfter(args.from, 'day') &&
+                        moment.unix(credit.date).isBefore(args.to, 'day')) {
+
+                        if (!results[credit.coach]) {
+                            results[credit.coach] = {
+                                distinct: 0,
+                                all: 0,
+                                subscriptions: []
+                            };
+                            countedNames[credit.coach] = {};
+                        }
+
+                        results[credit.coach].subscriptions.push({
+                            id: credit.id,
+                            client: client.name,
+                            date: credit.date,
+                            expiry: credit.expiry,
+                            amount: credit.amount
+                        });
+
+                        if (!countedNames.overall[client.name]) {
+                            countedNames.overall[client.name] = true;
+                            results.distinct++;
+                        }
+
+                        if (!countedNames[credit.coach][client.name]) {
+                            countedNames[credit.coach][client.name] = true;
+                            results[credit.coach].distinct++;
+                        }
+
+                        results[credit.coach].all++;
+                        results.all++;
+                    }
+                });
+            });
+
+
+
+            return results;
+        }
     }
 })();
