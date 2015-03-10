@@ -150,7 +150,16 @@
                 .then(checkEmailFormat)
                 .then(checkEmail)
                 .then(setPasswordToken)
-                .then(mailerService.sendForgottenPasswordMail);
+                .then(mailerService.sendForgottenPasswordMail)
+                .then(function() { return 'OK'; })
+                .catch(function (err) {
+                    if (err.message == errors.messages.unknownUserEmail ||
+                        err.message == errors.messages.unknownUserName) {
+                        return 'OK';
+                    } else {
+                        throw err;
+                    }
+                });
 
             function checkEmail(args) {
 
