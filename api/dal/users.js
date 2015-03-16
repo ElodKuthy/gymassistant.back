@@ -162,5 +162,15 @@
 
             return coachUtils.updateDoc(id, update);
         };
+
+        self.updatePreferences = function(id, preferences) {
+
+            function update(instance) {
+                instance.preferences = preferences;
+                return q(instance);
+            }
+
+            return coachUtils.updateDoc(id, update);
+        }
     }
 })();

@@ -590,6 +590,22 @@
             });
         });
 
+    router.route('/my/preferences')
+
+        .post(function (req, res) {
+
+            nodeify(res, function () {
+
+                var args = {
+                    user: req.user
+                }
+
+                addBodyToArgs(args, req.body);
+
+                return identityService.updatePreferences(args);
+            });
+        })
+
     function addBodyToArgs(args, body) {
         for (var key in body) {
             if (body.hasOwnProperty(key)) {
