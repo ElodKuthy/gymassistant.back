@@ -13,6 +13,10 @@
         var generatePassword = plugins.generatePassword;
         var validator = plugins.validator;
 
+        var defaultPreferences = {
+            askIrreversibleJoining: true
+        }
+
         self.createHash = function (password) {
             var sha512 = crypto.createHash('sha512');
             sha512.update(password, 'utf8');
@@ -66,7 +70,8 @@
                             _id: result._id,
                             name: result.name,
                             email: result.email,
-                            roles: result.roles
+                            roles: result.roles,
+                            preferences: result.preferences ? result.preferences : defaultPreferences
                         };
 
                         return user;
@@ -364,5 +369,20 @@
 
             return args;
         };
+
+        self.updatePreferences = function(args) {
+
+            return q(args)
+                .then(self.checkLoggedIn)
+                .then(function (args) {
+                    if (!args.preferences) {
+                        throw errors.missingProperty('Beállítások', 'Új beállítások');
+                    }
+
+                    return users.updatePreferences(args.user._id, args.preferences)
+                        .thenResolve(args.preferences);
+
+                });
+        }
     }
 })();
