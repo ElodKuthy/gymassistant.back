@@ -16,6 +16,7 @@
             return q(args)
                 .then(checkArgs)
                 .then(findUser)
+                .then(adjustStartDate)
                 .then(addCredit)
                 .then(addToTrainings);
         };
@@ -56,6 +57,19 @@
                 args.coach = args.user;
                 return identityService.checkCoach(args);
             }
+        }
+
+        function adjustStartDate(args) {
+
+            if (args.period != periods.today) {
+                args.client.credits.forEach(function (credit) {
+                    if (credit.expiry > args.date && credit.coach == args.coach.name) {
+                        args.date = moment.unix(credit.expiry).add({ day: 1 }).startOf('day').unix();
+                    }
+                });
+            }
+
+            return args;
         }
 
         function addCredit(args) {
