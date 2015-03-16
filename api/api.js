@@ -438,6 +438,21 @@
             }, 'A regisztrációs emailt sikeresen elküldtük újra');
         });
 
+    router.route('/change/name')
+
+        .post(function (req, res) {
+
+            nodeify(res, function () {
+                var args = {
+                    user: req.user
+                };
+
+                addBodyToArgs(args, req.body);
+
+                return identityService.changeName(args);
+            }, 'Sikeres névváltoztatás');
+        });
+
     router.route('/change/password')
 
         .post(function (req, res) {

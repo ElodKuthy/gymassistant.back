@@ -3,8 +3,8 @@
 
     module.exports = IdentityService;
 
-    IdentityService.$inject = ['plugins', 'log', 'users', 'errors', 'roles', 'mailerService'];
-    function IdentityService(plugins, log, users, errors, roles, mailerService) {
+    IdentityService.$inject = ['plugins', 'log', 'users', 'errors', 'roles', 'mailerService', 'trainings'];
+    function IdentityService(plugins, log, users, errors, roles, mailerService, trainings) {
         var self = this;
         var q = plugins.q;
         var crypto = plugins.crypto;
@@ -369,6 +369,47 @@
 
             return args;
         };
+
+        self.changeName = function(args) {
+
+            if (!args.name) {
+                throw errors.missingProperty('Beállítások', 'Eredeti név');
+            }
+
+            if (!args.userName) {
+                throw errors.missingProperty('Beállítások', 'Új név');
+            }
+
+            return q(args)
+                .then(self.checkAdmin)
+                .then(findUser)
+                .then(checkUserNameFree)
+                .then(changeName)
+                .then(updateTrainings);
+        }
+
+        function changeName(args) {
+            return users.updateName(args.client._id, args.userName).thenResolve(args);
+        }
+
+        function updateTrainings(args) {
+
+            return trainings.byDate()
+                .then(function(allTrainings) {
+                    var updates = [];
+                    allTrainings.forEach(function (training) {
+                        for (var index = 0; index < training.attendees.length; index++) {
+                            if (training.attendees[index].name == args.name) {
+                                training.attendees[index].name = args.userName;
+                                updates.push(trainings.updateAttendees(training._id, training.attendees));
+                                break;
+                            }
+                        }
+                    });
+
+                    return q.allSettled(updates).thenResolve(args);
+                });
+        }
 
         self.updatePreferences = function(args) {
 

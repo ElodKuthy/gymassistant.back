@@ -153,6 +153,16 @@
             return request('PUT', user._id, user);
         };
 
+        self.updateName = function(id, name) {
+
+            function update (instance) {
+                instance.name = name;
+                return q(instance);
+            }
+
+            return coachUtils.updateDoc(id, update);
+        };
+
         self.updateEmail = function(id, email) {
 
             function update (instance) {
