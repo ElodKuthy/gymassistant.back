@@ -177,6 +177,7 @@
                         results[credit.coach].subscriptions.push({
                             id: credit.id,
                             client: client.name,
+                            email: client.email,
                             date: credit.date,
                             expiry: credit.expiry,
                             amount: credit.amount
