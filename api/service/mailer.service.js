@@ -8,6 +8,7 @@
         var self = this;
         var q = plugins.q;
         var validator = plugins.validator;
+        var moment = plugins.moment;
 
         self.sendRegistrationMail = function (args) {
             return q.nfcall(mailer.send, 'emails/registration', {
@@ -41,6 +42,16 @@
                 to: args.user.email,
                 subject: 'Edzőterem Segéd - Jelszóváltoztatás',
                 userName: args.user.name
+            });
+        };
+
+        self.sendCancelledTrainingNotification = function (args) {
+            return q.nfcall(mailer.send, 'emails/cancelled_training', {
+                to: args.client.email,
+                subject: 'Edzőterem Segéd - Elmarad egy edzés',
+                userName: args.client.name,
+                trainingName: args.training.name + ' - ' + args.training.coach,
+                trainingDate: moment(args.training.date).format('YYYY. MM. DD. HH:mm')
             });
         };
     }

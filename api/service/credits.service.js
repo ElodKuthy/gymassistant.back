@@ -183,7 +183,7 @@
         }
         function findCreditToBook(args) {
 
-            var adminMode = roles.isAdmin(args.user.roles);
+            var adminMode = roles.isAdmin(args.user);
             var now = moment().unix();
             var creditToBook;
             if (args.credits) {

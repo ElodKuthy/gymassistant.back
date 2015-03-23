@@ -3,8 +3,8 @@
 
     module.exports = ScheduleService;
 
-    ScheduleService.$inject = ['plugins', 'trainingService', 'log', 'roles', 'errors', 'attendeesService', 'identityService'];
-    function ScheduleService(plugins, trainingService, log, roles, errors, attendeesService, identityService) {
+    ScheduleService.$inject = ['plugins', 'trainingService', 'log', 'roles', 'errors', 'attendeesService', 'identityService', 'mailerService'];
+    function ScheduleService(plugins, trainingService, log, roles, errors, attendeesService, identityService, mailerService) {
         var self = this;
         var moment = plugins.moment;
         var q = plugins.q;
@@ -32,7 +32,11 @@
 
         function validateTraining(args) {
 
-            if (roles.isAdmin(args.user.roles)) {
+            if ((['delete']).indexOf(args.purpose) > -1 && args.training.status === 'cancel') {
+                throw errors.trainingCanceled();
+            }
+
+            if (roles.isAdmin(args.user)) {
                 return args;
             }
 
@@ -48,17 +52,13 @@
                 throw errors.toLateToLeave();
             }
 
-            if ((['delete']).indexOf(args.purpose) > -1 && args.training.status === 'cancel') {
-                throw errors.trainingCanceled();
-            }
-
             return args;
         }
 
         self.cancelTraining = function (args) {
 
             return q(args)
-                .then(identityService.chechCoach)
+                .then(identityService.checkCoach)
                 .then(findTraining)
                 .then(checkTraining)
                 .then(removeAttendees)
@@ -78,14 +78,27 @@
                 return validateTraining(args);
             }
 
-            function removeAttendees (args) {
-                var promises = [];
-                args.training.attendees.forEach(function (attendee) {
-                    args.userName = attendee.name;
-                    promises.push(attendeesService.removeFromTraining(args));
-                });
+            function removeNextAttendee(args) {
+                if (args.training.attendees.length == 0) {
+                    return args;
+                }
 
-                return q.all(promises).thenResolve(args);
+                var attendee = args.training.attendees[0];
+                args.training.attendees.slice(0, 1);
+                args.userName = attendee.name;
+                args.client = {
+                    name: attendee.name,
+                    email: attendee.email
+                };
+
+                return attendeesService.removeFromTraining(args)
+                    .then(function () { return mailerService.sendCancelledTrainingNotification(args); })
+                    .then(function () { return removeNextAttendee(args); });
+            }
+
+            function removeAttendees (args) {
+                args.extendExpiry = true;
+                return removeNextAttendee(args);
             }
 
             function setTrainingStatusToCanceled (args) {

@@ -187,9 +187,10 @@
             var creditToAddId = args.training.attendees[attendeeToRemoveIndex].ref;
             args.training.attendees.splice(attendeeToRemoveIndex, 1);
 
-            return trainings.updateAttendees(args.training._id, args.training.attendees)
-                .then(function () { return users.increaseFreeCredit(args.client._id, creditToAddId) })
-                .then(function () { return args.training.attendees; });
+            return trainings.updateAttendees(args.training._id, args.training.attendees).thenResolve(args)
+                .then(function (args) { return users.increaseFreeCredit(args.client._id, creditToAddId).thenResolve(args); })
+                .then(function (args) { return args.extendExpiry ? users.increaseExpiry(args.client._id, creditToAddId, 604800).thenResolve(args) : args; })
+                .then(function (args) { return args.training.attendees; });
         }
 
         function remove(args) {
