@@ -13,7 +13,7 @@
         self.sendRegistrationMail = function (args) {
             return q.nfcall(mailer.send, 'emails/registration', {
                 to: args.client.email,
-                subject: 'Edzőterem Segéd - Üdvözölünk',
+                subject: 'Testkultúra Terem Segéd - Üdvözölünk',
                 userName: args.client.name,
                 token: args.token
             });
@@ -22,7 +22,7 @@
         self.sendCoachRegistrationMail = function (args) {
             return q.nfcall(mailer.send, 'emails/coach_registration', {
                 to: args.client.email,
-                subject: 'Edzőterem Segéd - Üdvözölünk',
+                subject: 'Testkultúra Terem Segéd - Üdvözölünk',
                 userName: args.client.name,
                 token: args.token
             });
@@ -31,7 +31,7 @@
         self.sendForgottenPasswordMail = function (args) {
             return q.nfcall(mailer.send, 'emails/forgotten_password', {
                 to: args.client.email,
-                subject: 'Edzőterem Segéd - Elfelejtett jelszó',
+                subject: 'Testkultúra Terem Segéd - Elfelejtett jelszó',
                 userName: args.client.name,
                 token: args.token
             });
@@ -40,7 +40,7 @@
         self.sendChangedPasswordMail = function (args) {
             return q.nfcall(mailer.send, 'emails/changed_password', {
                 to: args.user.email,
-                subject: 'Edzőterem Segéd - Jelszóváltoztatás',
+                subject: 'Testkultúra Terem Segéd - Jelszóváltoztatás',
                 userName: args.user.name
             });
         };
@@ -48,7 +48,7 @@
         self.sendCancelledTrainingNotification = function (args) {
             return q.nfcall(mailer.send, 'emails/cancelled_training', {
                 to: args.client.email,
-                subject: 'Edzőterem Segéd - Elmarad egy edzés',
+                subject: 'Testkultúra Terem Segéd - Elmarad egy edzés',
                 userName: args.client.name,
                 trainingName: args.training.name + ' - ' + args.training.coach,
                 trainingDate: moment(args.training.date).format('YYYY. MM. DD. HH:mm')
