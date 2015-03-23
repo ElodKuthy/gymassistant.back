@@ -11,7 +11,7 @@
             invalidUserNameOrPassword: 'Hibás felhasználónév vagy jelszó',
             unauthorized: 'Ehhez a művelethez nincs jogosultsága',
             invalidTrainingId: 'Hibás edzés azonosító',
-            trainingEnded: 'Ezt az órát már nem leget módosítani',
+            trainingEnded: 'Ezt az órát már nem lehet módosítani',
             trainingFull: 'Ez az edzés már megtelt',
             unknownUserName: 'Nincs ilyen nevű felhasználó',
             unknownUserEmail: 'Nincs ilyen email címmel regisztrált felhasználó',
@@ -33,7 +33,7 @@
             invalidCreditId: 'Ismeretlen kredit azonosító',
             dateIsInPast: 'Ez a dátum már elmúlt',
             invalidEmailFormat: 'Érvénytelen email cím formátum',
-            trainingCanceled: 'Ez az óra elmarad',
+            trainingCanceled: 'Ez az óra már le lett mondva',
             missingProperty: 'Hiányzó mező: ',
             invalidToken: 'Érvénytelen token',
             expiredToken: 'Ez a token már lejárt'

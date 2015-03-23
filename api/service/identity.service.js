@@ -245,7 +245,7 @@
             args.roles = [roles.client];
 
             return q(args)
-                .then(self.chechCoach)
+                .then(self.checkCoach)
                 .then(addUser)
                 .then(mailerService.sendRegistrationMail);
         };
