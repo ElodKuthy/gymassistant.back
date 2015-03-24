@@ -89,7 +89,7 @@
             });
         });
 
-    router.route('/training/id/:id')
+    router.route('/training/:id')
 
         .get(function (req, res) {
 
@@ -102,6 +102,21 @@
 
                 return trainingService.findById(args);
             });
+        })
+
+        .post(function (req, res) {
+
+            nodeify(res, function () {
+
+                var args = {
+                    user: req.user,
+                    id: req.param('id')
+                }
+
+                addBodyToArgs(args, req.body);
+
+                return trainingService.changeCoach(args);
+            }, 'Sikeresen megváltoztattad az óratartó edzőt');
         });
 
     router.route('/join/training/id/:id')

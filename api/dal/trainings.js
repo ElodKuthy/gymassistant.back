@@ -38,6 +38,16 @@
             return put(training._id, training);
         }
 
+        self.updateCoach = function (id, coach) {
+
+            function update (instance) {
+                instance.coach = coach;
+                return q(instance);
+            }
+
+            return coachUtils.updateDoc(id, update);
+        };
+
         self.updateStatus = function (id, status) {
 
             function update (instance) {
@@ -49,22 +59,13 @@
         };
 
         self.updateAttendees = function(id, attendees) {
-            var deferred = q.defer();
 
-            get(id)
-                .then(function (result) {
-                    result.attendees = attendees;
-                    put(id, result)
-                        .then(function (result) {
-                            deferred.resolve(result);
-                        }, function (error) {
-                            deferred.reject(error);
-                        });
-            }, function (error) {
-                deferred.reject(error);
-            });
+            function update (instance) {
+                instance.attendees = attendees;
+                return q(instance);
+            }
 
-            return deferred.promise;
+            return coachUtils.updateDoc(id, update);
         };
     }
 })();

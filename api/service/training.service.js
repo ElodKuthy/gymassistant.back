@@ -3,8 +3,8 @@
 
     module.exports = TrainingService;
 
-    TrainingService.$inject = ['plugins', 'trainings', 'log', 'roles', 'errors'];
-    function TrainingService(plugins, trainings, log, roles, errors) {
+    TrainingService.$inject = ['plugins', 'trainings', 'log', 'roles', 'errors', 'identityService', 'creditsService'];
+    function TrainingService(plugins, trainings, log, roles, errors, identityService, creditsService) {
         var self = this;
         var moment = plugins.moment;
         var q = plugins.q;
@@ -43,7 +43,7 @@
             var result = {
                 _id: training._id,
                 _rev: training._rev,
-                series: training._series,
+                series: training.series,
                 name: training.name,
                 coach: training.coach,
                 date: moment.unix(training.date),
@@ -108,5 +108,55 @@
         self.cancel = function (id) {
             return trainings.updateStatus(id, 'cancel');
         };
+
+        self.changeCoach = function(args) {
+
+            if (!args.id) {
+                throw errors.missingProperty('Edzőváltás', 'Edzés azonosító');
+            }
+
+            if (!args.coach) {
+                throw errors.missingProperty('Edzőváltás', 'Új edző');
+            }
+
+            return q(args)
+                .then(identityService.checkCoach)
+                .then(findTraining)
+                .then(updateAttendees)
+                .then(updateCoach);
+        }
+
+        function findTraining(args) {
+            return self.findById(args)
+                .then(function (training) {
+                    args.training = training;
+                    return args;
+                });
+        }
+
+        function updateAttendees(args) {
+
+            return updateAttendee(args, 0).then(function (args) { return trainings.updateAttendees(args.training._id, args.training.attendees).thenResolve(args); });
+        }
+
+        function updateAttendee(args, index) {
+
+            if (index >= args.training.attendees.length) {
+                return args;
+            }
+
+            var attendee = args.training.attendees[index];
+            args.id = attendee.ref;
+            args.userName =  attendee.name;
+
+            return creditsService.getCredit(args).then(function (credit) {
+                attendee.type = (credit.coach == args.coach) ? 'normal' : 'guest';
+                return updateAttendee(args, index + 1);
+            });
+        }
+
+        function updateCoach(args) {
+            return trainings.updateCoach(args.training._id, args.coach).thenResolve(args.training);
+        }
     }
 })();
