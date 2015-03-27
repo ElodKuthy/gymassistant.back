@@ -13,7 +13,7 @@
             if (user && user.name) {
                 for (var index = 0; index < training.attendees.length; index++) {
                     var current = training.attendees[index];
-                        if (current.name.indexOf(user.name) > -1) {
+                        if (current.name === user.name) {
                             return true;
                         }
                     }
