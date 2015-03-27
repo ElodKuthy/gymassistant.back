@@ -95,7 +95,7 @@
 
                     args.training.attendees.push({
                         name: args.client.name,
-                        type: bookedCredit.coach === args.training.coach ? 'normal' : 'guest',
+                        type: bookedCredit.firstTime ? 'first' : bookedCredit.coach === args.training.coach ? 'normal' : 'guest',
                         ref: bookedCredit.id,
                         checkedIn: false
                     });

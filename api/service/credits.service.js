@@ -168,6 +168,11 @@
 
         function updateExpiry(args) {
             if (args.addWeek) {
+
+                if (args.credit.firstTime) {
+                    throw errors.firstTimeModification();
+                }
+
                 return users.increaseExpiry(args.client._id, args.credit.id, 604800).thenResolve(args);
             }
 
@@ -176,6 +181,11 @@
 
         function updateFreeCredits(args) {
             if (args.addFreeCredit) {
+
+                if (args.credit.firstTime) {
+                    throw errors.firstTimeModification();
+                }
+
                 return users.increaseFreeCredit(args.client._id, args.credit.id).thenResolve(args);
             }
 

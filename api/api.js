@@ -292,32 +292,18 @@
             }, 'Sikeresen módosítottad a bérletet');
         });
 
-    router.route('/add/first/time/to/user/:userName')
+    router.route('/add/first/time')
 
-        .get(function (req, res) {
-
-            nodeify(res, function () {
-
-                var args = {
-                    user: req.user,
-                    userName: req.param('userName'),
-                }
-
-                return subscriptionService.add(args);
-            });
-        });
-
-    router.route('/add/first/time/to/user/:userName/for/date/:date')
-
-        .get(function (req, res) {
+        .post(function (req, res) {
 
             nodeify(res, function () {
 
                 var args = {
                     user: req.user,
-                    userName: req.param('userName'),
-                    date: req.param('date')
+                    firstTime: true
                 }
+
+                addBodyToArgs(args, req.body);
 
                 return subscriptionService.add(args);
             });

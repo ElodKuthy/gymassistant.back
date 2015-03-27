@@ -34,7 +34,7 @@
         };
 
         function showAttendeesForAuthOnly(training, user) {
-            if (user && user.name && (roles.isTheCoachOfTraining(user, training) || roles.isAdmin(user))) {
+            if (user && roles.isCoach(user)) {
                 return training.attendees;
             }
         }
@@ -89,7 +89,7 @@
         };
 
         self.findByIdFull = function(id) {
-            return self.findById({ id: id, user: { name: 'internal', roles: [roles.admin] } });
+            return self.findById({ id: id, user: { name: 'internal', roles: [roles.coach, roles.admin] } });
         };
 
         self.findById = function(args) {
