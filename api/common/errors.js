@@ -36,7 +36,19 @@
             trainingCanceled: 'Ez az óra már le lett mondva',
             missingProperty: 'Hiányzó mező: ',
             invalidToken: 'Érvénytelen token',
-            expiredToken: 'Ez a token már lejárt'
+            expiredToken: 'Ez a token már lejárt',
+            notFirstTime: 'A tanítványnak már nem ez az első alkalma',
+            firstTimeModification: 'Az első ingyenes alkalmat nem lehet módosítani'
+        };
+
+        self.firstTimeModification = function () {
+            log.error(self.messages.firstTimeModification);
+            return new Error(self.messages.firstTimeModification);
+        }
+
+        self.notFirstTime = function () {
+            log.error(self.messages.notFirstTime);
+            return new Error(self.messages.notFirstTime);
         };
 
         self.invalidToken = function () {

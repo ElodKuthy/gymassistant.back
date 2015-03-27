@@ -14,8 +14,8 @@
         self.add = function(args) {
 
             return q(args)
-                .then(checkArgs)
                 .then(findUser)
+                .then(checkArgs)
                 .then(adjustStartDate)
                 .then(addCredit)
                 .then(addToTrainings);
@@ -32,8 +32,12 @@
 
         function checkArgs(args) {
 
-            args.amount = parseInt(args.amount);
-            args.period = periods.parse(args.period);
+            if (args.firstTime && args.client.credits.length > 0) {
+                throw errors.notFirstTime();
+            }
+
+            args.amount = args.firstTime ? 1 : parseInt(args.amount);
+            args.period = args.firstTime ? periods.today : periods.parse(args.period);
 
             if (isNaN(args.amount) || args.amount < 1) {
                 throw errors.onlyPositiveIntegers();
@@ -43,9 +47,13 @@
                 throw errors.invalidPeriod();
             }
 
-            if (!moment(args.date).isValid) {
+            console.log(args.date);
+
+            if (!args.date || !moment(args.date).isValid) {
                 args.date = moment().startOf('day').unix();
             }
+
+            console.log(args.date);
 
             if (args.coachName) {
                 return q(args)
@@ -61,7 +69,7 @@
 
         function adjustStartDate(args) {
 
-            if (args.period != periods.today) {
+            if (!args.firstTime && args.period != periods.today) {
                 args.client.credits.forEach(function (credit) {
                     if (credit.expiry > args.date && credit.coach == args.coach.name) {
                         args.date = moment.unix(credit.expiry).add({ day: 1 }).startOf('day').unix();
@@ -74,7 +82,15 @@
 
         function addCredit(args) {
 
-            args.newCredit = {
+            args.newCredit = args.firstTime ? {
+                id: uuid.v4(),
+                date: moment.unix(args.date).startOf('day').unix(),
+                expiry: moment.unix(args.date).endOf('day').unix(),
+                coach: args.coach.name,
+                amount: 1,
+                free: 1,
+                firstTime: true
+            } : {
                 id: uuid.v4(),
                 date: moment.unix(args.date).startOf('day').unix(),
                 expiry: moment.unix(args.date).add({ days: args.period.days() }).endOf('day').unix(),
@@ -198,8 +214,6 @@
                     }
                 });
             });
-
-
 
             return results;
         }
