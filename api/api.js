@@ -2,8 +2,8 @@
     'use strict';
     module.exports = Api;
 
-    Api.$inject = ['plugins', 'errors', 'log', 'identityService', 'scheduleService', 'trainingService', 'mailerService', 'attendeesService', 'creditsService', 'subscriptionService', 'users', 'series', 'seriesService', 'usersService'];
-    function Api(plugins, errors, log, identityService, scheduleService, trainingService, mailerService, attendeesService, creditsService, subscriptionService, users, series, seriesService, usersService) {
+    Api.$inject = ['plugins', 'errors', 'log', 'identityService', 'scheduleService', 'trainingService', 'mailerService', 'attendeesService', 'creditsService', 'subscriptionService', 'users', 'series', 'seriesService', 'usersService', 'statsService'];
+    function Api(plugins, errors, log, identityService, scheduleService, trainingService, mailerService, attendeesService, creditsService, subscriptionService, users, series, seriesService, usersService, statsService) {
 
     var express = require('express');
     var router = express.Router();
@@ -620,7 +620,40 @@
 
                 return identityService.updatePreferences(args);
             });
-        })
+        });
+
+    router.route('/get/overview/:from/:to')
+
+        .get(function (req, res) {
+
+            nodeify(res, function () {
+
+                var args = {
+                    user: req.user,
+                    from: moment(req.param('from'), 'YYYY-MM-DD'),
+                    to: moment(req.param('to'), 'YYYY-MM-DD')
+                }
+
+                return statsService.getOverview(args);
+            });
+        });
+
+    router.route('/get/overview/:coach/:from/:to')
+
+        .get(function (req, res) {
+
+            nodeify(res, function () {
+
+                var args = {
+                    user: req.user,
+                    coach: req.param('coach'),
+                    from: moment(req.param('from'), 'YYYY-MM-DD'),
+                    to: moment(req.param('to'), 'YYYY-MM-DD')
+                }
+
+                return statsService.getOverview(args);
+            });
+        });
 
     function addBodyToArgs(args, body) {
         for (var key in body) {
