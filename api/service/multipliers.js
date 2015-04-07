@@ -10,7 +10,7 @@
 
       var _single = {
         '1': 2
-      }
+      };
 
       var _fourWeeks = {
         '1': 1.75,
@@ -20,7 +20,7 @@
         '5': 1,
         '6': 0.95,
         '7': 0.9
-      }
+      };
 
       var _twelveWeeks = {
         '1': 1.6,
@@ -30,22 +30,22 @@
         '5': 0.8,
         '6': 0.76,
         '7': 0.72
-      }
+      };
 
       self.get = function(period, amount) {
 
         var result;
 
-        if (period === periods.today) {
+        if (period === periods.today && amount == 1) {
           result = _single[amount];
         }
 
         if (period === periods.fourWeeks) {
-          result = _fourWeeks[amount];
+          result = _fourWeeks[Math.floor(amount / 4)];
         }
 
         if (period === periods.fourWeeks) {
-          result = _twelveWeeks[amount];
+          result = _twelveWeeks[Math.floor(amount / 12)];
         }
 
         if (!result) {
@@ -53,7 +53,7 @@
         }
 
         return result;
-      }
+      };
     }
 
 })();

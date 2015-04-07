@@ -600,7 +600,7 @@
                     user: req.user,
                     from: moment(req.param('from'), 'YYYY-MM-DD'),
                     to: moment(req.param('to'), 'YYYY-MM-DD')
-                }
+                };
 
                 return subscriptionService.getActiveSubscriptions(args);
             });
@@ -614,7 +614,7 @@
 
                 var args = {
                     user: req.user
-                }
+                };
 
                 addBodyToArgs(args, req.body);
 
@@ -632,7 +632,7 @@
                     user: req.user,
                     from: moment(req.param('from'), 'YYYY-MM-DD'),
                     to: moment(req.param('to'), 'YYYY-MM-DD')
-                }
+                };
 
                 return statsService.getOverview(args);
             });
@@ -649,7 +649,7 @@
                     coach: req.param('coach'),
                     from: moment(req.param('from'), 'YYYY-MM-DD'),
                     to: moment(req.param('to'), 'YYYY-MM-DD')
-                }
+                };
 
                 return statsService.getOverview(args);
             });

@@ -14,15 +14,15 @@
 
         args.results = {};
         return args.coach ? getOverviewAdmin(args) : getOverviewCoach(args);
-      }
+      };
 
       function getOverviewAdmin(args) {
 
         return q(args)
           .then(identityService.checkAdmin)
           .then(checkCoach)
-          //.then(getAttendeesStats)
-          //.then(getSubscriptions)
+          .then(getAttendeesStats)
+          .then(getSubscriptions)
           .then(getGuestCredits)
           .thenResolve(args.results);
       }
@@ -64,7 +64,7 @@
                     max: result.attendees.length
                   },
                   count: 1
-                }
+                };
                 args.results.series.push(current);
                 lookup[result.series] = current;
               }
@@ -100,11 +100,25 @@
                     .then(function (result) {
                       result[0].credits.forEach(function (credit) {
                         if (credit.id == attendee.ref) {
+                          var period = periods.parseUnixInterval(credit.expiry - credit.date);
+                          var multiplier = multipliers.get(period, credit.amount);
+                          var key;
+
                           if (credit.coach == args.coach) {
-                            args.results.guestCredits[training.coach] ? args.results.guestCredits[training.coach]-- : args.results.guestCredits[training.coach] = -1;
+                            key = training.coach;
+                            multiplier = - multiplier;
                           }
                           if (training.coach == args.coach) {
-                            args.results.guestCredits[credit.coach] ? args.results.guestCredits[credit.coach]++ : args.results.guestCredits[credit.coach] = 1;
+                            key = credit.coach;
+                          }
+
+                          if(key) {
+                            if (!args.results.guestCredits[key]) {
+                              args.results.guestCredits[key] = {
+                                sum: 0
+                              };
+                            }
+                            args.results.guestCredits[key].sum += multiplier;
                           }
                         }
                       });
@@ -122,8 +136,8 @@
         return q(args)
           .then(identityService.checkCoach)
           .then(setCoach)
-          //.then(getAttendeesStats)
-          //.then(getSubscriptions)
+          .then(getAttendeesStats)
+          .then(getSubscriptions)
           .then(getGuestCredits)
           .thenResolve(args.results);
       }
