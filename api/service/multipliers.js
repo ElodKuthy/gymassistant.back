@@ -8,44 +8,26 @@
 
       var self = this;
 
-      var _single = {
-        '1': 2
-      };
+      var _single = [2];
 
-      var _fourWeeks = {
-        '1': 1.75,
-        '2': 1.5,
-        '3': 1.25,
-        '4': 1.1,
-        '5': 1,
-        '6': 0.95,
-        '7': 0.9
-      };
+      var _fourWeeks = [1.75, 1.5, 1.25, 1.1, 1, 0.95, 0.9];
 
-      var _twelveWeeks = {
-        '1': 1.6,
-        '2': 1.2,
-        '3': 1,
-        '4': 0.88,
-        '5': 0.8,
-        '6': 0.76,
-        '7': 0.72
-      };
+      var _twelveWeeks = [1.6, 1.2, 1, 0.88, 0.8, 0.76, 0.72];
 
       self.get = function(period, amount) {
 
         var result;
 
         if (period === periods.today && amount == 1) {
-          result = _single[amount];
+          result = _single[amount - 1];
         }
 
         if (period === periods.fourWeeks) {
-          result = _fourWeeks[Math.floor(amount / 4)];
+          result = _fourWeeks[Math.round(amount / 4) - 1];
         }
 
-        if (period === periods.fourWeeks) {
-          result = _twelveWeeks[Math.floor(amount / 12)];
+        if (period === periods.twelveWeeks) {
+          result = _twelveWeeks[Math.round(amount / 12) - 1];
         }
 
         if (!result) {

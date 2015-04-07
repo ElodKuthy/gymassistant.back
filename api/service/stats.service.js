@@ -55,6 +55,7 @@
                 }
               } else {
                 current = {
+                  name: result.name,
                   day: moment.unix(result.date).isoWeekday(),
                   hour: moment.unix(result.date).hours(),
                   ids: [result._id],
@@ -80,6 +81,8 @@
               result.credits.forEach(function (credit) {
                 var bought = moment.unix(credit.date);
                 if (credit.coach == args.coach && bought.isAfter(args.from) && bought.isBefore(args.to)) {
+                  credit.name = result.name;
+                  credit.days = periods.parseUnixInterval(credit.expiry - credit.date).days();
                   args.results.subscriptions.push(credit);
                 }
               });
@@ -115,10 +118,11 @@
                           if(key) {
                             if (!args.results.guestCredits[key]) {
                               args.results.guestCredits[key] = {
-                                sum: 0
+                                coach: key,
+                                sum: 0.0
                               };
                             }
-                            args.results.guestCredits[key].sum += multiplier;
+                            args.results.guestCredits[key].sum = Math.round((args.results.guestCredits[key].sum + multiplier) * 100) / 100;
                           }
                         }
                       });
