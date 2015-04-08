@@ -44,7 +44,9 @@
             args.results.series = [];
             var lookup = {};
             results.forEach(function (training) {
-              if (training.status != 'cancel') {
+              if (training.status == 'cancel') {
+                args.results.trainings--;
+              } else {
                 var attendeesCount = training.attendees.length;
                 var participantsCount = getParticipantsCount(training.attendees);
                 args.results.all.attendees += attendeesCount;
