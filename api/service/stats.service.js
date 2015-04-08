@@ -114,9 +114,9 @@
           .then(function (results) {
             results.forEach(function (user) {
               var latest = { date: 0, expiry: 0 };
+              var addedAsNew = false;
               user.credits.forEach(function (credit) {
                 var bought = moment.unix(credit.date);
-                var addedAsNew = false;
                 credit.name = user.name;
                 var period = periods.parseUnixInterval(credit.expiry - credit.date);
                 credit.period = period.toLocal();
