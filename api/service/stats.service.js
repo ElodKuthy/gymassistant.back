@@ -75,6 +75,7 @@
 
       function getSubscriptions(args) {
         args.results.subscriptions = [];
+        args.results.allSubscriptions = 0;
         return users.byNameAll()
           .then(function (results) {
             results.forEach(function (result) {
@@ -82,8 +83,12 @@
                 var bought = moment.unix(credit.date);
                 if (credit.coach == args.coach && bought.isAfter(args.from) && bought.isBefore(args.to)) {
                   credit.name = result.name;
-                  credit.period = periods.parseUnixInterval(credit.expiry - credit.date).toLocal();
+                  var period = periods.parseUnixInterval(credit.expiry - credit.date);
+                  credit.period = period.toLocal();
                   args.results.subscriptions.push(credit);
+                  if (!credit.firstTime) {
+                    args.results.allSubscriptions += multipliers.getSum(period, credit.amount);
+                  }
                 }
               });
             });
