@@ -7,17 +7,19 @@
     function Periods (errors, log) {
         var self = this;
 
-        function Period (text, days) {
+        function Period (text, local, days) {
             var _text = text;
             var _days = days;
+            var _local = local;
 
             this.toString = function() { return _text; };
             this.days = function() { return _days; };
+            this.toLocal = function() { return _local; };
         }
 
-        self.today = new Period('today', 0);
-        self.fourWeeks = new Period('four_weeks', 28);
-        self.twelveWeeks = new Period('twelve_weeks', 84);
+        self.today = new Period('today', 'napijegy', 0);
+        self.fourWeeks = new Period('four_weeks', '4 hetes', 28);
+        self.twelveWeeks = new Period('twelve_weeks', '12 hetes', 84);
 
         var periods = [self.today, self.fourWeeks, self.twelveWeeks];
         var periodTexts = [self.today.toString(), self.fourWeeks.toString(), self.twelveWeeks.toString()];

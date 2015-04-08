@@ -82,7 +82,7 @@
                 var bought = moment.unix(credit.date);
                 if (credit.coach == args.coach && bought.isAfter(args.from) && bought.isBefore(args.to)) {
                   credit.name = result.name;
-                  credit.days = periods.parseUnixInterval(credit.expiry - credit.date).days();
+                  credit.period = periods.parseUnixInterval(credit.expiry - credit.date).toLocal();
                   args.results.subscriptions.push(credit);
                 }
               });

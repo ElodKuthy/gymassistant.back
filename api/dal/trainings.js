@@ -36,13 +36,12 @@
 
         self.byCoachFromTo = function(coach, from, to) {
             var keys = '?startkey=["' + coach + '",' + from.toString() + ']&endkey=["' + coach + '",' + to.toString() + ']';
-            console.log('_design/trainings/_view/byCoachAndDate' + keys);
             return get('_design/trainings/_view/byCoachAndDate' + keys);
-        }
+        };
 
         self.put = function (training) {
             return put(training._id, training);
-        }
+        };
 
         self.updateCoach = function (id, coach) {
 
