@@ -53,6 +53,7 @@
                 current.ids.push(training._id);
                 current.count++;
                 current.attendees.sum += attendeesCount;
+                current.participants.sum += participantsCount;
                 if (attendeesCount < current.attendees.min) {
                   current.attendees.min = attendeesCount;
                 }
@@ -112,13 +113,13 @@
               user.credits.forEach(function (credit) {
                 var bought = moment.unix(credit.date);
                 var addedAsNew = false;
+                credit.name = user.name;
+                var period = periods.parseUnixInterval(credit.expiry - credit.date);
+                credit.period = period.toLocal();
                 if (credit.coach == args.coach && credit.expiry > latest.expiry) {
                   latest = credit;
                 }
                 if (credit.coach == args.coach && bought.isAfter(args.from) && bought.isBefore(args.to)) {
-                  credit.name = user.name;
-                  var period = periods.parseUnixInterval(credit.expiry - credit.date);
-                  credit.period = period.toLocal();
                   args.results.subscriptions.push(credit);
                   if (!addedAsNew && moment.unix(user.registration).isAfter(args.from)) {
                     args.results.newClients.push(credit);
