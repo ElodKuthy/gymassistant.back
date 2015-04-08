@@ -44,48 +44,50 @@
             args.results.series = [];
             var lookup = {};
             results.forEach(function (training) {
-              var attendeesCount = training.attendees.length;
-              var participantsCount = getParticipantsCount(training.attendees);
-              args.results.all.attendees += attendeesCount;
-              args.results.all.participants += participantsCount;
-              var current = lookup[training.series];
-              if (current) {
-                current.ids.push(training._id);
-                current.count++;
-                current.attendees.sum += attendeesCount;
-                current.participants.sum += participantsCount;
-                if (attendeesCount < current.attendees.min) {
-                  current.attendees.min = attendeesCount;
+              if (training.status != 'cancel') {
+                var attendeesCount = training.attendees.length;
+                var participantsCount = getParticipantsCount(training.attendees);
+                args.results.all.attendees += attendeesCount;
+                args.results.all.participants += participantsCount;
+                var current = lookup[training.series];
+                if (current) {
+                  current.ids.push(training._id);
+                  current.count++;
+                  current.attendees.sum += attendeesCount;
+                  current.participants.sum += participantsCount;
+                  if (attendeesCount < current.attendees.min) {
+                    current.attendees.min = attendeesCount;
+                  }
+                  if (participantsCount < current.participants.min) {
+                    current.participants.min = participantsCount;
+                  }
+                  if (attendeesCount > current.attendees.max) {
+                    current.attendees.max = attendeesCount;
+                  }
+                  if (participantsCount > current.participants.max) {
+                    current.participants.max = participantsCount;
+                  }
+                } else {
+                  current = {
+                    name: training.name,
+                    day: moment.unix(training.date).isoWeekday(),
+                    hour: moment.unix(training.date).hours(),
+                    ids: [training._id],
+                    attendees: {
+                      sum: attendeesCount,
+                      min: attendeesCount,
+                      max: attendeesCount
+                    },
+                    participants: {
+                      sum: participantsCount,
+                      min: participantsCount,
+                      max: participantsCount
+                    },
+                    count: 1
+                  };
+                  args.results.series.push(current);
+                  lookup[training.series] = current;
                 }
-                if (participantsCount < current.attendees.min) {
-                  current.participants.min = participantsCount;
-                }
-                if (attendeesCount > current.attendees.max) {
-                  current.attendees.max = attendeesCount;
-                }
-                if (participantsCount > current.attendees.max) {
-                  current.participants.max = participantsCount;
-                }
-              } else {
-                current = {
-                  name: training.name,
-                  day: moment.unix(training.date).isoWeekday(),
-                  hour: moment.unix(training.date).hours(),
-                  ids: [training._id],
-                  attendees: {
-                    sum: attendeesCount,
-                    min: attendeesCount,
-                    max: attendeesCount
-                  },
-                  participants: {
-                    sum: participantsCount,
-                    min: participantsCount,
-                    max: participantsCount
-                  },
-                  count: 1
-                };
-                args.results.series.push(current);
-                lookup[training.series] = current;
               }
             });
           }).thenResolve(args);
