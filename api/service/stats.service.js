@@ -37,60 +37,102 @@
         return trainings.byCoachFromTo(args.coach, args.from.unix(), args.to.unix())
           .then(function (results) {
             args.results.trainings = results.length;
-            args.results.allAttendees = 0;
+            args.results.all = {
+              attendees: 0,
+              participants: 0
+            };
             args.results.series = [];
             var lookup = {};
-            results.forEach(function (result) {
-              args.results.allAttendees += result.attendees.length;
-              var current = lookup[result.series];
+            results.forEach(function (training) {
+              var attendeesCount = training.attendees.length;
+              var participantsCount = getParticipantsCount(training.attendees);
+              args.results.all.attendees += attendeesCount;
+              args.results.all.participants += participantsCount;
+              var current = lookup[training.series];
               if (current) {
-                current.ids.push(result._id);
+                current.ids.push(training._id);
                 current.count++;
-                current.attendees.sum += result.attendees.length;
-                if (result.attendees.length < current.attendees.min) {
-                  current.attendees.min = result.attendees.length;
+                current.attendees.sum += attendeesCount;
+                if (attendeesCount < current.attendees.min) {
+                  current.attendees.min = attendeesCount;
                 }
-                if (result.attendees.length > current.attendees.max) {
-                  current.attendees.max = result.attendees.length;
+                if (participantsCount < current.attendees.min) {
+                  current.participants.min = participantsCount;
+                }
+                if (attendeesCount > current.attendees.max) {
+                  current.attendees.max = attendeesCount;
+                }
+                if (participantsCount > current.attendees.max) {
+                  current.participants.max = participantsCount;
                 }
               } else {
                 current = {
-                  name: result.name,
-                  day: moment.unix(result.date).isoWeekday(),
-                  hour: moment.unix(result.date).hours(),
-                  ids: [result._id],
+                  name: training.name,
+                  day: moment.unix(training.date).isoWeekday(),
+                  hour: moment.unix(training.date).hours(),
+                  ids: [training._id],
                   attendees: {
-                    sum: result.attendees.length,
-                    min: result.attendees.length,
-                    max: result.attendees.length
+                    sum: attendeesCount,
+                    min: attendeesCount,
+                    max: attendeesCount
+                  },
+                  participants: {
+                    sum: participantsCount,
+                    min: participantsCount,
+                    max: participantsCount
                   },
                   count: 1
                 };
                 args.results.series.push(current);
-                lookup[result.series] = current;
+                lookup[training.series] = current;
               }
             });
           }).thenResolve(args);
       }
 
+      function getParticipantsCount(attendees) {
+        var participants = 0;
+        attendees.forEach(function(attendee) {
+          if (attendee.checkedIn) {
+            participants++;
+          }
+        });
+        return participants;
+      }
+
       function getSubscriptions(args) {
+        args.results.passiveClients = [];
+        args.results.newClients = [];
         args.results.subscriptions = [];
         args.results.allSubscriptions = 0;
         return users.byNameAll()
           .then(function (results) {
-            results.forEach(function (result) {
-              result.credits.forEach(function (credit) {
+            results.forEach(function (user) {
+              var latest = { date: 0, expiry: 0 };
+              user.credits.forEach(function (credit) {
                 var bought = moment.unix(credit.date);
+                var addedAsNew = false;
+                if (credit.coach == args.coach && credit.expiry > latest.expiry) {
+                  latest = credit;
+                }
                 if (credit.coach == args.coach && bought.isAfter(args.from) && bought.isBefore(args.to)) {
-                  credit.name = result.name;
+                  credit.name = user.name;
                   var period = periods.parseUnixInterval(credit.expiry - credit.date);
                   credit.period = period.toLocal();
                   args.results.subscriptions.push(credit);
+                  if (!addedAsNew && moment.unix(user.registration).isAfter(args.from)) {
+                    args.results.newClients.push(credit);
+                    addedAsNew = true;
+                  }
                   if (!credit.firstTime) {
                     args.results.allSubscriptions += multipliers.getSum(period, credit.amount);
                   }
                 }
               });
+              var expired = moment.unix(latest.expiry);
+              if (expired.isAfter(args.from) && expired.isBefore(args.to)) {
+                args.results.passiveClients.push(latest);
+              }
             });
           }).thenResolve(args);
       }
