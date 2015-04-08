@@ -16,7 +16,7 @@
             return q(args)
                 .then(findUser)
                 .then(checkArgs)
-                .then(adjustStartDate)
+                .then(adjustExpiryDate)
                 .then(addCredit)
                 .then(addToTrainings);
         };
@@ -58,7 +58,7 @@
             if (args.coachName) {
                 return q(args)
                     .then(identityService.checkAdmin)
-                    .then(function () { return identityService.findByName(args.coachName) })
+                    .then(function () { return identityService.findByName(args.coachName); })
                     .then(function (coach) { args.coach = coach; })
                     .thenResolve(args);
             } else {
@@ -67,14 +67,23 @@
             }
         }
 
-        function adjustStartDate(args) {
+        function adjustExpiryDate(args) {
 
-            if (!args.firstTime && args.period != periods.today) {
-                args.client.credits.forEach(function (credit) {
-                    if (credit.expiry > args.date && credit.coach == args.coach.name) {
-                        args.date = moment.unix(credit.expiry).add({ day: 1 }).startOf('day').unix();
+            if (!args.firstTime) {
+                args.expiry = moment.unix(args.date).add({ days: args.period.days() }).endOf('day').unix();
+
+                if (args.period != periods.today) {
+                    var latestExpiry = 0;
+                    args.client.credits.forEach(function (credit) {
+                        if (credit.expiry > latestExpiry && credit.coach == args.coach.name) {
+                            latestExpiry = credit.expiry;
+                        }
+                    });
+
+                    if (latestExpiry > args.date) {
+                        args.expiry += (latestExpiry - args.date);
                     }
-                });
+                }
             }
 
             return args;
@@ -93,7 +102,7 @@
             } : {
                 id: uuid.v4(),
                 date: moment.unix(args.date).startOf('day').unix(),
-                expiry: moment.unix(args.date).add({ days: args.period.days() }).endOf('day').unix(),
+                expiry: moment.unix(args.expiry).endOf('day').unix(),
                 coach: args.coach.name,
                 amount: args.amount,
                 free: args.amount
@@ -109,7 +118,7 @@
             }
 
             var promises = [];
-            var offset = args.period.days();
+            var offset = Math.round((args.newCredit.expiry - args.newCredit.date) / 86400);
 
             args.series.forEach(function (current) {
                 promises.push(trainings.bySeriesTillOffset(current, args.date, offset));
@@ -125,6 +134,10 @@
                         } else {
                             log.error(result.reason);
                         }
+                    });
+
+                    trainingsToAdd.sort(function (a, b) {
+                        return a.date - b.date;
                     });
 
                     var errors = [];
@@ -155,13 +168,13 @@
                 .then(identityService.checkAdmin)
                 .then(getAllUser)
                 .then(countActiveSubscriptions);
-        }
+        };
 
         function getAllUser(args) {
             return users.byNameAll().then(function (results) {
                 args.clients = results;
                 return args;
-            })
+            });
         }
 
         function countActiveSubscriptions(args) {
