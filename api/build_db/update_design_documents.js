@@ -44,7 +44,7 @@
                         map: "function (doc) { if (doc.type === \"training\" && doc.series && doc.date) { emit([doc.series, doc.date], doc ) } }"
                     },
                     byCoachAndDate: {
-                        map: "function (doc) { if (doc.type === \"training\" && doc.coach && doc.date) { emit([doc.coach, doc.date], { \"_id\": doc._id } ) } }"
+                        map: "function (doc) { if (doc.type === \"training\" && doc.coach && doc.date) { emit([doc.coach, doc.date], doc ) } }"
                     }
                 }
             },

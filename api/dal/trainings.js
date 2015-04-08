@@ -34,9 +34,14 @@
             return get('_design/trainings/_view/bySeriesAndDate' + keys);
         };
 
+        self.byCoachFromTo = function(coach, from, to) {
+            var keys = '?startkey=["' + coach + '",' + from.toString() + ']&endkey=["' + coach + '",' + to.toString() + ']';
+            return get('_design/trainings/_view/byCoachAndDate' + keys);
+        };
+
         self.put = function (training) {
             return put(training._id, training);
-        }
+        };
 
         self.updateCoach = function (id, coach) {
 
