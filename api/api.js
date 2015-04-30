@@ -13,6 +13,7 @@
     router.use(function(req, res, next) {
 
         res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Methods', 'GET,POST,DELETE');
         res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
 
         log.info(req.method + ' ' + req.originalUrl + ' from: ' + req.connection.remoteAddress);
@@ -555,6 +556,19 @@
                 addBodyToArgs(args, req.body);
 
                 return seriesService.set(args);
+            });
+        })
+
+        .delete(function (req, res) {
+
+            nodeify(res, function () {
+
+                var args = {
+                    user: req.user,
+                    id: req.param('id'),
+                };
+
+                return seriesService.deleteSeries(args);
             });
         });
 

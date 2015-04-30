@@ -38,8 +38,14 @@
             invalidToken: 'Érvénytelen token',
             expiredToken: 'Ez a token már lejárt',
             notFirstTime: 'A tanítványnak már nem ez az első alkalma',
-            firstTimeModification: 'Az első ingyenes alkalmat nem lehet módosítani'
+            firstTimeModification: 'Az első ingyenes alkalmat nem lehet módosítani',
+            seriesCancelled: 'Ez az edzés már törölve lett'
         };
+
+        self.seriesCancelled = function () {
+            log.error(self.messages.seriesCancelled);
+            return new Error(self.messages.seriesCancelled);
+        }
 
         self.firstTimeModification = function () {
             log.error(self.messages.firstTimeModification);
