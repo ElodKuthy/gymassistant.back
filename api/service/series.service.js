@@ -3,12 +3,13 @@
 
     module.exports = SeriesService;
 
-    SeriesService.$inject = ['plugins', 'errors', 'identityService', 'series', 'trainings'];
-    function SeriesService(plugins, errors, identityService, series, trainings) {
+    SeriesService.$inject = ['plugins', 'errors', 'identityService', 'scheduleService', 'series', 'trainings'];
+    function SeriesService(plugins, errors, identityService, scheduleService, series, trainings) {
 
         var self = this;
         var uuid = plugins.uuid;
         var q = plugins.q;
+        var moment = plugins.moment;
 
         self.statuses = {
             normal: 'normal',
@@ -180,9 +181,13 @@
 
             function getTrainings(series) {
 
-                var promisies = [];
+                var promises = [];
 
                 series.forEach(function (currentSeries) {
+
+                    if (currentSeries.status === 'cancelled') {
+                        throw errors.seriesCancelled();
+                    }
 
                     var startDate = args.from.clone().startOf('isoWeek').add({ days: (currentSeries.date.day - 1), hours: currentSeries.date.hour });
 
@@ -191,11 +196,11 @@
                     }
 
                     for (var date = startDate; date.isBefore(args.to); date.add({ week: 1 })) {
-                        promisies.push(updateOrCreateTraining(currentSeries, date.unix()));
+                        promises.push(updateOrCreateTraining(currentSeries, date.unix()));
                     }
                 });
 
-                return q.all(promisies);
+                return q.all(promises);
             }
 
             function updateOrCreateTraining(series, date) {
@@ -213,15 +218,48 @@
 
             function saveTrainings(instances) {
 
-                var promisies = [];
+                var promises = [];
 
                 instances.forEach(function (instance) {
-                    promisies.push(trainings.put(instance));
+                    promises.push(trainings.put(instance));
                 });
 
-                return q.allSettled(promisies);
+                return q.allSettled(promises);
             }
         };
+
+        self.deleteSeries = function(args) {
+
+            return q(args)
+                .then(identityService.checkAdmin)
+                .then(getTrainings)
+                .then(cancelTrainings)
+                .then(cancelSeries)
+                .thenResolve('Sikeres törölted az edzést');
+
+            function getTrainings(args) {
+                return trainings.bySeriesFromTo(args.id, moment().endOf('day').unix(), moment({ years: 3000 }).endOf('year').unix())
+                    .then(function (trainings) {
+                        args.trainings = trainings;
+                        return args;
+                    });
+            }
+
+            function cancelTrainings(args) {
+
+                var promises = [];
+
+                args.trainings.forEach(function (training) {
+                    promises.push(scheduleService.cancelTraining({ user: args.user, id: training._id }));
+                });
+
+                return q.allSettled(promises).thenResolve(args);
+            }
+
+            function cancelSeries(args) {
+                return series.updateStatus(args.id, self.statuses.cancelled).thenResolve(args);
+            }
+        }
     }
 
 })();
