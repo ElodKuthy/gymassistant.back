@@ -1,0 +1,32 @@
+<html>
+<head>
+    <style type="text/css">
+        div {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+<div>Kedves <%= userName %>!</div>
+
+<div>Csak szerettünk volna szólni, hogy a bérleted egy héten belül lejár.</div>
+
+<div>Új bérletet akkor kell venned, ha az összes alkalmadat lejártad az aktuális bérleteden, vagy annak érvényessége lejárt.</div>
+
+<div>
+    Ezt a bérletedet <%= purchaseDate %>-n vásároltad, <%= expiryDate %>-ig érvényes, és összesen <%= amount %> edzésalkalomra szól. <% if (participated + missed > 0) { %>A vásárlás óta<% } %><% if (participated > 0) { %> részt vettél <%= participated %> edzésen<% if (missed > 0) { %>,<% } } %><% if (missed > 0) { %> kihagytál <%= missed %> feliratkozott edzést. <% } %><% if (attended > 0) { %>Még fel vagy írva <%= attended %> edzésre<% } %><% if (free > 0) { %><% if (attended  > 0) { %>, és van <% } else { %>Van <% } %><%= free %> szabad kredited. Kérlek, vedd figyelembe, hogy a szabad kreditjeidet a bérleted lejárati ideje után már nem tudod felhasználni.<% } %>
+</div>
+
+<div>Amennyiben nyomós ok miatt (pl. betegség, nyaralás) nem tudtál részt venni órákon, kérheted a bérleted érvényességének meghosszabbítását az edződtől személyesen, vagy a <a href="mailto:support@tkmuhely.hu">support@tkmuhely.hu</a> email címre írva. (A hosszabbítás alatt a lemondott órákkal felszabadított krediteket tudod felhasználni, a hosszabbítással plusz alkalmak nem keletkeznek.)</div>
+
+<div>Ha a jövőben nem szeretnél ilyen emlékeztetőket kapni, akkor erre a linkre kattintva ezt megteheted: <a href="https://gonczy.testkulturamuhely.hu/leiratkozas/<%= unsubscribe %>">https://gonczy.testkulturamuhely.hu/leiratkozas/<%= unsubscribe %></a> (A profil oldaladon szintén be tudod állítani, miről szeretnél üzenetet kapni, és miről nem.)</div>
+
+<div>Ha további kérdéseid lennének, szintén fordulj bizalommal edződhöz személyesen, vagy írj nekünk a <a href="mailto:support@tkmuhely.hu">support@tkmuhely.hu</a> email címre.</div>
+
+<div>
+    Üdvözlettel,<br/>
+    A Testkultúra Terem Csapata
+</div>
+
+</body>
+<html>

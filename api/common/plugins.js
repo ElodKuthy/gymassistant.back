@@ -3,7 +3,7 @@
 
     module.exports = Plugins;
 
-    function Plugins () {
+    function Plugins() {
         var self = this;
 
         self.jsonfile = require('jsonfile');
@@ -17,6 +17,7 @@
         self.validator = require('validator');
         self.expect = require('chai').expect;
         self.a = require('a');
+        self.schedule = require('node-schedule');
     }
 
 })();

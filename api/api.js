@@ -3,36 +3,41 @@
     module.exports = Api;
 
     Api.$inject = ['plugins', 'errors', 'log', 'identityService', 'scheduleService', 'trainingService', 'mailerService', 'attendeesService', 'creditsService', 'subscriptionService', 'users', 'series', 'seriesService', 'usersService', 'statsService'];
+
     function Api(plugins, errors, log, identityService, scheduleService, trainingService, mailerService, attendeesService, creditsService, subscriptionService, users, series, seriesService, usersService, statsService) {
 
-    var express = require('express');
-    var router = express.Router();
-    var q = plugins.q;
-    var moment = plugins.moment;
+        var express = require('express');
+        var router = express.Router();
+        var q = plugins.q;
+        var moment = plugins.moment;
 
-    router.use(function(req, res, next) {
+        router.use(function (req, res, next) {
 
-        res.header('Access-Control-Allow-Origin', '*');
-        res.header('Access-Control-Allow-Methods', 'GET,POST,DELETE');
-        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+            res.header('Access-Control-Allow-Origin', '*');
+            res.header('Access-Control-Allow-Methods', 'GET,POST,DELETE');
+            res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
 
-        log.info(req.method + ' ' + req.originalUrl + ' from: ' + req.connection.remoteAddress);
+            log.info(req.method + ' ' + req.originalUrl + ' from: ' + req.connection.remoteAddress);
 
-        identityService.authenticate(identityService.parseBasicAuthorizationHeader(req.headers.authorization))
-            .then(function (result) {
-                req.user = result;
-                next();
-            }, function (error) {
-                log.error(error);
-                res.json({ error : error.message });
+            identityService.authenticate(identityService.parseBasicAuthorizationHeader(req.headers.authorization))
+                .then(function (result) {
+                    req.user = result;
+                    next();
+                }, function (error) {
+                    log.error(error);
+                    res.json({
+                        error: error.message
+                    });
+                });
+        });
+
+        router.get('/', function (req, res) {
+            res.json({
+                message: 'GymAssistant REST API'
             });
-    });
+        });
 
-    router.get('/', function(req, res) {
-        res.json({ message: 'GymAssistant REST API' });
-    });
-
-    router.route('/login')
+        router.route('/login')
 
         .get(function (req, res) {
 
@@ -45,7 +50,7 @@
             });
         });
 
-    router.route('/schedule/this/week')
+        router.route('/schedule/this/week')
 
         .get(function (req, res) {
 
@@ -59,8 +64,7 @@
             });
         });
 
-
-    router.route('/schedule/today')
+        router.route('/schedule/today')
 
         .get(function (req, res) {
 
@@ -74,7 +78,7 @@
             });
         });
 
-    router.route('/schedule/from/:firstDate/to/:lastDate')
+        router.route('/schedule/from/:firstDate/to/:lastDate')
 
         .get(function (req, res) {
 
@@ -90,7 +94,7 @@
             });
         });
 
-    router.route('/training/:id')
+        router.route('/training/:id')
 
         .get(function (req, res) {
 
@@ -120,7 +124,7 @@
             }, 'Sikeresen megváltoztattad az óratartó edzőt');
         });
 
-    router.route('/join/training/id/:id')
+        router.route('/join/training/id/:id')
 
         .get(function (req, res) {
 
@@ -135,7 +139,7 @@
             }, 'Sikerült feliratkoznod az órára');
         });
 
-    router.route('/add/user/:userName/to/training/id/:id')
+        router.route('/add/user/:userName/to/training/id/:id')
 
         .get(function (req, res) {
 
@@ -151,8 +155,7 @@
             }, 'A tanítványt sikeresen felirtad az órára');
         });
 
-
-    router.route('/leave/training/id/:id')
+        router.route('/leave/training/id/:id')
 
         .get(function (req, res) {
 
@@ -167,7 +170,7 @@
             }, 'Sikerült lemondanod az órát');
         });
 
-    router.route('/remove/user/:userName/from/training/id/:id')
+        router.route('/remove/user/:userName/from/training/id/:id')
 
         .get(function (req, res) {
 
@@ -183,7 +186,7 @@
             }, 'A tanítványt sikerült eltávolítani az óráról');
         });
 
-    router.route('/check/in/user/:userName/to/training/id/:id')
+        router.route('/check/in/user/:userName/to/training/id/:id')
 
         .get(function (req, res) {
 
@@ -199,7 +202,7 @@
             }, 'Sikeres bejelentkezés');
         });
 
-    router.route('/undo/check/in/user/:userName/for/training/id/:id')
+        router.route('/undo/check/in/user/:userName/for/training/id/:id')
 
         .get(function (req, res) {
 
@@ -215,7 +218,7 @@
             }, 'Sikerült visszavonni a bejelentkezést');
         });
 
-    router.route('/my/credits')
+        router.route('/my/credits')
 
         .get(function (req, res) {
 
@@ -225,11 +228,13 @@
                     user: req.user
                 };
 
-                return creditsService.getCredits(args).then(function (args) { return args.credits });
+                return creditsService.getCredits(args).then(function (args) {
+                    return args.credits
+                });
             });
         });
 
-    router.route('/credits/of/user/:userName')
+        router.route('/credits/of/user/:userName')
 
         .get(function (req, res) {
 
@@ -240,11 +245,13 @@
                     userName: req.param('userName')
                 };
 
-                return creditsService.getUserCredits(args).then(function (args) { return args.credits });
+                return creditsService.getUserCredits(args).then(function (args) {
+                    return args.credits
+                });
             });
         });
 
-    router.route('/credit/details/:id')
+        router.route('/credit/details/:id')
 
         .get(function (req, res) {
 
@@ -260,7 +267,7 @@
             });
         });
 
-    router.route('/credit/details/:id/of/:name')
+        router.route('/credit/details/:id/of/:name')
 
         .get(function (req, res) {
 
@@ -293,7 +300,7 @@
             }, 'Sikeresen módosítottad a bérletet');
         });
 
-    router.route('/add/first/time')
+        router.route('/add/first/time')
 
         .post(function (req, res) {
 
@@ -310,7 +317,7 @@
             });
         })
 
-    router.route('/add/subscription/with/:amount/credits/to/user/:userName/for/:period')
+        router.route('/add/subscription/with/:amount/credits/to/user/:userName/for/:period')
 
         .get(function (req, res) {
 
@@ -329,8 +336,7 @@
             });
         });
 
-
-    router.route('/add/subscription/with/:amount/credits/to/user/:userName/from/date/:date/for/:period/by/:coachName')
+        router.route('/add/subscription/with/:amount/credits/to/user/:userName/from/date/:date/for/:period/by/:coachName')
 
         .get(function (req, res) {
 
@@ -350,7 +356,7 @@
             });
         });
 
-    router.route('/all/users')
+        router.route('/all/users')
 
         .get(function (req, res) {
 
@@ -364,7 +370,7 @@
             });
         });
 
-    router.route('/all/coaches')
+        router.route('/all/coaches')
 
         .get(function (req, res) {
 
@@ -378,7 +384,7 @@
             });
         });
 
-    router.route('/user/:name')
+        router.route('/user/:name')
 
         .get(function (req, res) {
 
@@ -393,7 +399,7 @@
             });
         });
 
-    router.route('/add/new/user/with/name/:name/and/email/:email')
+        router.route('/add/new/user/with/name/:name/and/email/:email')
 
         .get(function (req, res) {
 
@@ -409,7 +415,7 @@
             }, 'Sikeresült létrehozni az új felhasználót');
         });
 
-    router.route('/add/new/coach/with/name/:name/and/email/:email')
+        router.route('/add/new/coach/with/name/:name/and/email/:email')
 
         .get(function (req, res) {
 
@@ -425,7 +431,7 @@
             }, 'Sikeresült létrehozni az új felhasználót');
         });
 
-    router.route('/send/registration/email/to/user/:name')
+        router.route('/send/registration/email/to/user/:name')
 
         .get(function (req, res) {
 
@@ -440,7 +446,7 @@
             }, 'A regisztrációs emailt sikeresen elküldtük újra');
         });
 
-    router.route('/change/name')
+        router.route('/change/name')
 
         .post(function (req, res) {
 
@@ -455,7 +461,7 @@
             }, 'Sikeres névváltoztatás');
         });
 
-    router.route('/change/password')
+        router.route('/change/password')
 
         .post(function (req, res) {
 
@@ -470,7 +476,7 @@
             }, 'Sikeres jelszóváltoztatás');
         });
 
-    router.route('/change/email/of/user/:name/to/:email')
+        router.route('/change/email/of/user/:name/to/:email')
 
         .get(function (req, res) {
 
@@ -487,7 +493,7 @@
             }, 'Az email címet sikeresen megváltoztattuk');
         });
 
-    router.route('/cancel/training/id/:id')
+        router.route('/cancel/training/id/:id')
 
         .get(function (req, res) {
 
@@ -502,7 +508,7 @@
             }, 'Az órát sikeresen lemondásra került');
         });
 
-    router.route('/reset/password/user/:name/email/:email')
+        router.route('/reset/password/user/:name/email/:email')
 
         .get(function (req, res) {
 
@@ -517,7 +523,7 @@
             });
         });
 
-    router.route('/all/series')
+        router.route('/all/series')
 
         .get(function (req, res) {
 
@@ -531,7 +537,7 @@
             });
         });
 
-    router.route('/series/:id')
+        router.route('/series/:id')
 
         .get(function (req, res) {
 
@@ -572,7 +578,7 @@
             });
         });
 
-    router.route('/add/new/series')
+        router.route('/add/new/series')
 
         .post(function (req, res) {
 
@@ -587,7 +593,7 @@
             });
         });
 
-    router.route('/update/trainings/from/:from/to/:to')
+        router.route('/update/trainings/from/:from/to/:to')
 
         .get(function (req, res) {
 
@@ -604,7 +610,7 @@
             });
         });
 
-    router.route('/active/subscriptions/from/:from/to/:to')
+        router.route('/active/subscriptions/from/:from/to/:to')
 
         .get(function (req, res) {
 
@@ -620,7 +626,7 @@
             });
         });
 
-    router.route('/my/preferences')
+        router.route('/my/preferences')
 
         .post(function (req, res) {
 
@@ -636,7 +642,7 @@
             });
         });
 
-    router.route('/get/overview/:from/:to')
+        router.route('/get/overview/:from/:to')
 
         .get(function (req, res) {
 
@@ -652,7 +658,7 @@
             });
         });
 
-    router.route('/get/overview/:coach/:from/:to')
+        router.route('/get/overview/:coach/:from/:to')
 
         .get(function (req, res) {
 
@@ -669,19 +675,41 @@
             });
         });
 
-    function addBodyToArgs(args, body) {
-        for (var key in body) {
-            if (body.hasOwnProperty(key)) {
-                args[key] = body[key];
+        router.route('/unsubscribe/:id')
+
+        .post(function (req, res) {
+
+            nodeify(res, function () {
+
+                var args = {
+                    id: req.param('id')
+                };
+
+                addBodyToArgs(args, req.body);
+
+                return identityService.unsubscribe(args);
+            }, 'Sikeres leiratkozás');
+        });
+
+        function addBodyToArgs(args, body) {
+            for (var key in body) {
+                if (body.hasOwnProperty(key)) {
+                    args[key] = body[key];
+                }
             }
         }
+
+        function nodeify(res, action, resultOverride) {
+
+            q.try(action).done(function (result) {
+                res.json(resultOverride ? resultOverride : result);
+            }, function (err) {
+                res.json({
+                    error: err.message
+                });
+            });
+        }
+
+        this.router = router;
     }
-
-    function nodeify (res, action, resultOverride) {
-
-        q.try(action).done(function (result) { res.json(resultOverride ? resultOverride : result); }, function (err) { res.json({ error : err.message }); });
-    }
-
-    this.router = router;
-}
 })();

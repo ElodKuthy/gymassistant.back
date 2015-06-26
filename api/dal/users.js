@@ -4,6 +4,7 @@
     module.exports = Users;
 
     Users.$inject = ['plugins', 'coachUtils', 'log', 'errors'];
+
     function Users(plugins, coachUtils, log, errors) {
         var self = this;
         var q = plugins.q;
@@ -25,15 +26,15 @@
             return request('GET', '_design/users/_view/byEmail' + coachUtils.addKey(email));
         };
 
-        self.creditsById = function(id) {
+        self.creditsById = function (id) {
             return request('GET', '_design/credits/_view/byId' + coachUtils.addKey(id));
         };
 
-        self.creditsByName = function(name) {
+        self.creditsByName = function (name) {
             return request('GET', '_design/credits/_view/byName' + coachUtils.addKey(name));
         };
 
-        self.updateHash = function(id, hash) {
+        self.updateHash = function (id, hash) {
             var deferred = q.defer();
 
             request('GET', id)
@@ -45,14 +46,14 @@
                         }, function (error) {
                             deferred.reject(error);
                         });
-            }, function (error) {
-                deferred.reject(error);
-            });
+                }, function (error) {
+                    deferred.reject(error);
+                });
 
             return deferred.promise;
         };
 
-        self.addCredit = function(id, credit) {
+        self.addCredit = function (id, credit) {
             var deferred = q.defer();
 
             request('GET', id)
@@ -64,22 +65,22 @@
                         }, function (error) {
                             deferred.reject(error);
                         });
-            }, function (error) {
-                deferred.reject(error);
-            });
+                }, function (error) {
+                    deferred.reject(error);
+                });
 
             return deferred.promise;
         };
 
         function findCreditById(credits, creditId) {
             var result;
-            for(var index = 0; index < credits.length; index++) {
+            for (var index = 0; index < credits.length; index++) {
                 if (credits[index].id === creditId)
                     return credits[index];
             }
         }
 
-        self.decreaseFreeCredit = function(id, creditId) {
+        self.decreaseFreeCredit = function (id, creditId) {
 
             function update(user) {
                 var deferred = q.defer();
@@ -99,7 +100,7 @@
             return coachUtils.updateDoc(id, update);
         };
 
-        self.increaseFreeCredit = function(id, creditId, retries) {
+        self.increaseFreeCredit = function (id, creditId, retries) {
             var deferred = q.defer();
 
             var currentTry = isNaN(retries) ? 1 : retries + 1;
@@ -128,16 +129,16 @@
                                 deferred.reject(error);
                             }
                         });
-            }, function (error) {
-                deferred.reject(error);
-            });
+                }, function (error) {
+                    deferred.reject(error);
+                });
 
             return deferred.promise;
         };
 
-        self.increaseExpiry = function(id, creditId, inc) {
+        self.increaseExpiry = function (id, creditId, inc) {
 
-            function update (instance) {
+            function update(instance) {
                 var credit = findCreditById(instance.credits, creditId);
                 if (!credit) {
                     throw errors.invalidCreditId();
@@ -149,13 +150,13 @@
             return coachUtils.updateDoc(id, update);
         };
 
-        self.add = function(user) {
+        self.add = function (user) {
             return request('PUT', user._id, user);
         };
 
-        self.updateName = function(id, name) {
+        self.updateName = function (id, name) {
 
-            function update (instance) {
+            function update(instance) {
                 instance.name = name;
                 return q(instance);
             }
@@ -163,9 +164,9 @@
             return coachUtils.updateDoc(id, update);
         };
 
-        self.updateEmail = function(id, email) {
+        self.updateEmail = function (id, email) {
 
-            function update (instance) {
+            function update(instance) {
                 instance.email = email;
                 return q(instance);
             }
@@ -173,7 +174,7 @@
             return coachUtils.updateDoc(id, update);
         };
 
-        self.updatePreferences = function(id, preferences) {
+        self.updatePreferences = function (id, preferences) {
 
             function update(instance) {
                 instance.preferences = preferences;

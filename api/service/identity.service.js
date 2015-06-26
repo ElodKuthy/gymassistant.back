@@ -4,6 +4,7 @@
     module.exports = IdentityService;
 
     IdentityService.$inject = ['plugins', 'log', 'users', 'errors', 'roles', 'mailerService', 'trainings'];
+
     function IdentityService(plugins, log, users, errors, roles, mailerService, trainings) {
         var self = this;
         var q = plugins.q;
@@ -14,7 +15,8 @@
         var validator = plugins.validator;
 
         var defaultPreferences = {
-            askIrreversibleJoining: true
+            askIrreversibleJoining: true,
+            expirationNotification: true
         }
 
         self.createHash = function (password) {
@@ -104,7 +106,7 @@
                 });
         }
 
-        self.changeEmail = function(args) {
+        self.changeEmail = function (args) {
 
             return q(args)
                 .then(self.checkCoach)
@@ -125,7 +127,9 @@
                     args.client = client;
                     return args;
                 })
-                .catch(function () { throw errors.unknownUserName(); });
+                .catch(function () {
+                    throw errors.unknownUserName();
+                });
         }
 
         function checkEmailFormat(args) {
@@ -149,14 +153,18 @@
 
         self.resetPassword = function (args) {
 
-            args.offset = { day: 1 };
+            args.offset = {
+                day: 1
+            };
 
             return findUser(args)
                 .then(checkEmailFormat)
                 .then(checkEmail)
                 .then(setPasswordToken)
                 .then(mailerService.sendForgottenPasswordMail)
-                .then(function() { return 'OK'; })
+                .then(function () {
+                    return 'OK';
+                })
                 .catch(function (err) {
                     if (err.message == errors.messages.unknownUserEmail ||
                         err.message == errors.messages.unknownUserName) {
@@ -176,7 +184,7 @@
             }
         };
 
-        self.changePassword = function(args) {
+        self.changePassword = function (args) {
 
             return q(args)
                 .then(checkPassword)
@@ -207,17 +215,17 @@
                 return q(args.userName)
                     .then(findByNameFull)
                     .then(function (user) {
-                            if (args.token != user.hash.token) {
-                                throw errors.invalidToken();
-                            }
+                        if (args.token != user.hash.token) {
+                            throw errors.invalidToken();
+                        }
 
-                            if (moment().isAfter(moment.unix(user.hash.expiry))) {
-                                throw errors.expiredToken();
-                            }
+                        if (moment().isAfter(moment.unix(user.hash.expiry))) {
+                            throw errors.expiredToken();
+                        }
 
-                            args.user = user;
+                        args.user = user;
 
-                            return args;
+                        return args;
                     });
             }
 
@@ -226,7 +234,9 @@
                 args.user.hash = self.createHash(args.password);
 
                 return users.updateHash(args.user._id, args.user.hash)
-                    .then(function () { return args });
+                    .then(function () {
+                        return args
+                    });
             }
         };
 
@@ -260,9 +270,11 @@
                 .then(mailerService.sendCoachRegistrationMail);
         };
 
-        self.resendRegistrationEmail = function(args) {
+        self.resendRegistrationEmail = function (args) {
 
-            args.offset = { month: 1 };
+            args.offset = {
+                month: 1
+            };
 
             return q(args)
                 .then(self.chechAdmin)
@@ -282,7 +294,9 @@
 
         function addUser(args) {
 
-            args.offset = { month: 1 };
+            args.offset = {
+                month: 1
+            };
 
             return q(args)
                 .then(checkUserNameFree)
@@ -319,6 +333,7 @@
 
             return users.byName(name)
                 .then(function (results) {
+                    console.log(results[0]);
                     if (results.length != 1) {
                         throw errors.unknownUserName();
                     }
@@ -338,7 +353,7 @@
                 });
         };
 
-        self.checkLoggedIn = function(args) {
+        self.checkLoggedIn = function (args) {
             if (!args.user) {
                 throw errors.unauthorized();
             }
@@ -346,7 +361,7 @@
             return args;
         };
 
-        self.checkCoach = function(args) {
+        self.checkCoach = function (args) {
             if (!args.user) {
                 throw errors.invalidUserNameOrPassword();
             }
@@ -358,7 +373,7 @@
             return args;
         };
 
-        self.checkAdmin = function(args) {
+        self.checkAdmin = function (args) {
             if (!args.user) {
                 throw errors.invalidUserNameOrPassword();
             }
@@ -370,7 +385,7 @@
             return args;
         };
 
-        self.changeName = function(args) {
+        self.changeName = function (args) {
 
             if (!args.name) {
                 throw errors.missingProperty('Beállítások', 'Eredeti név');
@@ -395,7 +410,7 @@
         function updateTrainings(args) {
 
             return trainings.byDate()
-                .then(function(allTrainings) {
+                .then(function (allTrainings) {
                     var updates = [];
                     allTrainings.forEach(function (training) {
                         for (var index = 0; index < training.attendees.length; index++) {
@@ -411,7 +426,7 @@
                 });
         }
 
-        self.updatePreferences = function(args) {
+        self.updatePreferences = function (args) {
 
             return q(args)
                 .then(self.checkLoggedIn)
@@ -424,6 +439,45 @@
                         .thenResolve(args.preferences);
 
                 });
+        }
+
+        self.unsubscribe = function (args) {
+
+            return q(args)
+                .then(findUserByUnsubsribeId)
+                .then(unsubscribeUser);
+        }
+
+        function findUserByUnsubsribeId(args) {
+
+            if (!args.id) {
+                throw errors.missingProperty('Leiratkozás', 'Id');
+            }
+
+            return users.byNameFull()
+                .then(function (results) {
+
+                    results.some(function (user) {
+                        if (user.preferences && user.preferences.id == args.id) {
+                            args.user = user;
+                            return true;
+                        }
+                    });
+
+                    return args;
+                });
+        }
+
+        function unsubscribeUser(args) {
+
+            if (!args.user) {
+                throw errors.invalidToken();
+            }
+
+            args.user.preferences.expirationNotification = args.expirationNotification;
+
+            return users.updatePreferences(args.user._id, args.user.preferences)
+                .thenResolve(args.preferences);
         }
     }
 })();

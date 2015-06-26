@@ -4,14 +4,14 @@
     module.exports = SubscriptionService;
 
     SubscriptionService.$inject = ['plugins', 'users', 'errors', 'log', 'periods', 'identityService', 'trainings', 'attendeesService'];
+
     function SubscriptionService(plugins, users, errors, log, periods, identityService, trainings, attendeesService) {
         var self = this;
         var q = plugins.q;
         var moment = plugins.moment;
         var uuid = plugins.uuid;
 
-
-        self.add = function(args) {
+        self.add = function (args) {
 
             return q(args)
                 .then(findUser)
@@ -47,19 +47,19 @@
                 throw errors.invalidPeriod();
             }
 
-            console.log(args.date);
-
             if (!args.date || !moment(args.date).isValid) {
                 args.date = moment().startOf('day').unix();
             }
 
-            console.log(args.date);
-
             if (args.coachName) {
                 return q(args)
                     .then(identityService.checkAdmin)
-                    .then(function () { return identityService.findByName(args.coachName); })
-                    .then(function (coach) { args.coach = coach; })
+                    .then(function () {
+                        return identityService.findByName(args.coachName);
+                    })
+                    .then(function (coach) {
+                        args.coach = coach;
+                    })
                     .thenResolve(args);
             } else {
                 args.coach = args.user;
@@ -70,7 +70,9 @@
         function adjustExpiryDate(args) {
 
             if (!args.firstTime) {
-                args.expiry = moment.unix(args.date).add({ days: args.period.days() }).endOf('day').unix();
+                args.expiry = moment.unix(args.date).add({
+                    days: args.period.days()
+                }).endOf('day').unix();
 
                 if (args.period != periods.today) {
                     var latestExpiry = 0;
@@ -114,7 +116,9 @@
         function addToTrainings(args) {
 
             if (!args.series || !args.series.length || args.series.length === 0) {
-                return { result: 'Sikeres bérlet vásárlás (feliratkozások nélkül)'};
+                return {
+                    result: 'Sikeres bérlet vásárlás (feliratkozások nélkül)'
+                };
             }
 
             var promises = [];
@@ -142,9 +146,12 @@
 
                     var errors = [];
 
-                    function addToTraining (index) {
+                    function addToTraining(index) {
                         if (index === trainingsToAdd.length) {
-                            return { result: 'Sikeres bérlet vásárlás', remarks: errors };
+                            return {
+                                result: 'Sikeres bérlet vásárlás',
+                                remarks: errors
+                            };
                         }
 
                         args.id = trainingsToAdd[index]._id;
@@ -162,7 +169,7 @@
                 });
         }
 
-        self.getActiveSubscriptions = function(args) {
+        self.getActiveSubscriptions = function (args) {
 
             return q(args)
                 .then(identityService.checkAdmin)

@@ -4,6 +4,7 @@
     module.exports = MailerService;
 
     MailerService.$inject = ['plugins', 'log', 'mailer'];
+
     function MailerService(plugins, log, mailer) {
         var self = this;
         var q = plugins.q;
@@ -52,6 +53,23 @@
                 userName: args.client.name,
                 trainingName: args.training.name + ' - ' + args.training.coach,
                 trainingDate: moment(args.training.date).format('YYYY. MM. DD. HH:mm')
+            });
+        };
+
+        self.sendExpirationReminder = function (args) {
+            return q.nfcall(mailer.send, 'emails/expiration_reminder', {
+                to: args.client.email,
+                bcc: 'support@tkmuhely.hu',
+                subject: 'Testkultúra Terem Segéd - Emlékeztető bérlet lejárati idejéről',
+                userName: args.client.name,
+                purchaseDate: moment.unix(args.credit.date).format('YYYY. MM. DD'),
+                expiryDate: moment.unix(args.credit.expiry).format('YYYY. MM. DD'),
+                amount: args.credit.amount,
+                participated: args.participated,
+                missed: args.missed,
+                attended: args.attended,
+                free: args.credit.free,
+                unsubscribe: args.client.preferences.id
             });
         };
     }

@@ -3,8 +3,11 @@
 
     var container = require('../container.js')('config.json');
 
-    var updater = container.get('designDocumentsUpdater');
+    var designDocumentsUpdater = container.get('designDocumentsUpdater');
+    var userPreferencesUpdater = container.get('userPreferencesUpdater');
 
-    updater.update().done();
+    designDocumentsUpdater.update()
+        .then(userPreferencesUpdater.update)
+        .done();
 
 })();

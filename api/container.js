@@ -11,6 +11,7 @@
 
         /* DB build scripts */
         container.register('designDocumentsUpdater', require('./build_db/update_design_documents.js'));
+        container.register('userPreferencesUpdater', require('./build_db/update_user_preferences.js'));
 
         /* common components */
         container.register('coachUtils', require('./common/coach_utils.js'));
@@ -38,6 +39,10 @@
         container.register('seriesService', require('./service/series.service.js'));
         container.register('statsService', require('./service/stats.service.js'));
         container.register('usersService', require('./service/users.service.js'));
+
+        /* tasks */
+        container.register('taskRunner', require('./task/task.runner.js'));
+        container.register('expirationCheckTask', require('./task/expiration.check.task.js'));
 
         /* api */
         container.register('api', require('./api.js'));

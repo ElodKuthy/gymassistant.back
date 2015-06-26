@@ -3,77 +3,94 @@
  */
 try {
 
-var express = require('express'),
-    bodyParser = require('body-parser'),
-    methodOverride = require('method-override'),
-    morgan = require('morgan'),
-    routes = require('./routes/index.js'),
-    https = require('https'),
-    path = require('path'),
-    fs = require('fs'),
-    favicon = require('serve-favicon'),
-    mailer = require('express-mailer');
+    var express = require('express'),
+        bodyParser = require('body-parser'),
+        methodOverride = require('method-override'),
+        morgan = require('morgan'),
+        routes = require('./routes/index.js'),
+        https = require('https'),
+        path = require('path'),
+        fs = require('fs'),
+        favicon = require('serve-favicon'),
+        mailer = require('express-mailer');
 
-var app = module.exports = express();
+    var app = module.exports = express();
 
-var container = require('./api/container.js')('config.json');
-var config = container.get('config');
+    var container = require('./api/container.js')('config.json');
+    var config = container.get('config');
 
-/**
- * Configuration
- */
+    /**
+     * Configuration
+     */
 
-// all environments
-app.set('port', process.env.PORT || config.server.port);
-app.set('views', __dirname + '/views');
-app.engine('html', require('ejs').renderFile);
-app.set('view engine', 'html');
-app.use(morgan('dev'));
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-app.use(methodOverride());
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(favicon("public/favicon.ico"));
+    // all environments
+    app.set('port', process.env.PORT || config.server.port);
+    app.set('views', __dirname + '/views');
+    app.engine('html', require('ejs').renderFile);
+    app.set('view engine', 'html');
+    app.use(morgan('dev'));
+    app.use(bodyParser.urlencoded({
+        extended: true
+    }));
+    app.use(bodyParser.json());
+    app.use(methodOverride());
+    app.use(express.static(path.join(__dirname, 'public')));
+    app.use(favicon("public/favicon.ico"));
 
-mailer.extend(app, {
-    from: config.email.from,
-    host: config.email.host,
-    secureConnection: config.email.secureConnection,
-    port: config.email.port,
-    transportMethod: config.email.transportMethod,
-    auth: config.email.auth
-});
+    /**
+     * Mailer
+     */
 
-/**
- * Routes
- */
+    mailer.extend(app, {
+        from: config.email.from,
+        host: config.email.host,
+        secureConnection: config.email.secureConnection,
+        port: config.email.port,
+        transportMethod: config.email.transportMethod,
+        auth: config.email.auth
+    });
 
-container.register('mailer', app.mailer);
-var api = container.get('api');
+    container.register('mailer', app.mailer);
 
-var options = {
-    key: fs.readFileSync(__dirname + "/ssl/key.pem"),
-    cert: fs.readFileSync(__dirname + "/ssl/cert.pem")
-};
+    /**
+     * Task runner
+     */
 
-// serve index and view partials
-app.get('/', routes.index);
-app.get('/:dir/:name.html', routes.partials);
+    var taskRunner = container.get('taskRunner');
+    taskRunner.initAllScheduledTasks();
 
-// JSON API
-app.use("/api", api.router);
+    /**
+     * Certificates
+     */
 
-// redirect all others to the index (HTML5 history)
-app.get('*', routes.index);
+    var options = {
+        key: fs.readFileSync(__dirname + "/ssl/key.pem"),
+        cert: fs.readFileSync(__dirname + "/ssl/cert.pem")
+    };
 
+    /**
+     * Routes
+     */
 
-/**
- * Start Server
- */
+    var api = container.get('api');
 
-https.createServer(options, app).listen(app.get('port'), function () {
-    console.log('Express server listening on port ' + app.get('port'));
-});
+    // serve index and view partials
+    app.get('/', routes.index);
+    app.get('/:dir/:name.html', routes.partials);
+
+    // JSON API
+    app.use("/api", api.router);
+
+    // redirect all others to the index (HTML5 history)
+    app.get('*', routes.index);
+
+    /**
+     * Start Server
+     */
+
+    https.createServer(options, app).listen(app.get('port'), function () {
+        console.log('Express server listening on port ' + app.get('port'));
+    });
 
 } catch (err) {
     console.log(err);
