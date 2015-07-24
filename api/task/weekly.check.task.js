@@ -21,7 +21,7 @@
         }
 
         function checkExpiringSubscriptions() {
-            users.byNameAll()
+            return users.byNameAll()
                 .then(function (results) {
                     results.forEach(checkUser);
                 });

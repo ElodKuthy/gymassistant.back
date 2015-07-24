@@ -333,7 +333,6 @@
 
             return users.byName(name)
                 .then(function (results) {
-                    console.log(results[0]);
                     if (results.length != 1) {
                         throw errors.unknownUserName();
                     }

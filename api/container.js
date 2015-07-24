@@ -42,7 +42,10 @@
 
         /* tasks */
         container.register('taskRunner', require('./task/task.runner.js'));
-        container.register('expirationCheckTask', require('./task/expiration.check.task.js'));
+        container.register('hourlyCheckTask', require('./task/hourly.check.task.js'));
+        container.register('dailyCheckTask', require('./task/daily.check.task.js'));
+        container.register('weeklyCheckTask', require('./task/weekly.check.task.js'));
+        container.register('monthlyCheckTask', require('./task/monthly.check.task.js'));
 
         /* api */
         container.register('api', require('./api.js'));

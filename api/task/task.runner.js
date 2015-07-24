@@ -3,14 +3,17 @@
 
     module.exports = TaskRunner;
 
-    TaskRunner.$inject = ['expirationCheckTask'];
+    TaskRunner.$inject = ['hourlyCheckTask', 'dailyCheckTask', 'weeklyCheckTask', 'monthlyCheckTask'];
 
-    function TaskRunner(expirationCheckTask) {
+    function TaskRunner(hourlyCheckTask, dailyCheckTask, weeklyCheckTask, monthlyCheckTask) {
         var self = this;
 
         self.initAllScheduledTasks = function () {
 
-            expirationCheckTask.init();
+            hourlyCheckTask.init();
+            dailyCheckTask.init();
+            weeklyCheckTask.init();
+            monthlyCheckTask.init();
         }
     }
 
