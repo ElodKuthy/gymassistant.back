@@ -58,6 +58,16 @@
                         map: "function (doc) { if (doc.type === \"training series\" && doc.date) { emit(doc.date, doc ) } }"
                     }
                 }
+            },
+            locations: {
+                views: {
+                    byId: {
+                        map: "function (doc) { if (doc.type === 'location') { emit (doc._id, doc) } }"
+                    },
+                    byName: {
+                        map: "function (doc) { if (doc.type === 'location') { emit (doc.name, doc) } }"
+                    }
+                }
             }
         };
 
