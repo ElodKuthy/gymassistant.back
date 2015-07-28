@@ -77,7 +77,8 @@
                 coachUtils.put('_design/users', self.design.users),
                 coachUtils.put('_design/credits', self.design.credits),
                 coachUtils.put('_design/trainings', self.design.trainings),
-                coachUtils.put('_design/series', self.design.series)
+                coachUtils.put('_design/series', self.design.series),
+                coachUtils.put('_design/locations', self.design.locations)
             ]);
         };
 
@@ -91,7 +92,8 @@
                     coachUtils.get('_design/users'),
                     coachUtils.get('_design/credits'),
                     coachUtils.get('_design/trainings'),
-                    coachUtils.get('_design/series')
+                    coachUtils.get('_design/series'),
+                    coachUtils.get('_design/locations'),
                 ])
                 .spread(function (users, credits, trainings, series) {
                     var promisies = [];
@@ -122,6 +124,13 @@
                             _id: series._id,
                             _rev: series._rev,
                             views: self.design.series.views
+                        }));
+                    }
+                    if (!compareDesignDocuments(locations, self.design.locations)) {
+                        promisies.push(coachUtils.put('_design/locations', {
+                            _id: locations._id,
+                            _rev: locations._rev,
+                            views: self.design.locations.views
                         }));
                     }
 
