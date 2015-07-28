@@ -700,6 +700,17 @@
             });
         });
 
+        router.route('/location/:id')
+
+        .get(function (req, res) {
+            nodeify(res, function () {
+
+                var id = req.param('id');
+
+                return locationService.findById(id);
+            });
+        });
+
         function addBodyToArgs(args, body) {
             for (var key in body) {
                 if (body.hasOwnProperty(key)) {

@@ -4,6 +4,7 @@
     module.exports = Errors;
 
     Errors.$inject = ['log'];
+
     function Errors(log) {
         var self = this;
         self.messages = {
@@ -39,8 +40,14 @@
             expiredToken: 'Ez a token már lejárt',
             notFirstTime: 'A tanítványnak már nem ez az első alkalma',
             firstTimeModification: 'Az első ingyenes alkalmat nem lehet módosítani',
-            seriesCancelled: 'Ez az edzés már törölve lett'
+            seriesCancelled: 'Ez az edzés már törölve lett',
+            invalidId: 'Érvénytelen azonosító'
         };
+
+        self.invalidId = function () {
+            log.error(self.messages.invalidId);
+            return new Error(self.messages.invalidId);
+        }
 
         self.seriesCancelled = function () {
             log.error(self.messages.seriesCancelled);
@@ -82,127 +89,127 @@
             return new Error(self.messages.serverError);
         };
 
-        self.invalidUserNameOrPassword = function() {
+        self.invalidUserNameOrPassword = function () {
             log.error(self.messages.invalidUserNameOrPassword);
             return new Error(self.messages.invalidUserNameOrPassword);
         };
 
-        self.unauthorized = function() {
+        self.unauthorized = function () {
             log.error(self.messages.unauthorized);
             return new Error(self.messages.unauthorized);
-         };
+        };
 
-        self.invalidTrainingId = function() {
+        self.invalidTrainingId = function () {
             log.error(self.messages.invalidTrainingId);
             return new Error(self.messages.invalidTrainingId);
         };
 
-        self.trainingEnded = function() {
+        self.trainingEnded = function () {
             log.error(self.messages.trainingEnded);
             return new Error(self.messages.trainingEnded);
         };
 
-        self.trainingFull = function() {
+        self.trainingFull = function () {
             log.error(self.messages.trainingFull);
             return new Error(self.messages.trainingFull);
         };
 
-        self.unknownUserName = function() {
+        self.unknownUserName = function () {
             log.error(self.messages.unknownUserName);
             return new Error(self.messages.unknownUserName);
         };
 
-        self.alreadySignedUp = function() {
+        self.alreadySignedUp = function () {
             log.error(self.messages.alreadySignedUp);
             return new Error(self.messages.alreadySignedUp);
         };
 
-        self.selfAttend = function() {
+        self.selfAttend = function () {
             log.error(self.messages.selfAttend);
             return new Error(self.messages.selfAttend);
         };
 
-        self.noCredit = function() {
+        self.noCredit = function () {
             log.error(self.messages.noCredit);
             return new Error(self.messages.noCredit);
         };
 
-        self.notSignedUp = function() {
+        self.notSignedUp = function () {
             log.error(self.messages.notSignedUp);
             return new Error(self.messages.notSignedUp);
         };
 
-        self.alreadyCheckedIn = function() {
+        self.alreadyCheckedIn = function () {
             log.error(self.messages.alreadyCheckedIn);
             return new Error(self.messages.alreadyCheckedIn);
         };
 
-        self.notCheckedIn = function() {
+        self.notCheckedIn = function () {
             log.error(self.messages.notCheckedIn);
             return new Error(self.messages.notCheckedIn);
         };
 
-        self.toLateToLeave = function() {
+        self.toLateToLeave = function () {
             log.error(self.messages.toLateToLeave);
             return new Error(self.messages.toLateToLeave);
         };
 
-        self.onlyPositiveIntegers = function() {
+        self.onlyPositiveIntegers = function () {
             log.error(self.messages.onlyPositiveIntegers);
             return new Error(self.messages.onlyPositiveIntegers);
         };
 
-        self.passwordChangeFailed = function() {
+        self.passwordChangeFailed = function () {
             log.error(self.messages.passwordChangeFailed);
             return new Error(self.messages.passwordChangeFailed);
         };
 
-        self.cantModifyNotOwnTraining = function() {
+        self.cantModifyNotOwnTraining = function () {
             log.error(self.messages.cantModifyNotOwnTraining);
             return new Error(self.messages.cantModifyNotOwnTraining);
         };
 
-        self.tooEarlyToCheckIn = function() {
+        self.tooEarlyToCheckIn = function () {
             log.error(self.messages.tooEarlyToCheckIn);
             return new Error(self.messages.tooEarlyToCheckIn);
         };
 
-        self.userNameAlreadyExist = function() {
+        self.userNameAlreadyExist = function () {
             log.error(self.messages.userNameAlreadyExist);
             return new Error(self.messages.userNameAlreadyExist);
         };
 
-        self.invalidPeriod = function() {
+        self.invalidPeriod = function () {
             log.error(self.messages.invalidPeriod);
             return new Error(self.messages.invalidPeriod);
         };
 
-        self.notEnoughTrainingsForDailyTicket = function() {
+        self.notEnoughTrainingsForDailyTicket = function () {
             log.error(self.messages.notEnoughTrainingsForDailyTicket);
             return new Error(self.messages.notEnoughTrainingsForDailyTicket);
         };
 
-        self.invalidCreditId = function() {
+        self.invalidCreditId = function () {
             log.error(self.messages.invalidCreditId);
             return new Error(self.messages.invalidCreditId);
         };
 
-        self.dateIsInPast = function() {
+        self.dateIsInPast = function () {
             log.error(self.messages.dateIsInPast);
             return new Error(self.messages.dateIsInPast);
         };
 
-        self.invalidEmailFormat = function() {
+        self.invalidEmailFormat = function () {
             log.error(self.messages.invalidEmailFormat);
             return new Error(self.messages.invalidEmailFormat);
         };
 
-        self.trainingCanceled = function() {
+        self.trainingCanceled = function () {
             log.error(self.messages.trainingCanceled);
             return new Error(self.messages.trainingCanceled);
         };
 
-        self.unknownUserEmail = function() {
+        self.unknownUserEmail = function () {
             log.error(self.messages.unknownUserEmail);
             return new Error(self.messages.unknownUserEmail);
         };
