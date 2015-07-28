@@ -1,10 +1,11 @@
-(function() {
+(function () {
     'use strict';
 
     module.exports = SeriesService;
 
-    SeriesService.$inject = ['plugins', 'errors', 'identityService', 'scheduleService', 'series', 'trainings'];
-    function SeriesService(plugins, errors, identityService, scheduleService, series, trainings) {
+    SeriesService.$inject = ['plugins', 'errors', 'identityService', 'scheduleService', 'locationService', 'series', 'trainings'];
+
+    function SeriesService(plugins, errors, identityService, scheduleService, locationService, series, trainings) {
 
         var self = this;
         var uuid = plugins.uuid;
@@ -14,7 +15,7 @@
         self.statuses = {
             normal: 'normal',
             cancelled: 'cancelled',
-            parse: function(value) {
+            parse: function (value) {
                 if (value == self.statuses.normal)
                     return self.statuses.normal;
                 if (value == self.statuses.cancelled)
@@ -22,30 +23,33 @@
             }
         };
 
-        self.getAll = function(args) {
+        self.getAll = function (args) {
             return q(args)
                 .then(identityService.checkCoach)
-                .then(function() { return series.byDate() });
+                .then(function () {
+                    return series.byDate()
+                });
         }
 
-        self.getAllOfCoach = function(args) {
+        self.getAllOfCoach = function (args) {
             return q(args)
                 .then(identityService.checkAdmin)
-                .then(function() { return series.byCoach(args.coach) });
+                .then(function () {
+                    return series.byCoach(args.coach)
+                });
         }
 
-        self.get = function(args) {
+        self.get = function (args) {
             return q(args)
                 .then(identityService.checkAdmin)
-                .then(function() {
+                .then(function () {
                     return series.get(args.id).catch(function (err) {
                         throw errors.invalidTrainingId(err);
                     });
                 });
         }
 
-
-        self.add = function(args) {
+        self.add = function (args) {
 
             return q(args)
                 .then(identityService.checkAdmin)
@@ -53,37 +57,40 @@
                 .then(addAdditionalProperties)
                 .then(addToDb);
 
-                function check(args) {
-                    if (!args.name) {
-                        throw errors.missingProperty('Új edzés', 'név');
-                    }
-                    if (!args.coach) {
-                        throw errors.missingProperty('Új edzés', 'edző');
-                    }
-                    if (!args.max) {
-                        throw errors.missingProperty('Új edzés', 'maximális létszám');
-                    }
-                    if (!args.date) {
-                        throw errors.missingProperty('Új edzés', 'dátum');
-                    }
-
-                    return args;
+            function check(args) {
+                if (!args.name) {
+                    throw errors.missingProperty('Új edzés', 'név');
+                }
+                if (!args.coach) {
+                    throw errors.missingProperty('Új edzés', 'edző');
+                }
+                if (!args.max) {
+                    throw errors.missingProperty('Új edzés', 'maximális létszám');
+                }
+                if (!args.date) {
+                    throw errors.missingProperty('Új edzés', 'dátum');
+                }
+                if (!args.location) {
+                    throw errors.missingProperty('Új edzés', 'terem');
                 }
 
-                function addAdditionalProperties(args) {
-                    args._id = uuid.v4();
-                    args.status = self.statuses.normal;
-                    args.type = 'training series';
-                    delete args.user;
-                    return args;
-                }
+                return args;
+            }
 
-                function addToDb(args) {
-                    return series.add(args);
-                }
+            function addAdditionalProperties(args) {
+                args._id = uuid.v4();
+                args.status = self.statuses.normal;
+                args.type = 'training series';
+                delete args.user;
+                return args;
+            }
+
+            function addToDb(args) {
+                return series.add(args);
+            }
         }
 
-        self.set = function(args) {
+        self.set = function (args) {
 
             return q(args)
                 .then(identityService.checkAdmin)
@@ -92,8 +99,8 @@
                 .then(updateCoach)
                 .then(updateMax)
                 .then(updateDate)
-                .then(updateStatus);
-
+                .then(updateStatus)
+                .then(updateLocation);
 
             function updateName(instance) {
 
@@ -130,6 +137,7 @@
 
                 return instance;
             }
+
             function updateStatus(instance) {
 
                 if (args.status && self.statuses.parse(args.status) && args.status != instance.status) {
@@ -138,9 +146,21 @@
 
                 return instance;
             }
+
+            function updateLocation(instance) {
+
+                return locationService.findById(args.location).then(function (location) {
+
+                    if (location) {
+                        return series.updateLocation(instance._id, args.location);
+                    }
+
+                    return instance;
+                });
+            }
         };
 
-        self.updateTrainings = function(args) {
+        self.updateTrainings = function (args) {
 
             return q(args)
                 .then(identityService.checkAdmin)
@@ -189,13 +209,20 @@
                         throw errors.seriesCancelled();
                     }
 
-                    var startDate = args.from.clone().startOf('isoWeek').add({ days: (currentSeries.date.day - 1), hours: currentSeries.date.hour });
+                    var startDate = args.from.clone().startOf('isoWeek').add({
+                        days: (currentSeries.date.day - 1),
+                        hours: currentSeries.date.hour
+                    });
 
-                    if(startDate.isBefore(args.from)) {
-                        startDate.add({ week: 1 });
+                    if (startDate.isBefore(args.from)) {
+                        startDate.add({
+                            week: 1
+                        });
                     }
 
-                    for (var date = startDate; date.isBefore(args.to); date.add({ week: 1 })) {
+                    for (var date = startDate; date.isBefore(args.to); date.add({
+                            week: 1
+                        })) {
                         promises.push(updateOrCreateTraining(currentSeries, date.unix()));
                     }
                 });
@@ -206,11 +233,19 @@
             function updateOrCreateTraining(series, date) {
 
                 return trainings.bySeriesAndDate(series._id, date).then(function (results) {
-                    var training = (results && results.length) ? results[0] : { _id: uuid.v4(), series: series._id, date: date, attendees: [], type: 'training', status: 'normal' };
+                    var training = (results && results.length) ? results[0] : {
+                        _id: uuid.v4(),
+                        series: series._id,
+                        date: date,
+                        attendees: [],
+                        type: 'training',
+                        status: 'normal'
+                    };
 
                     training.name = series.name;
                     training.coach = series.coach;
                     training.max = series.max;
+                    training.location = series.location;
 
                     return training;
                 });
@@ -228,7 +263,7 @@
             }
         };
 
-        self.deleteSeries = function(args) {
+        self.deleteSeries = function (args) {
 
             return q(args)
                 .then(identityService.checkAdmin)
@@ -238,7 +273,9 @@
                 .thenResolve('Sikeres törölted az edzést');
 
             function getTrainings(args) {
-                return trainings.bySeriesFromTo(args.id, moment().endOf('day').unix(), moment({ years: 3000 }).endOf('year').unix())
+                return trainings.bySeriesFromTo(args.id, moment().endOf('day').unix(), moment({
+                        years: 3000
+                    }).endOf('year').unix())
                     .then(function (trainings) {
                         args.trainings = trainings;
                         return args;
@@ -250,7 +287,10 @@
                 var promises = [];
 
                 args.trainings.forEach(function (training) {
-                    promises.push(scheduleService.cancelTraining({ user: args.user, id: training._id }));
+                    promises.push(scheduleService.cancelTraining({
+                        user: args.user,
+                        id: training._id
+                    }));
                 });
 
                 return q.allSettled(promises).thenResolve(args);

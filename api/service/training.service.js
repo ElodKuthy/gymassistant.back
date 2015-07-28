@@ -4,6 +4,7 @@
     module.exports = TrainingService;
 
     TrainingService.$inject = ['plugins', 'trainings', 'log', 'roles', 'errors', 'identityService', 'creditsService'];
+
     function TrainingService(plugins, trainings, log, roles, errors, identityService, creditsService) {
         var self = this;
         var moment = plugins.moment;
@@ -13,22 +14,22 @@
             if (user && user.name) {
                 for (var index = 0; index < training.attendees.length; index++) {
                     var current = training.attendees[index];
-                        if (current.name === user.name) {
-                            return true;
-                        }
+                    if (current.name === user.name) {
+                        return true;
                     }
+                }
             }
             return false;
         };
 
-        self.isParticipant = function(training, user) {
+        self.isParticipant = function (training, user) {
             if (user && user.name) {
                 for (var index = 0; index < training.attendees.length; index++) {
                     var current = training.attendees[index];
-                        if (current.name.indexOf(user.name) > -1) {
-                            return current.checkedIn;
-                        }
+                    if (current.name.indexOf(user.name) > -1) {
+                        return current.checkedIn;
                     }
+                }
             }
             return false;
         };
@@ -54,12 +55,13 @@
                 isParticipant: self.isParticipant(training, user),
                 current: training.attendees.length,
                 attendees: showAttendeesForAuthOnly(training, user),
+                location: training.location
             };
 
             return result;
         }
 
-        self.findByDate = function(startDate, endDate, user) {
+        self.findByDate = function (startDate, endDate, user) {
 
             var deferred = q.defer();
 
@@ -88,11 +90,17 @@
             return deferred.promise;
         };
 
-        self.findByIdFull = function(id) {
-            return self.findById({ id: id, user: { name: 'internal', roles: [roles.coach, roles.admin] } });
+        self.findByIdFull = function (id) {
+            return self.findById({
+                id: id,
+                user: {
+                    name: 'internal',
+                    roles: [roles.coach, roles.admin]
+                }
+            });
         };
 
-        self.findById = function(args) {
+        self.findById = function (args) {
 
             return trainings.byId(args.id)
                 .then(function (trainings) {
@@ -109,7 +117,7 @@
             return trainings.updateStatus(id, 'cancel');
         };
 
-        self.changeCoach = function(args) {
+        self.changeCoach = function (args) {
 
             if (!args.id) {
                 throw errors.missingProperty('Edzőváltás', 'Edzés azonosító');
@@ -136,7 +144,9 @@
 
         function updateAttendees(args) {
 
-            return updateAttendee(args, 0).then(function (args) { return trainings.updateAttendees(args.training._id, args.training.attendees).thenResolve(args); });
+            return updateAttendee(args, 0).then(function (args) {
+                return trainings.updateAttendees(args.training._id, args.training.attendees).thenResolve(args);
+            });
         }
 
         function updateAttendee(args, index) {
@@ -147,7 +157,7 @@
 
             var attendee = args.training.attendees[index];
             args.id = attendee.ref;
-            args.userName =  attendee.name;
+            args.userName = attendee.name;
 
             return creditsService.getCredit(args).then(function (credit) {
                 attendee.type = (credit.coach == args.coach) ? 'normal' : 'guest';

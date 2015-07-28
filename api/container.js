@@ -21,6 +21,7 @@
         container.register('plugins', require('./common/plugins.js'), 'singleton');
 
         /* data access layer */
+        container.register('locations', require('./dal/locations.js'));
         container.register('series', require('./dal/series.js'));
         container.register('trainings', require('./dal/trainings.js'));
         container.register('users', require('./dal/users.js'));
@@ -29,6 +30,7 @@
         container.register('attendeesService', require('./service/attendees.service.js'));
         container.register('creditsService', require('./service/credits.service.js'));
         container.register('identityService', require('./service/identity.service.js'));
+        container.register('locationService', require('./service/location.service.js'));
         container.register('mailerService', require('./service/mailer.service.js'));
         container.register('multipliers', require('./service/multipliers.js'), 'singleton');
         container.register('periods', require('./service/periods.js'), 'singleton');

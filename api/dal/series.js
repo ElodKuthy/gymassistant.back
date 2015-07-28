@@ -4,6 +4,7 @@
     module.exports = Series;
 
     Series.$inject = ['plugins', 'coachUtils'];
+
     function Series(plugins, coachUtils) {
         var self = this;
         var get = coachUtils.get;
@@ -23,13 +24,13 @@
             return get(id);
         };
 
-        self.add = function(series) {
+        self.add = function (series) {
             return put(series._id, series);
         };
 
         self.updateName = function (id, name) {
 
-            function update (instance) {
+            function update(instance) {
                 instance.name = name;
                 return q(instance);
             }
@@ -39,7 +40,7 @@
 
         self.updateCoach = function (id, coach) {
 
-            function update (instance) {
+            function update(instance) {
                 instance.coach = coach;
                 return q(instance);
             }
@@ -49,7 +50,7 @@
 
         self.updateMax = function (id, max) {
 
-            function update (instance) {
+            function update(instance) {
                 instance.max = max;
                 return q(instance);
             }
@@ -59,7 +60,7 @@
 
         self.updateDate = function (id, date) {
 
-            function update (instance) {
+            function update(instance) {
                 instance.date = date;
                 return q(instance);
             }
@@ -69,8 +70,18 @@
 
         self.updateStatus = function (id, status) {
 
-            function update (instance) {
+            function update(instance) {
                 instance.status = status;
+                return q(instance);
+            }
+
+            return coachUtils.updateDoc(id, update);
+        };
+
+        self.updateLocation = function (id, location) {
+
+            function update(instance) {
+                instance.location = location;
                 return q(instance);
             }
 

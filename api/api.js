@@ -2,9 +2,9 @@
     'use strict';
     module.exports = Api;
 
-    Api.$inject = ['plugins', 'errors', 'log', 'identityService', 'scheduleService', 'trainingService', 'mailerService', 'attendeesService', 'creditsService', 'subscriptionService', 'users', 'series', 'seriesService', 'usersService', 'statsService'];
+    Api.$inject = ['plugins', 'errors', 'log', 'identityService', 'scheduleService', 'trainingService', 'mailerService', 'attendeesService', 'creditsService', 'subscriptionService', 'users', 'series', 'seriesService', 'usersService', 'statsService', 'locationService'];
 
-    function Api(plugins, errors, log, identityService, scheduleService, trainingService, mailerService, attendeesService, creditsService, subscriptionService, users, series, seriesService, usersService, statsService) {
+    function Api(plugins, errors, log, identityService, scheduleService, trainingService, mailerService, attendeesService, creditsService, subscriptionService, users, series, seriesService, usersService, statsService, locationService) {
 
         var express = require('express');
         var router = express.Router();
@@ -689,6 +689,15 @@
 
                 return identityService.unsubscribe(args);
             }, 'Sikeres leiratkozás');
+        });
+
+        router.route('/location')
+
+        .get(function (req, res) {
+            nodeify(res, function () {
+
+                return locationService.all();
+            });
         });
 
         function addBodyToArgs(args, body) {
