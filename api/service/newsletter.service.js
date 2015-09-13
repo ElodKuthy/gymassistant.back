@@ -37,6 +37,6 @@ function NewsletterService(plugins, log, coachUtils, identityService, mailerServ
     }
 
     function checkPreferences(args, index) {
-        return args.users[index].preferences.newsletter;
+        return args.users[index].preferences.newsletter && args.users[index].email;
     }
 }
