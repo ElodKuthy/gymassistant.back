@@ -72,6 +72,16 @@
                 unsubscribe: args.client.preferences.id
             });
         };
+
+        self.sendNewsletter = function (args) {
+            return q.nfcall(mailer.send, 'emails/newsletter', {
+                to: args.client.email,
+                subject: args.subject,
+                userName: args.client.name,
+                content: args.content,
+                unsubscribe: args.client.preferences.id
+            });
+        };
     }
 
 })();

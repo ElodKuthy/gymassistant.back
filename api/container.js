@@ -33,6 +33,7 @@
         container.register('locationService', require('./service/location.service.js'));
         container.register('mailerService', require('./service/mailer.service.js'));
         container.register('multipliers', require('./service/multipliers.js'), 'singleton');
+        container.register('newsletterService', require('./service/newsletter.service.js'));
         container.register('periods', require('./service/periods.js'), 'singleton');
         container.register('roles', require('./service/roles.js'), 'singleton');
         container.register('scheduleService', require('./service/schedule.service.js'));

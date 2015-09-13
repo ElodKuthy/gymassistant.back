@@ -57,6 +57,11 @@
                 modified = true;
             }
 
+            if (typeof preferences.newsletter === "undefined") {
+                preferences.newsletter = true;
+                modified = true;
+            }
+
             args.users[args.index].preferences = preferences;
 
             return modified;

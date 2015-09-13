@@ -6,8 +6,6 @@
     var designDocumentsUpdater = container.get('designDocumentsUpdater');
     var userPreferencesUpdater = container.get('userPreferencesUpdater');
 
-    designDocumentsUpdater.update()
-        .then(userPreferencesUpdater.update)
-        .done();
+    return userPreferencesUpdater.update().done();
 
 })();

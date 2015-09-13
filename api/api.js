@@ -2,9 +2,9 @@
     'use strict';
     module.exports = Api;
 
-    Api.$inject = ['plugins', 'errors', 'log', 'identityService', 'scheduleService', 'trainingService', 'mailerService', 'attendeesService', 'creditsService', 'subscriptionService', 'users', 'series', 'seriesService', 'usersService', 'statsService', 'locationService'];
+    Api.$inject = ['plugins', 'errors', 'log', 'identityService', 'scheduleService', 'trainingService', 'mailerService', 'attendeesService', 'creditsService', 'subscriptionService', 'users', 'series', 'seriesService', 'usersService', 'statsService', 'locationService', 'newsletterService'];
 
-    function Api(plugins, errors, log, identityService, scheduleService, trainingService, mailerService, attendeesService, creditsService, subscriptionService, users, series, seriesService, usersService, statsService, locationService) {
+    function Api(plugins, errors, log, identityService, scheduleService, trainingService, mailerService, attendeesService, creditsService, subscriptionService, users, series, seriesService, usersService, statsService, locationService, newsletterService) {
 
         var express = require('express');
         var router = express.Router();
@@ -708,6 +708,23 @@
                 var id = req.param('id');
 
                 return locationService.findById(id);
+            });
+        });
+
+        router.route('/send/newsletter')
+
+        .options(function (req, res) {
+            res.send('POST');
+        })
+
+        .post(function (req, res) {
+            nodeify(res, function () {
+                var args = {
+                    user: req.user
+                };
+                addBodyToArgs(args, req.body);
+
+                return newsletterService.sendNewsletter(args);
             });
         });
 

@@ -474,6 +474,7 @@
             }
 
             args.user.preferences.expirationNotification = args.expirationNotification;
+            args.user.preferences.newsletter = args.newsletter;
 
             return users.updatePreferences(args.user._id, args.user.preferences)
                 .thenResolve(args.preferences);

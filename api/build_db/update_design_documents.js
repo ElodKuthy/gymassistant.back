@@ -73,7 +73,7 @@
 
         self.build = function () {
 
-            return q.all([
+            return q.allSettled([
                 coachUtils.put('_design/users', self.design.users),
                 coachUtils.put('_design/credits', self.design.credits),
                 coachUtils.put('_design/trainings', self.design.trainings),
