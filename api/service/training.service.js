@@ -152,7 +152,7 @@
         function updateAttendee(args, index) {
 
             if (index >= args.training.attendees.length) {
-                return args;
+                return q(args);
             }
 
             var attendee = args.training.attendees[index];
