@@ -42,12 +42,7 @@ try {
      */
 
     mailer.extend(app, {
-        from: config.email.from,
-        host: config.email.host,
-        secureConnection: config.email.secureConnection,
-        port: config.email.port,
-        transportMethod: config.email.transportMethod,
-        auth: config.email.auth
+        from: config.email.from
     });
 
     container.register('mailer', app.mailer);
