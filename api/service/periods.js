@@ -33,10 +33,10 @@
         };
 
         self.parseUnixInterval = function(interval) {
-            if (interval < 2419200) { // four weeks in sec
+            if (interval < 2419199) { // four weeks in sec
                 return self.today;
             }
-            if (interval < 7257600) { // tweleve weeks in sec
+            if (interval < 7257599) { // tweleve weeks in sec
                 return self.fourWeeks;
             }
 
