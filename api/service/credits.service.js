@@ -202,9 +202,12 @@
                     if ((current.date * 1000 < args.training.date && current.expiry * 1000 > args.training.date) &&
                         (current.expiry > now || adminMode) &&
                         current.free > 0) {
-                        creditToBook = current;
-                        if (creditToBook.coach === args.training.coach) {
+                        if (current.coach === args.training.coach) {
+                            creditToBook = current;
                             break;
+                        }
+                        if (!creditToBook) {
+                            creditToBook = current;
                         }
                     }
                 }
