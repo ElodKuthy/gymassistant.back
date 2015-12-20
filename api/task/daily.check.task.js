@@ -3,9 +3,9 @@
 
     module.exports = DailyCheckTask;
 
-    DailyCheckTask.$inject = ['plugins', 'users', 'trainings', 'mailerService'];
+    DailyCheckTask.$inject = ['plugins', 'users', 'trainings', 'mailerService', 'creditsService'];
 
-    function DailyCheckTask(plugins, users, trainings, mailerService) {
+    function DailyCheckTask(plugins, users, trainings, mailerService, creditsService) {
         var self = this;
         var schedule = plugins.schedule;
         var moment = plugins.moment;
@@ -27,9 +27,7 @@
         }
 
         function checkUser(user) {
-            var now = moment();
-            var emptyCredits = [];
-
+            creditsService.checkCredits({ user: user });
         }
 
     }

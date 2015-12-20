@@ -20,6 +20,22 @@
             return args;
         }
 
+        function parseNotExpiredCreditsOnly(args) {
+            if (args.credits.length != 1) {
+                throw errors.unknownUserName();
+            } else {
+                var credits = args.credits[0];
+                args.credits = [];
+                credits.forEach(function (credit) {
+                    if (moment.unix(credit.expiry).isAfter(moment())) {
+                        args.credits.push(credit);
+                    }
+                });
+            }
+
+            return args;
+        }
+
         function decorateCredit (credit, details) {
             var now = moment().unix();
             var add;
@@ -92,6 +108,27 @@
             });
         }
 
+        function expiryEmptyCredit(user, credits, index) {
+            if (index < credits.length) {
+
+                var current = credits[index];
+
+                if (current.free + current.attended === 0) {
+                    return users.setExpiry(user._id, current.id, moment().unix()).then(function () {
+                        return expiryEmptyCredit(user, credits, index + 1);
+                    });
+                }
+
+                return expiryEmptyCredit(user, credits, index + 1);
+            }
+
+            return q('done');
+        }
+
+        function expiryEmptyCredits(args) {
+            return expiryEmptyCredit(args.user, args.credits, 0).thenResolve(args);
+        }
+
         self.getUserCredits = function (args) {
 
             if (!args.userName) {
@@ -104,6 +141,14 @@
                 .then(parseCredits)
                 .then(decorateCredits);
         };
+
+        self.checkCredits = function (args) {
+            return q(args)
+                .then(findCredits)
+                .then(parseNotExpiredCreditsOnly)
+                .then(decorateCredits)
+                .then(expiryEmptyCredits);
+        }
 
         self.getCredits = function (args) {
 

@@ -150,6 +150,20 @@
             return coachUtils.updateDoc(id, update);
         };
 
+        self.setExpiry = function (id, creditId, expiry) {
+
+            function update(instance) {
+                var credit = findCreditById(instance.credits, creditId);
+                if (!credit) {
+                    throw errors.invalidCreditId();
+                }
+                credit.expiry = expiry;
+                return q(instance);
+            }
+
+            return coachUtils.updateDoc(id, update);
+        };
+
         self.add = function (user) {
             return request('PUT', user._id, user);
         };
