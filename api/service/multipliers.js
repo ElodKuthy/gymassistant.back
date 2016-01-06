@@ -31,11 +31,11 @@
           result = _single.instance[amount - 1];
         }
 
-        if (period === periods.fourWeeks) {
+        if (!result || period === periods.fourWeeks) {
           result = _fourWeeks.instance[Math.round(amount / 4) - 1];
         }
 
-        if (period === periods.twelveWeeks) {
+        if (!result || period === periods.twelveWeeks) {
           result = _twelveWeeks.instance[Math.round(amount / 12) - 1];
         }
 
@@ -54,11 +54,11 @@
           result = _single.sum[amount - 1];
         }
 
-        if (period === periods.fourWeeks) {
+        if (!result || period === periods.fourWeeks) {
           result = _fourWeeks.sum[Math.round(amount / 4) - 1];
         }
 
-        if (period === periods.twelveWeeks) {
+        if (!result || period === periods.twelveWeeks) {
           result = _twelveWeeks.sum[Math.round(amount / 12) - 1];
         }
 
