@@ -8,7 +8,7 @@ try {
         methodOverride = require('method-override'),
         morgan = require('morgan'),
         routes = require('./routes/index.js'),
-        https = require('https'),
+        http = require('http'),
         path = require('path'),
         fs = require('fs'),
         favicon = require('serve-favicon'),
@@ -55,15 +55,6 @@ try {
     taskRunner.initAllScheduledTasks();
 
     /**
-     * Certificates
-     */
-
-    var options = {
-        key: fs.readFileSync(__dirname + "/ssl/key.pem"),
-        cert: fs.readFileSync(__dirname + "/ssl/cert.pem")
-    };
-
-    /**
      * Routes
      */
 
@@ -83,7 +74,7 @@ try {
      * Start Server
      */
 
-    https.createServer(options, app).listen(app.get('port'), function () {
+    http.createServer(app).listen(app.get('port'), function () {
         console.log('Express server listening on port ' + app.get('port'));
     });
 
