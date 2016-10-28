@@ -265,7 +265,7 @@
             args.roles = [roles.client, roles.coach];
 
             return q(args)
-                .then(self.chechAdmin)
+                .then(self.checkAdmin)
                 .then(addUser)
                 .then(mailerService.sendCoachRegistrationMail);
         };
@@ -277,7 +277,7 @@
             };
 
             return q(args)
-                .then(self.chechAdmin)
+                .then(self.checkAdmin)
                 .then(findUser)
                 .then(setPasswordToken)
                 .then(sendEmail);
