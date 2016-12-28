@@ -71,8 +71,8 @@
 
             if (!adminMode
                 && (['leave', 'remove']).indexOf(args.purpose) > -1
-                && args.training.date.isAfter(moment('2015-12-21Z00:00:00+01:00'))
-                && args.training.date.isBefore(moment('2016-01-04Z00:00:00+01:00'))) {
+                && args.training.date.isAfter(moment('2016-12-31Z00:00:00+01:00'))
+                && args.training.date.isBefore(moment('2017-01-01Z00:00:00+01:00'))) {
                     throw errors.toLateToLeave();
             }
 
